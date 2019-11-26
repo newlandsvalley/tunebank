@@ -38,22 +38,24 @@ import qualified Text.Blaze.Html
 
 import Tunebank.TestData.User (users1)
 import Tunebank.TestData.AbcMetadata (getTuneMetadata, getTuneList)
-import Tunebank.ApiType (UserAPI1, AbcTuneAPI1)
+import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
+import Tunebank.ApiType (UserAPI1, AbcTuneAPI1, CommentAPI1)
 import Tunebank.Model.User (User(..))
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
+import Tunebank.Model.Comment (CommentId, Comment)
 
 import Data.Genre (Genre)
 
-server1 :: Server UserAPI1
-server1 = return users1
+userServer :: Server UserAPI1
+userServer = return users1
 
-server2 :: Server AbcTuneAPI1
-server2 = tuneHandler :<|> tuneListHandler
+tuneServer :: Server AbcTuneAPI1
+tuneServer = tuneHandler :<|> tuneListHandler
    where
      tuneHandler :: Genre -> TuneId -> Handler AbcMetadata
-     tuneHandler  genre tuneRef =
-       case getTuneMetadata genre tuneRef of
+     tuneHandler  genre tuneId =
+       case getTuneMetadata genre tuneId of
          Nothing -> throwError (err404 {errBody = "tune not found"})
          Just metadata -> return metadata
 
@@ -61,18 +63,36 @@ server2 = tuneHandler :<|> tuneListHandler
      tuneListHandler genre =
        return $ getTuneList genre
 
+commentServer :: Server CommentAPI1
+commentServer = commentHandler :<|> commentListHandler
+  where
+    commentHandler :: Genre -> TuneId -> CommentId -> Handler Comment
+    commentHandler  genre tuneId commentId =
+      case getTuneComment genre tuneId commentId of
+        Nothing -> throwError (err404 {errBody = "comment not found"})
+        Just comment -> return comment
+
+    commentListHandler :: Genre -> TuneId -> Handler [Comment]
+    commentListHandler genre tuneId =
+      return $ getTuneComments genre tuneId
+
 userAPI :: Proxy UserAPI1
 userAPI = Proxy
 
 abcTuneAPI :: Proxy AbcTuneAPI1
 abcTuneAPI = Proxy
 
+commentAPI :: Proxy CommentAPI1
+commentAPI = Proxy
+
 -- 'serve' comes from servant and hands you a WAI Application,
 -- which you can think of as an "abstract" web application,
 -- not yet a webserver.
 app1 :: Application
-app1 = serve userAPI server1
-
+app1 = serve userAPI userServer
 
 app2 :: Application
-app2 = serve abcTuneAPI server2
+app2 = serve abcTuneAPI tuneServer
+
+app3 :: Application
+app3 = serve commentAPI commentServer

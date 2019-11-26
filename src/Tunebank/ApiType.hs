@@ -9,6 +9,7 @@ import Servant.API
 import Tunebank.Model.User (User)
 import Tunebank.Model.AbcMetadata (AbcMetadata)
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
+import Tunebank.Model.Comment (Comment, CommentId)
 import Data.Genre (Genre)
 import Tunebank.Model.Genre ()
 
@@ -25,3 +26,7 @@ type UserAPI1 = "tunebank" :> "users" :> Get '[JSON] [User]
 type AbcTuneAPI1 =
      "tunebank" :> "genre" :> Capture "genre" Genre :> "tune" :> Capture "tune" TuneId :> Get '[JSON] AbcMetadata
      :<|> "tunebank" :> "genre" :> Capture "genre" Genre :> "search" :>  Get '[JSON] [TuneRef]
+
+type CommentAPI1 =
+    "tunebank" :> "genre" :> Capture "genre" Genre :> "tune" :> Capture "tune" TuneId :> "comment" :> Capture "comment" CommentId :> Get '[JSON] Comment
+     :<|>   "tunebank" :> "genre" :> Capture "genre" Genre :> "tune" :> Capture "tune" TuneId :> "comments" :> Get '[JSON] [Comment]

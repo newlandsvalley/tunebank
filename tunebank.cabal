@@ -43,8 +43,10 @@ executable tunebank
                    , Tunebank.Model.User
                    , Tunebank.Model.AbcMetadata
                    , Tunebank.Model.TuneRef
+                   , Tunebank.Model.Comment
                    , Tunebank.TestData.User
                    , Tunebank.TestData.AbcMetadata
+                   , Tunebank.TestData.Comment
 
   build-depends:
                      blaze-html   >= 0.9.0.1 && < 0.10

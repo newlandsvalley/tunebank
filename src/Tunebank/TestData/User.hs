@@ -1,6 +1,6 @@
 module Tunebank.TestData.User
-  ( User(..)
-  , users1
+  (
+    users1
   ) where
 
 import Prelude ()
