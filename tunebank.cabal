@@ -1,0 +1,62 @@
+name:                tunebank
+version:             0.1.0.0
+synopsis:            RESTful server for tunes in ABC notation
+description:         this is intended to be a rewrite of the Scala MusicRest project
+homepage:            https://github.com/newlandsvalley/tunebank#readme
+license:             BSD3
+license-file:        LICENSE
+author:              John Watson
+maintainer:          john.watson@gmx.co.uk
+copyright:           2019 John Watson
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+executable tunebank
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , base-compat
+                     , bytestring
+                     , containers
+                     , transformers
+                     , servant
+                     , aeson
+                     , attoparsec
+                     , directory
+                     , http-api-data
+                     , http-client
+                     , http-media
+                     , http-types
+                     , mtl
+                     , string-conversions
+                     , time
+                     , text
+                     , validation
+                     , wai
+                     , warp
+  other-modules:     Tunebank.ApiType
+                   , Tunebank.Server
+                   , Tunebank.Model.Genre
+                   , Tunebank.Model.User
+                   , Tunebank.Model.AbcMetadata
+                   , Tunebank.Model.TuneRef
+                   , Tunebank.TestData.User
+                   , Tunebank.TestData.AbcMetadata
+
+  build-depends:
+                     blaze-html   >= 0.9.0.1 && < 0.10
+                   , blaze-markup >= 0.8.0.0 && < 0.9
+                   , lucid        >= 2.9.11  && < 2.10
+
+  -- Servant dependencies
+  build-depends:
+                      servant
+                    , servant-server
+                    , servant-client
+                    , servant-docs
+
+-- my git libraries
+  build-depends:      abc-header-parser
