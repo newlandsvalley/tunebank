@@ -88,11 +88,11 @@ commentAPI = Proxy
 -- 'serve' comes from servant and hands you a WAI Application,
 -- which you can think of as an "abstract" web application,
 -- not yet a webserver.
-app1 :: Application
-app1 = serve userAPI userServer
+userApp :: Application
+userApp = serve userAPI userServer
 
-app2 :: Application
-app2 = serve abcTuneAPI tuneServer
+tuneApp :: Application
+tuneApp = serve abcTuneAPI tuneServer
 
-app3 :: Application
-app3 = serve commentAPI commentServer
+commentApp :: Application
+commentApp = serve commentAPI commentServer

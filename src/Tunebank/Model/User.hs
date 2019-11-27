@@ -21,3 +21,6 @@ data User = User
   } deriving (Eq, Show, Generic)
 
 instance ToJSON User
+
+-- needed for tests
+instance FromJSON User

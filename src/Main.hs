@@ -1,7 +1,7 @@
 module Main where
 
-import Tunebank.Server (app1, app2, app3)
+import Tunebank.Server (userApp, tuneApp, commentApp)
 import Network.Wai.Handler.Warp (run)
 
 main :: IO ()
-main = run 8081 app3
+main = run 8081 commentApp
