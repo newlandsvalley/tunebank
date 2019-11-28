@@ -5,10 +5,9 @@ module Tunebank.TestData.AbcMetadata
   ) where
 
 import Prelude ()
-import Prelude.Compat
+import Prelude.Compat hiding (lookup)
 
-import Data.Map (Map, fromList, elems)
-import qualified Data.Map as Map (lookup)
+import Data.Map (Map, fromList, elems, lookup)
 import Data.Text (Text, pack, unpack, toLower)
 import Data.Maybe (catMaybes, fromJust)
 import Data.Time.Calendar
@@ -37,7 +36,7 @@ buildMetadata genre abc =
         headerMap = buildHeaderMap headerList
         validated = toEither $ validateHeaders genre headerMap
         transcription :: Maybe Text
-        transcription = Map.lookup Transcription headerMap
+        transcription = lookup Transcription headerMap
         fromValidated :: V.ValidatedHeaders -> Maybe MetadataEntry
         fromValidated  (V.ValidatedHeaders title _ key rhythm )  =
           let
@@ -75,7 +74,7 @@ getTuneMetadata genre tuneId =
       let
         tracedTuneId = trace ("scandi tuneId: " <> (show tuneId)) tuneId
       in
-        Map.lookup tracedTuneId scandiMetadata
+        lookup tracedTuneId scandiMetadata
     _ ->
       Nothing
 

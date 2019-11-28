@@ -11,11 +11,20 @@ import qualified Data.Aeson.Parser
 import Data.Text (Text, pack, toLower)
 import Data.Maybe (Maybe)
 
+data Role =
+    Administrator
+  | NormalUser
+    deriving (Eq, Ord, Show, Generic)
+
+instance ToJSON Role
+instance FromJSON Role
+
 -- | A user
 data User = User
-  { name :: String
-  , email :: String
-  , role :: String
+  { name :: Text
+  , email :: Text
+  , password :: Text
+  , role :: Role
   , registration_date :: Day
   , registered :: Bool
   } deriving (Eq, Show, Generic)

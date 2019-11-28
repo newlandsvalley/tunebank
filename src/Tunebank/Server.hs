@@ -36,19 +36,28 @@ import Servant.Types.SourceT (source)
 import qualified Data.Aeson.Parser
 import qualified Text.Blaze.Html
 
-import Tunebank.TestData.User (users1)
+import Tunebank.TestData.User (getUsers, registerNewUser)
 import Tunebank.TestData.AbcMetadata (getTuneMetadata, getTuneList)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
-import Tunebank.ApiType (UserAPI1, AbcTuneAPI1, CommentAPI1)
+import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1)
 import Tunebank.Model.User (User(..))
+import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (CommentId, Comment)
 
 import Data.Genre (Genre)
 
-userServer :: Server UserAPI1
-userServer = return users1
+userServer :: Server UserAPI
+userServer = usersHandler :<|> newUserHandler
+   where
+     usersHandler :: Handler [User]
+     usersHandler =
+       return getUsers
+
+     newUserHandler :: UserReg.Submission -> Handler User
+     newUserHandler submission =
+       return $ registerNewUser submission
 
 tuneServer :: Server AbcTuneAPI1
 tuneServer = tuneHandler :<|> tuneListHandler
@@ -76,7 +85,7 @@ commentServer = commentHandler :<|> commentListHandler
     commentListHandler genre tuneId =
       return $ getTuneComments genre tuneId
 
-userAPI :: Proxy UserAPI1
+userAPI :: Proxy UserAPI
 userAPI = Proxy
 
 abcTuneAPI :: Proxy AbcTuneAPI1

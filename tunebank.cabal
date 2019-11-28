@@ -41,6 +41,7 @@ executable tunebank
                    , Tunebank.Server
                    , Tunebank.Model.Genre
                    , Tunebank.Model.User
+                   , Tunebank.Model.UserRegistration
                    , Tunebank.Model.AbcMetadata
                    , Tunebank.Model.TuneRef
                    , Tunebank.Model.Comment
