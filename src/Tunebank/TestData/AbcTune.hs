@@ -1,7 +1,8 @@
-module Tunebank.TestData.AbcMetadata
+module Tunebank.TestData.AbcTune
   (
     getTuneMetadata
   , getTuneList
+  , postNewTune
   ) where
 
 import Prelude ()
@@ -10,7 +11,12 @@ import Prelude.Compat hiding (lookup)
 import Data.Map (Map, fromList, elems, lookup)
 import Data.Text (Text, pack, unpack, toLower)
 import Data.Maybe (catMaybes, fromJust)
+import Data.Either (Either(..))
 import Data.Time.Calendar
+import Data.Tuple (fst)
+import Control.Error.Util (hush)
+
+import Data.ByteString.Lazy.Internal (ByteString, packChars)
 
 import Data.Validation (Validation(..), toEither)
 import Data.Abc.Validator (buildHeaderMap, validateHeaders)
@@ -18,35 +24,35 @@ import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
 import Data.Abc.Parser (abcParse, headersParse)
 import Data.Abc
 import Data.Genre
-import Data.Bifunctor (second)
+import Data.Bifunctor (second, bimap)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
+import qualified Tunebank.Model.NewTune as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 
 import Debug.Trace (trace)
 
 type MetadataEntry = (TuneRef.TuneId, AbcMetadata)
 
-buildMetadata :: Genre -> String -> Maybe MetadataEntry
-buildMetadata genre abc =
-  case (headersParse (pack abc)) of
+buildMetadata :: Genre -> Text -> Either String MetadataEntry
+buildMetadata genre abcText =
+  case (headersParse abcText) of
     Left err ->
-      Nothing
+      Left err
     Right headerList ->
       let
         headerMap = buildHeaderMap headerList
         validated = toEither $ validateHeaders genre headerMap
         transcription :: Maybe Text
         transcription = lookup Transcription headerMap
-        fromValidated :: V.ValidatedHeaders -> Maybe MetadataEntry
-        fromValidated  (V.ValidatedHeaders title _ key rhythm )  =
+        fromValid :: V.ValidatedHeaders -> MetadataEntry
+        fromValid  (V.ValidatedHeaders title _ key rhythm )  =
           let
-            -- k = (unpack $ toLower title) <> "-" <> (unpack $ toLower rhythm)
             k = TuneRef.tuneId title rhythm
             k' = trace ("map key: " <> show k) k
           in
-            Just $ (k', AbcMetadata title key rhythm (pack "administrator") transcription (pack abc))
+            (k', AbcMetadata title key rhythm (pack "administrator") transcription abcText)
       in
-        either (const Nothing) fromValidated validated
+        bimap concat fromValid validated
 
 buildTuneRef :: AbcMetadata -> TuneRef.TuneRef
 buildTuneRef metadata =
@@ -66,6 +72,17 @@ getTuneList genre =
     _ ->
       []
 
+postNewTune :: Genre -> S.Submission -> Either ByteString TuneRef.TuneId
+postNewTune genre submission =
+  let
+    theText = S.abc submission
+    tracedText = trace ("new tune text: " <> (show theText)) theText
+  in
+    case (buildMetadata genre $ S.abc submission) of
+      Left err ->
+        Left $ packChars err
+      Right metadata ->
+        Right (fst metadata)
 
 getTuneMetadata :: Genre -> TuneRef.TuneId -> Maybe AbcMetadata
 getTuneMetadata genre tuneId =
@@ -78,14 +95,13 @@ getTuneMetadata genre tuneId =
     _ ->
       Nothing
 
-
-scandiAbc :: [ String ]
+scandiAbc :: [ Text ]
 scandiAbc =
-  [augustsson, fastan, cig]
+  [(pack augustsson), (pack fastan), (pack cig)]
 
 scandiMetadata :: Map TuneRef.TuneId AbcMetadata
 scandiMetadata =
-  fromList $ catMaybes $ map (buildMetadata Scandi) scandiAbc
+  fromList $ catMaybes $ map (hush . buildMetadata Scandi) scandiAbc
 
 
 augustsson :: String

@@ -8,11 +8,12 @@ import Data.Time (UTCTime)
 import Servant.API
 import Tunebank.Model.User (User)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
+import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata)
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (Comment, CommentId)
-import Data.Genre (Genre)
 import Tunebank.Model.Genre ()
+import Data.Genre (Genre)
 
 
 type UserAPI = "tunebank" :> "users"
@@ -44,6 +45,12 @@ type AbcTuneAPI1 =
                      :> Capture "genre" Genre
                      :> "search"
                      :>  Get '[JSON] [TuneRef]
+
+     :<|> "tunebank" :> "genre"
+                     :> Capture "genre" Genre
+                     :> "tune"
+                     :> ReqBody '[FormUrlEncoded] NewTune.Submission
+                     :> Post '[JSON] TuneId
 
 type CommentAPI1 =
     "tunebank" :> "genre"

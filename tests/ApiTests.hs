@@ -21,6 +21,8 @@ import           Network.HTTP.Types
 import           Network.Wai
 import qualified Network.Wai.Handler.Warp         as Warp
 
+import           Control.Error.Util (hush)
+
 import           Servant
 import           Servant.Client
 import           Servant.Server

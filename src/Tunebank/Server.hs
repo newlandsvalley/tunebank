@@ -37,11 +37,12 @@ import qualified Data.Aeson.Parser
 import qualified Text.Blaze.Html
 
 import Tunebank.TestData.User (getUsers, registerNewUser)
-import Tunebank.TestData.AbcMetadata (getTuneMetadata, getTuneList)
+import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1)
 import Tunebank.Model.User (User(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
+import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (CommentId, Comment)
@@ -60,7 +61,7 @@ userServer = usersHandler :<|> newUserHandler
        return $ registerNewUser submission
 
 tuneServer :: Server AbcTuneAPI1
-tuneServer = tuneHandler :<|> tuneListHandler
+tuneServer = tuneHandler :<|> tuneListHandler :<|> newTuneHandler
    where
      tuneHandler :: Genre -> TuneId -> Handler AbcMetadata
      tuneHandler  genre tuneId =
@@ -71,6 +72,13 @@ tuneServer = tuneHandler :<|> tuneListHandler
      tuneListHandler :: Genre -> Handler [TuneRef]
      tuneListHandler genre =
        return $ getTuneList genre
+
+     newTuneHandler :: Genre -> NewTune.Submission -> Handler TuneId
+     newTuneHandler genre submission =
+       case postNewTune genre submission of
+         Left err ->
+             throwError (err400 {errBody = err})
+         Right tuneId -> return tuneId
 
 commentServer :: Server CommentAPI1
 commentServer = commentHandler :<|> commentListHandler
