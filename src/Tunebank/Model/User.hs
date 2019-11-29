@@ -33,3 +33,7 @@ instance ToJSON User
 
 -- needed for tests
 instance FromJSON User
+
+-- | A user we'll grab from the database when we authenticate someone
+newtype UserName = UserName { userName :: Text }
+  deriving (Eq, Show)

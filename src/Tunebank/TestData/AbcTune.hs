@@ -28,13 +28,14 @@ import Data.Bifunctor (second, bimap)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import qualified Tunebank.Model.NewTune as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
+import Tunebank.Model.User (UserName(..))
 
 import Debug.Trace (trace)
 
 type MetadataEntry = (TuneRef.TuneId, AbcMetadata)
 
-buildMetadata :: Genre -> Text -> Either String MetadataEntry
-buildMetadata genre abcText =
+buildMetadata :: UserName -> Genre -> Text -> Either String MetadataEntry
+buildMetadata (UserName submitter) genre abcText =
   case (headersParse abcText) of
     Left err ->
       Left err
@@ -50,7 +51,7 @@ buildMetadata genre abcText =
             k = TuneRef.tuneId title rhythm
             k' = trace ("map key: " <> show k) k
           in
-            (k', AbcMetadata title key rhythm (pack "administrator") transcription abcText)
+            (k', AbcMetadata title key rhythm submitter transcription abcText)
       in
         bimap concat fromValid validated
 
@@ -72,13 +73,13 @@ getTuneList genre =
     _ ->
       []
 
-postNewTune :: Genre -> S.Submission -> Either ByteString TuneRef.TuneId
-postNewTune genre submission =
+postNewTune :: UserName -> Genre -> S.Submission -> Either ByteString TuneRef.TuneId
+postNewTune userName genre submission =
   let
     theText = S.abc submission
     tracedText = trace ("new tune text: " <> (show theText)) theText
   in
-    case (buildMetadata genre $ S.abc submission) of
+    case (buildMetadata userName genre $ S.abc submission) of
       Left err ->
         Left $ packChars err
       Right metadata ->
@@ -101,7 +102,10 @@ scandiAbc =
 
 scandiMetadata :: Map TuneRef.TuneId AbcMetadata
 scandiMetadata =
-  fromList $ catMaybes $ map (hush . buildMetadata Scandi) scandiAbc
+  let
+    submitter = UserName (pack "Administrator")
+  in
+    fromList $ catMaybes $ map (hush . buildMetadata submitter Scandi) scandiAbc
 
 
 augustsson :: String

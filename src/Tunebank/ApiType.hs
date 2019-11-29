@@ -6,18 +6,18 @@ module Tunebank.ApiType where
 import Data.Text
 import Data.Time (UTCTime)
 import Servant.API
-import Tunebank.Model.User (User)
+import Tunebank.Model.User (User, UserName)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata)
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (Comment, CommentId)
 import Tunebank.Model.Genre ()
-import Tunebank.Authentication.BasicAuth (UserName)
 import Data.Genre (Genre)
 
 
 type UserAPI = "tunebank" :> "users"
+                          :> BasicAuth "tunebank-realm" UserName
                           :>  Get '[JSON] [User]
                 -- equivalent to 'GET /tunebank/users'
 
@@ -27,7 +27,8 @@ type UserAPI = "tunebank" :> "users"
                 -- equivalent to 'POST /tunebank/users' with a URL encoded from form
 
                :<|> "tunebank" :> "user" :> "check"
-                               :> BasicAuth "tunebank-realm" UserName :> Get '[PlainText] Text
+                               :> BasicAuth "tunebank-realm" UserName
+                               :> Get '[PlainText] Text
                 -- equivalent to GET /tunebank/check/user
 
             {- we don't want to expose user deletion
@@ -52,7 +53,8 @@ type AbcTuneAPI1 =
                      :> "search"
                      :>  Get '[JSON] [TuneRef]
 
-     :<|> "tunebank" :> "genre"
+     :<|> "tunebank" :> BasicAuth "tunebank-realm" UserName
+                     :> "genre"
                      :> Capture "genre" Genre
                      :> "tune"
                      :> ReqBody '[FormUrlEncoded] NewTune.Submission

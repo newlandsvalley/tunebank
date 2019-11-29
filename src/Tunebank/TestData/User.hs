@@ -4,12 +4,13 @@ module Tunebank.TestData.User
   , registerNewUser
   , validateUser
   , getUserRole
+  , hasAdminRole
   ) where
 
 import Prelude ()
 import Prelude.Compat hiding (lookup)
 
-import Tunebank.Model.User (User(..), Role(..))
+import Tunebank.Model.User (User(..), Role(..), UserName(..))
 import qualified Tunebank.Model.UserRegistration as Reg (Submission(..))
 import Data.Text (Text, pack, unpack)
 import Data.Time.Calendar
@@ -28,6 +29,7 @@ userEntries :: [UserEntry]
 userEntries =
   [ ( (pack "Isaac Newton"),  User (pack "Isaac Newton") (pack "isaac@newton.co.uk") (pack "hide me") NormalUser (fromGregorian 1683  3 1) True )
   , ( (pack "Albert Einstein"), User (pack "Albert Einstein") (pack "ae@mc2.org") (pack "hide me") Administrator  (fromGregorian 1905 12 1) True )
+  , ( (pack "Administrator"), User (pack "Administrator") (pack "john.watson@gmx.co.uk") (pack "password") Administrator  (fromGregorian 1905 12 1) True )
   ]
 
 getUsers :: [User]
@@ -43,13 +45,17 @@ validateUser name suppliedPassword =
   in
     maybe False (== suppliedPassword) mpwd
 
-getUserRole :: Text -> Maybe Role
-getUserRole name =
+hasAdminRole :: UserName -> Bool
+hasAdminRole userName =
+  maybe False (== Administrator) (getUserRole userName)
+
+getUserRole :: UserName -> Maybe Role
+getUserRole (UserName userName) =
   let
     userMap :: UserMap
     userMap = fromList userEntries
   in
-    fmap role $ lookup name userMap
+    fmap role $ lookup userName userMap
 
 
 registerNewUser :: Reg.Submission -> User

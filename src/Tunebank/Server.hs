@@ -37,26 +37,28 @@ import Servant.Types.SourceT (source)
 import qualified Data.Aeson.Parser
 import qualified Text.Blaze.Html
 
-import Tunebank.TestData.User (getUsers, registerNewUser)
+import Tunebank.TestData.User (getUsers, registerNewUser, hasAdminRole)
 import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1)
-import Tunebank.Model.User (User(..))
+import Tunebank.Model.User (User(..), UserName(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (CommentId, Comment)
-import Tunebank.Authentication.BasicAuth (UserName, basicAuthServerContext)
+import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 
 import Data.Genre (Genre)
 
 userServer :: Server UserAPI
 userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
    where
-     usersHandler :: Handler [User]
-     usersHandler =
-       return getUsers
+     usersHandler :: UserName -> Handler [User]
+     usersHandler userName =
+       if (hasAdminRole userName)
+         then throwError (err404 {errBody = "not authorized"})
+         else return getUsers
 
      newUserHandler :: UserReg.Submission -> Handler User
      newUserHandler submission =
@@ -82,9 +84,9 @@ tuneServer = tuneHandler :<|> tuneListHandler :<|> newTuneHandler
      tuneListHandler genre =
        return $ getTuneList genre
 
-     newTuneHandler :: Genre -> NewTune.Submission -> Handler TuneId
-     newTuneHandler genre submission =
-       case postNewTune genre submission of
+     newTuneHandler :: UserName -> Genre -> NewTune.Submission -> Handler TuneId
+     newTuneHandler userName genre submission =
+       case postNewTune userName genre submission of
          Left err ->
              throwError (err400 {errBody = err})
          Right tuneId -> return tuneId
@@ -120,7 +122,8 @@ userApp = serveWithContext
             userAPI basicAuthServerContext userServer
 
 tuneApp :: Application
-tuneApp = serve abcTuneAPI tuneServer
+tuneApp = serveWithContext
+            abcTuneAPI  basicAuthServerContext tuneServer
 
 commentApp :: Application
 commentApp = serve commentAPI commentServer

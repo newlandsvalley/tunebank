@@ -10,10 +10,8 @@
 {-# LANGUAGE UndecidableInstances  #-}
 
 module Tunebank.Authentication.BasicAuth
-   ( UserName(..)
-   , basicAuthServerContext
+   ( basicAuthServerContext
    ) where
-
 
 import Servant.API                      ((:<|>) ((:<|>)), (:>), BasicAuth,
                                             Get, JSON)
@@ -33,10 +31,8 @@ import Servant.Server.Experimental.Auth()
 import Tunebank.TestData.User (validateUser)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
+import Tunebank.Model.User (UserName(..))
 
--- | A user we'll grab from the database when we authenticate someone
-newtype UserName = UserName { userName :: Text }
-  deriving (Eq, Show)
 
 -- | We need to supply our handlers with the right Context. In this case,
 -- Basic Authentication requires a Context Entry with the 'BasicAuthCheck' value
