@@ -21,6 +21,7 @@ import Data.Attoparsec.ByteString
 import Data.ByteString (ByteString)
 import Data.List
 import Data.Maybe
+import Data.Text (Text)
 import Data.String.Conversions
 import Data.Time.Calendar
 import GHC.Generics
@@ -46,11 +47,12 @@ import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (CommentId, Comment)
+import Tunebank.Authentication.BasicAuth (UserName, basicAuthServerContext)
 
 import Data.Genre (Genre)
 
 userServer :: Server UserAPI
-userServer = usersHandler :<|> newUserHandler
+userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
    where
      usersHandler :: Handler [User]
      usersHandler =
@@ -59,6 +61,13 @@ userServer = usersHandler :<|> newUserHandler
      newUserHandler :: UserReg.Submission -> Handler User
      newUserHandler submission =
        return $ registerNewUser submission
+
+     -- check user is pre-checked with basic authentication
+     -- at the moment, the client doesn't really expect much from the response
+     -- once it passes authentication
+     checkUserHandler :: UserName -> Handler Text
+     checkUserHandler userName =
+         return "Y"
 
 tuneServer :: Server AbcTuneAPI1
 tuneServer = tuneHandler :<|> tuneListHandler :<|> newTuneHandler
@@ -104,9 +113,11 @@ commentAPI = Proxy
 
 -- 'serve' comes from servant and hands you a WAI Application,
 -- which you can think of as an "abstract" web application,
--- not yet a webserver.
+-- not yet a webserver.  userApp is the only one so far to
+-- be fitted with basic authentication
 userApp :: Application
-userApp = serve userAPI userServer
+userApp = serveWithContext
+            userAPI basicAuthServerContext userServer
 
 tuneApp :: Application
 tuneApp = serve abcTuneAPI tuneServer

@@ -47,6 +47,7 @@ executable tunebank
                    , Tunebank.Model.TuneRef
                    , Tunebank.Model.NewTune
                    , Tunebank.Model.Comment
+                   , Tunebank.Authentication.BasicAuth
                    , Tunebank.TestData.User
                    , Tunebank.TestData.AbcTune
                    , Tunebank.TestData.Comment

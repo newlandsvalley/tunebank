@@ -2,7 +2,8 @@ module Tunebank.TestData.User
   (
     getUsers
   , registerNewUser
-  , checkUser
+  , validateUser
+  , getUserRole
   ) where
 
 import Prelude ()
@@ -33,13 +34,23 @@ getUsers :: [User]
 getUsers =
   map snd userEntries
 
-checkUser :: Text -> Maybe Role
-checkUser name =
+validateUser :: Text -> Text -> Bool
+validateUser name suppliedPassword =
+  let
+    userMap :: UserMap
+    userMap = fromList userEntries
+    mpwd = fmap password $ lookup name userMap
+  in
+    maybe False (== suppliedPassword) mpwd
+
+getUserRole :: Text -> Maybe Role
+getUserRole name =
   let
     userMap :: UserMap
     userMap = fromList userEntries
   in
     fmap role $ lookup name userMap
+
 
 registerNewUser :: Reg.Submission -> User
 registerNewUser submission =

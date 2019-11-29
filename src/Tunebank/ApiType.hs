@@ -13,16 +13,22 @@ import Tunebank.Model.AbcMetadata (AbcMetadata)
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (Comment, CommentId)
 import Tunebank.Model.Genre ()
+import Tunebank.Authentication.BasicAuth (UserName)
 import Data.Genre (Genre)
 
 
 type UserAPI = "tunebank" :> "users"
                           :>  Get '[JSON] [User]
-               -- equivalent to 'GET /tunebank/users'
+                -- equivalent to 'GET /tunebank/users'
+
                :<|> "tunebank" :> "user"
                                :> ReqBody '[FormUrlEncoded] UserReg.Submission
                                :> Post '[JSON] User
-                -- equivalent to 'POST /tunebank/users' with a URL encoded form object
+                -- equivalent to 'POST /tunebank/users' with a URL encoded from form
+
+               :<|> "tunebank" :> "user" :> "check"
+                               :> BasicAuth "tunebank-realm" UserName :> Get '[PlainText] Text
+                -- equivalent to GET /tunebank/check/user
 
             {- we don't want to expose user deletion
                :<|> "tunebank" :> "user"
