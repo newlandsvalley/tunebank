@@ -39,6 +39,7 @@ getUsers =
 validateUser :: Text -> Text -> Bool
 validateUser name suppliedPassword =
   let
+    foo = trace ("validating user: " <> (show name)) name
     userMap :: UserMap
     userMap = fromList userEntries
     mpwd = fmap password $ lookup name userMap
@@ -52,6 +53,7 @@ hasAdminRole userName =
 getUserRole :: UserName -> Maybe Role
 getUserRole (UserName userName) =
   let
+    foo = trace ("get user role for: " <> (show userName)) userName
     userMap :: UserMap
     userMap = fromList userEntries
   in

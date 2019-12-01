@@ -56,7 +56,7 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
    where
      usersHandler :: UserName -> Handler [User]
      usersHandler userName =
-       if (hasAdminRole userName)
+       if (not $ hasAdminRole userName)
          then throwError (err404 {errBody = "not authorized"})
          else return getUsers
 

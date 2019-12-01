@@ -109,3 +109,4 @@ test-suite tests
                      , hspec
                      , hspec-wai
   default-language:    Haskell2010
+  other-modules:     ApiTests
