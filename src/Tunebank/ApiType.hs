@@ -6,7 +6,7 @@ module Tunebank.ApiType where
 import Data.Text
 import Data.Time (UTCTime)
 import Servant.API
-import Tunebank.Model.User (User, UserName)
+import Tunebank.Model.User (User, UserName, UserId)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata)
@@ -30,6 +30,12 @@ type UserAPI = "tunebank" :> "users"
                                :> BasicAuth "tunebank-realm" UserName
                                :> Get '[PlainText] Text
                 -- equivalent to GET /tunebank/check/user
+
+               :<|> "tunebank" :> "user" :> "validate"
+                               :> Capture "tune" UserId
+                               :> Get '[PlainText] Text
+               -- equivalent to GET /tunebank/user/validate/slug
+               -- validate a user registration
 
             {- we don't want to expose user deletion
                :<|> "tunebank" :> "user"

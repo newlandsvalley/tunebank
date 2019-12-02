@@ -3,10 +3,6 @@
 module Main where
 
 
-import Data.Text (pack)
-import Data.List (length)
-import Data.Bifunctor (second)
-import Data.Either (isLeft, isRight, fromRight)
 import Test.Hspec
 import ApiTests (apiSpec)
 

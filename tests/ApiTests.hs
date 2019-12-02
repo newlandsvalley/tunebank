@@ -18,32 +18,23 @@ import           Prelude ()
 import           Prelude.Compat
 
 import qualified Control.Concurrent               as C
-import           Control.Concurrent.MVar
 import           Control.Exception                (bracket)
-import           Control.Lens              hiding (Context)
-import           Data.Aeson
-import           Data.Aeson.Lens
-import qualified Data.HashMap.Strict              as HM
 import           Data.Text                        (Text, unpack)
-import           GHC.Generics
 import           Network.HTTP.Client       hiding (Proxy)
-import           Network.HTTP.Types
-import           Network.Wai
 import qualified Network.Wai.Handler.Warp         as Warp
 
-import           Control.Error.Util (hush)
+-- import           Control.Error.Util (hush)
 import           Data.Either (isLeft)
-import           Data.Bifunctor (first, second)
+import           Data.Bifunctor (second)
 
 import           Servant
 import           Servant.Client
-import           Servant.Server
-import           Servant.QuickCheck
-import           Servant.QuickCheck.Internal (serverDoesntSatisfy)
+-- import           Servant.QuickCheck
+-- import           Servant.QuickCheck.Internal (serverDoesntSatisfy)
 
 import           Test.Hspec
 import           Test.Hspec.Wai
-import           Test.Hspec.Wai.Matcher
+-- import           Test.Hspec.Wai.Matcher
 
 
 import Tunebank.ApiType (UserAPI)
@@ -58,18 +49,29 @@ admin :: BasicAuthData
 admin =
    BasicAuthData "Administrator" "password"
 
+normalUser :: BasicAuthData
+normalUser =
+  BasicAuthData "Fred" "password"
+
 badUser :: BasicAuthData
 badUser =
    BasicAuthData "Joe" "wibble"
 
+validateableUid :: UserId
+validateableUid =
+  UserId "FRED"
+
+{-}
 spec :: Spec
 spec = do
   apiSpec
+-}
 
 users :: BasicAuthData -> ClientM [User]
 newUser :: UReg.Submission -> ClientM User
 checkUser :: BasicAuthData -> ClientM Text
-users :<|> newUser :<|> checkUser = client (Proxy :: Proxy UserAPI)
+validateUser :: UserId -> ClientM Text
+users :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy UserAPI)
 
 
 withUserApp :: IO () -> IO ()
@@ -85,11 +87,9 @@ apiSpec :: Spec
 apiSpec =
   -- `around` will start our Server before the tests and turn it off after
   around_ withUserApp $ do
-    -- create a test client function
-    -- create a servant-client ClientEnv
-    baseUrl <- runIO $ parseBaseUrl "http://localhost:8888"
-    manager <- runIO $ newManager defaultManagerSettings
-    let clientEnv = mkClientEnv manager baseUrl
+    base <- runIO $ parseBaseUrl "http://localhost:8888"
+    mgr <- runIO $ newManager defaultManagerSettings
+    let clientEnv = mkClientEnv mgr base
 
     describe "POST user" $ do
       it "should create a user " $ do
@@ -100,7 +100,10 @@ apiSpec =
     describe "GET users" $ do
       it "should get a user list " $ do
         result <- runClientM  (users admin) clientEnv
-        (second length result) `shouldBe` (Right 3)
+        (second length result) `shouldBe` (Right 4)
+      it "should reject a non-admin (normal) user auth" $ do
+        result <- runClientM  (users normalUser) clientEnv
+        (isLeft result) `shouldBe` True
 
     describe "check user" $ do
       it "should accept a valid user " $ do
@@ -109,4 +112,12 @@ apiSpec =
       it "should reject an invalid user " $ do
         result <- runClientM  (checkUser badUser) clientEnv
         -- maybe we aught to analyse the error but this shoule be enough
+        (isLeft result) `shouldBe` True
+
+    describe "validate user registration" $ do
+      it "should accept a valid user id slub" $ do
+        result <- runClientM  (validateUser validateableUid) clientEnv
+        result `shouldBe` (Right "Y")
+      it "should reject an invalid user id slub" $ do
+        result <- runClientM  (validateUser (UserId "WIBBLE")) clientEnv
         (isLeft result) `shouldBe` True

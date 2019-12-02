@@ -37,11 +37,11 @@ import Servant.Types.SourceT (source)
 import qualified Data.Aeson.Parser
 import qualified Text.Blaze.Html
 
-import Tunebank.TestData.User (getUsers, registerNewUser, hasAdminRole)
+import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
 import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1)
-import Tunebank.Model.User (User(..), UserName(..))
+import Tunebank.Model.User (User(..), UserName(..), UserId(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
@@ -53,6 +53,7 @@ import Data.Genre (Genre)
 
 userServer :: Server UserAPI
 userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
+              :<|> validateUserRegistrationHandler
    where
      usersHandler :: UserName -> Handler [User]
      usersHandler userName =
@@ -69,7 +70,13 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
      -- once it passes authentication
      checkUserHandler :: UserName -> Handler Text
      checkUserHandler userName =
-         return "Y"
+        return "Y"
+
+     validateUserRegistrationHandler :: UserId -> Handler Text
+     validateUserRegistrationHandler userId =
+       if (not $ validateUserRegistration userId)
+         then throwError (err404 {errBody = "user registration not recognized"})
+         else return "Y"
 
 tuneServer :: Server AbcTuneAPI1
 tuneServer = tuneHandler :<|> tuneListHandler :<|> newTuneHandler
