@@ -17,12 +17,19 @@ newtype TuneId = TuneId Text
   deriving (Eq, Ord, Show, Generic)
 
 instance ToJSON TuneId
+instance FromJSON TuneId
+
 
 -- | this instance supports Capture text of type TuneId which are
 -- | all in one piece when found in URL components
 instance FromHttpApiData TuneId
   where
     parseUrlPiece t = Right $ TuneId t
+
+-- required for client testing
+instance ToHttpApiData TuneId
+  where
+    toUrlPiece (TuneId t) = t
 
 -- | but a TuneId is built by combining the title and rhythm
 tuneId :: Text -> Text -> TuneId
@@ -39,3 +46,5 @@ data TuneRef = TuneRef
    } deriving (Eq, Show, Generic)
 
 instance ToJSON TuneRef
+
+instance FromJSON TuneRef

@@ -40,7 +40,7 @@ import qualified Text.Blaze.Html
 import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
 import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
-import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1)
+import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
@@ -111,6 +111,10 @@ commentServer = commentHandler :<|> commentListHandler
     commentListHandler genre tuneId =
       return $ getTuneComments genre tuneId
 
+overallServer :: Server OverallAPI
+overallServer =
+  userServer :<|> tuneServer :<|> commentServer
+
 userAPI :: Proxy UserAPI
 userAPI = Proxy
 
@@ -119,6 +123,9 @@ abcTuneAPI = Proxy
 
 commentAPI :: Proxy CommentAPI1
 commentAPI = Proxy
+
+overallAPI :: Proxy OverallAPI
+overallAPI = Proxy
 
 -- 'serve' comes from servant and hands you a WAI Application,
 -- which you can think of as an "abstract" web application,

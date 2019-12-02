@@ -11,3 +11,8 @@ import Data.Bifunctor (first)
 instance FromHttpApiData Genre
   where
     parseUrlPiece text = first pack $ genreParse (unpack text)
+
+-- required for client testing
+instance ToHttpApiData Genre
+  where
+    toUrlPiece genre = pack (show genre)

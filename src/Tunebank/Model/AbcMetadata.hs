@@ -24,3 +24,5 @@ data AbcMetadata = AbcMetadata
 
 
 instance ToJSON AbcMetadata
+
+instance FromJSON AbcMetadata

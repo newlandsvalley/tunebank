@@ -11,7 +11,7 @@
      instead, just test the business logic by going directly to the handler
 -}
 
-module ApiTests (apiSpec) where
+module UserApiTests (userApiSpec) where
 
 
 import           Prelude ()
@@ -41,38 +41,13 @@ import Tunebank.ApiType (UserAPI)
 import Tunebank.Server (userApp)
 import Tunebank.Model.User
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
-
-sampleNewUser :: UReg.Submission
-sampleNewUser = UReg.Submission "fred" "fred@gmail.com" "pwd" "pwd" "http://localhost"
-
-admin :: BasicAuthData
-admin =
-   BasicAuthData "Administrator" "password"
-
-normalUser :: BasicAuthData
-normalUser =
-  BasicAuthData "Fred" "password"
-
-badUser :: BasicAuthData
-badUser =
-   BasicAuthData "Joe" "wibble"
-
-validateableUid :: UserId
-validateableUid =
-  UserId "FRED"
-
-{-}
-spec :: Spec
-spec = do
-  apiSpec
--}
+import TestData
 
 users :: BasicAuthData -> ClientM [User]
 newUser :: UReg.Submission -> ClientM User
 checkUser :: BasicAuthData -> ClientM Text
 validateUser :: UserId -> ClientM Text
 users :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy UserAPI)
-
 
 withUserApp :: IO () -> IO ()
 withUserApp action =
@@ -82,9 +57,8 @@ withUserApp action =
     C.killThread
     (const action)
 
-
-apiSpec :: Spec
-apiSpec =
+userApiSpec :: Spec
+userApiSpec =
   -- `around` will start our Server before the tests and turn it off after
   around_ withUserApp $ do
     base <- runIO $ parseBaseUrl "http://localhost:8888"
