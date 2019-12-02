@@ -27,11 +27,11 @@ import Tunebank.Server (tuneApp)
 import Tunebank.Model.User
 import Tunebank.Model.NewTune
 import Tunebank.Model.TuneRef
-import Tunebank.Model.AbcMetadata
+import qualified Tunebank.Model.AbcMetadata as Metadata
 import TestData
 
 
-tune ::  Genre -> TuneId -> ClientM AbcMetadata
+tune ::  Genre -> TuneId -> ClientM Metadata.AbcMetadata
 tunes ::  Genre ->  ClientM [TuneRef]
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
 tune :<|> tunes :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
@@ -52,7 +52,17 @@ tuneApiSpec =
     mgr <- runIO $ newManager defaultManagerSettings
     let clientEnv = mkClientEnv mgr base
 
+    describe "Get tune" $ do
+      it "should get a tune (without need for authorization)" $ do
+        result <- runClientM (tune Scandi augustssonId) clientEnv
+        (second Metadata.rhythm result) `shouldBe` (Right  "Engelska")
+
+    describe "Get tunes" $ do
+      it "should get all tunes from the genre" $ do
+        result <- runClientM (tunes Scandi) clientEnv
+        (second length result) `shouldBe` (Right 3)
+
     describe "POST tune" $ do
       it "should accept a new tune " $ do
-        result <- runClientM (newTune admin Scandi (Submission $ pack augustsson)) clientEnv
-        result `shouldBe` (Right $ TuneId "engelska efter albert augustsson-engelska")
+        result <- runClientM (newTune normalUser Scandi (Submission $ pack augustsson)) clientEnv
+        result `shouldBe` (Right augustssonId)
