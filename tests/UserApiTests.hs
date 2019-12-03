@@ -38,9 +38,11 @@ import           Test.Hspec.Wai
 
 
 import Tunebank.ApiType (UserAPI)
+import Tunebank.Types (AppCtx(..))
 import Tunebank.Server (userApp)
 import Tunebank.Model.User
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
+import Data.Configurator.Types (Config)
 import TestData
 
 users :: BasicAuthData -> ClientM [User]
@@ -49,18 +51,18 @@ checkUser :: BasicAuthData -> ClientM Text
 validateUser :: UserId -> ClientM Text
 users :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy UserAPI)
 
-withUserApp :: IO () -> IO ()
-withUserApp action =
+withUserApp :: Config -> IO () -> IO ()
+withUserApp config action =
   -- we can spin up a server in another thread and kill that thread when done
   -- in an exception-safe way
-  bracket (liftIO $ C.forkIO $ Warp.run 8888 userApp)
+  bracket (liftIO $ C.forkIO $ Warp.run 8888 (userApp $ AppCtx config))
     C.killThread
     (const action)
 
-userApiSpec :: Spec
-userApiSpec =
+userApiSpec :: Config -> Spec
+userApiSpec config =
   -- `around` will start our Server before the tests and turn it off after
-  around_ withUserApp $ do
+  around_ (withUserApp config) $ do
     base <- runIO $ parseBaseUrl "http://localhost:8888"
     mgr <- runIO $ newManager defaultManagerSettings
     let clientEnv = mkClientEnv mgr base

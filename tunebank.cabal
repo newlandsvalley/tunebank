@@ -19,6 +19,7 @@ executable tunebank
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , base-compat
+                     , configurator >= 0.3.0 && < 0.4.0
                      , bytestring
                      , containers
                      , transformers
@@ -39,6 +40,8 @@ executable tunebank
                      , wai
                      , warp
   other-modules:     Tunebank.ApiType
+                   , Tunebank.Types
+                   , Tunebank.Config
                    , Tunebank.Server
                    , Tunebank.Model.Genre
                    , Tunebank.Model.User
@@ -76,6 +79,7 @@ test-suite tests
                      , src
   build-depends:       base >= 4.7 && < 5
                      , base-compat
+                     , configurator >= 0.3.0 && < 0.4.0
                      , containers
                      , unordered-containers
                      , bytestring

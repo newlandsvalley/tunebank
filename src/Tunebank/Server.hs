@@ -11,7 +11,7 @@
 module Tunebank.Server where
 
 import Prelude ()
-import Prelude.Compat
+import Prelude.Compat hiding (lookup)
 
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -19,9 +19,9 @@ import Data.Aeson
 import Data.Aeson.Types
 import Data.Attoparsec.ByteString
 import Data.ByteString (ByteString)
-import Data.List
+import Data.List hiding (lookup)
 import Data.Maybe
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.String.Conversions
 import Data.Time.Calendar
 import GHC.Generics
@@ -36,6 +36,8 @@ import Text.Blaze.Html.Renderer.Utf8
 import Servant.Types.SourceT (source)
 import qualified Data.Aeson.Parser
 import qualified Text.Blaze.Html
+import Data.Configurator.Types (Config)
+import Data.Configurator
 
 import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
 import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune)
@@ -44,74 +46,95 @@ import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
+import Tunebank.Types
+import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (CommentId, Comment)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 
-import Data.Genre (Genre)
 
-userServer :: Server UserAPI
+import Data.Genre (Genre)
+import Debug.Trace (trace, traceM)
+
+{-}
+type AppM = ReaderT AppCtx Handler
+
+data AppCtx = AppCtx {
+  _getConfig :: Config
+  }
+-}
+
+userServer :: ServerT UserAPI AppM
 userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
               :<|> validateUserRegistrationHandler
    where
-     usersHandler :: UserName -> Handler [User]
-     usersHandler userName =
+     usersHandler :: UserName -> AppM [User]
+     usersHandler userName = do
        if (not $ hasAdminRole userName)
          then throwError (err404 {errBody = "not authorized"})
-         else return getUsers
+         else
+           pure getUsers
 
-     newUserHandler :: UserReg.Submission -> Handler User
-     newUserHandler submission =
-       return $ registerNewUser submission
+     newUserHandler :: UserReg.Submission -> AppM User
+     newUserHandler submission = do
+       pure $ registerNewUser submission
 
      -- check user is pre-checked with basic authentication
      -- at the moment, the client doesn't really expect much from the response
      -- once it passes authentication
-     checkUserHandler :: UserName -> Handler Text
+     checkUserHandler :: UserName -> AppM Text
      checkUserHandler userName =
-        return "Y"
+        pure  "Y"
 
-     validateUserRegistrationHandler :: UserId -> Handler Text
-     validateUserRegistrationHandler userId =
+     validateUserRegistrationHandler :: UserId -> AppM Text
+     validateUserRegistrationHandler userId = do
        if (not $ validateUserRegistration userId)
          then throwError (err404 {errBody = "user registration not recognized"})
-         else return "Y"
+         else
+           pure "Y"
 
-tuneServer :: Server AbcTuneAPI1
+tuneServer :: ServerT AbcTuneAPI1 AppM
 tuneServer = tuneHandler :<|> tuneListHandler :<|> newTuneHandler
-   where
-     tuneHandler :: Genre -> TuneId -> Handler AbcMetadata
-     tuneHandler  genre tuneId =
-       case getTuneMetadata genre tuneId of
-         Nothing -> throwError (err404 {errBody = "tune not found"})
-         Just metadata -> return metadata
+  where
+    tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
+    tuneHandler genre tuneId = do
+      -- let's just prove that lookup config works OK
+      mhost <- Config.lookupString "tunebank.server.host"
+      case (getTuneMetadata genre tuneId) of
+        Nothing -> do
+          throwError (err404 {errBody = "tune not found"})
+        Just metadata ->
+          pure metadata
 
-     tuneListHandler :: Genre -> Handler [TuneRef]
-     tuneListHandler genre =
-       return $ getTuneList genre
+    tuneListHandler :: Genre -> AppM [TuneRef]
+    tuneListHandler genre = do
+      pure $ getTuneList genre
 
-     newTuneHandler :: UserName -> Genre -> NewTune.Submission -> Handler TuneId
-     newTuneHandler userName genre submission =
-       case postNewTune userName genre submission of
-         Left err ->
-             throwError (err400 {errBody = err})
-         Right tuneId -> return tuneId
+    newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
+    newTuneHandler userName genre submission = do
+      case (postNewTune userName genre submission) of
+        Left err ->
+          throwError (err400 {errBody = err})
+        Right tuneId ->
+          pure tuneId
 
-commentServer :: Server CommentAPI1
+commentServer :: ServerT CommentAPI1 AppM
 commentServer = commentHandler :<|> commentListHandler
   where
-    commentHandler :: Genre -> TuneId -> CommentId -> Handler Comment
-    commentHandler  genre tuneId commentId =
-      case getTuneComment genre tuneId commentId of
-        Nothing -> throwError (err404 {errBody = "comment not found"})
-        Just comment -> return comment
+    commentHandler :: Genre -> TuneId -> CommentId -> AppM Comment
+    commentHandler  genre tuneId commentId = do
+      case (getTuneComment genre tuneId commentId) of
+        Nothing ->
+          throwError (err404 {errBody = "comment not found"})
+        Just comment ->
+          pure comment
 
-    commentListHandler :: Genre -> TuneId -> Handler [Comment]
+    commentListHandler :: Genre -> TuneId -> AppM [Comment]
     commentListHandler genre tuneId =
-      return $ getTuneComments genre tuneId
+      pure $ getTuneComments genre tuneId
 
-overallServer :: Server OverallAPI
+overallServer :: ServerT OverallAPI AppM
 overallServer =
   userServer :<|> tuneServer :<|> commentServer
 
@@ -131,13 +154,20 @@ overallAPI = Proxy
 -- which you can think of as an "abstract" web application,
 -- not yet a webserver.  userApp is the only one so far to
 -- be fitted with basic authentication
-userApp :: Application
-userApp = serveWithContext
-            userAPI basicAuthServerContext userServer
+userApp :: AppCtx -> Application
+userApp ctx =
+  serveWithContext userAPI basicAuthServerContext $
+    hoistServerWithContext userAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+      (flip runReaderT ctx) userServer
 
-tuneApp :: Application
-tuneApp = serveWithContext
-            abcTuneAPI  basicAuthServerContext tuneServer
+tuneApp :: AppCtx -> Application
+tuneApp ctx =
+  serveWithContext abcTuneAPI basicAuthServerContext $
+    hoistServerWithContext abcTuneAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+      (flip runReaderT ctx) tuneServer
 
-commentApp :: Application
-commentApp = serve commentAPI commentServer
+commentApp :: AppCtx -> Application
+commentApp ctx =
+  serveWithContext commentAPI basicAuthServerContext $
+    hoistServerWithContext commentAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+      (flip runReaderT ctx) commentServer

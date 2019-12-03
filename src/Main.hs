@@ -1,7 +1,11 @@
 module Main where
 
+import Tunebank.Types (AppCtx(..))
 import Tunebank.Server (userApp, tuneApp, commentApp)
 import Network.Wai.Handler.Warp (run)
+import Data.Configurator
 
 main :: IO ()
-main = run 8081 userApp
+main = do
+  config <- load [ Required "conf/tunebank.conf" ]
+  run 8081 (userApp $ AppCtx config)
