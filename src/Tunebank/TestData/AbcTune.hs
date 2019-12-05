@@ -3,11 +3,13 @@ module Tunebank.TestData.AbcTune
     getTuneMetadata
   , getTuneList
   , postNewTune
+  , getTunePdf
   ) where
 
 import Prelude ()
 import Prelude.Compat hiding (lookup)
 
+import System.IO (FilePath)
 import Data.Map (Map, fromList, elems, lookup)
 import Data.Text (Text, pack, unpack, toLower)
 import Data.Maybe (catMaybes, fromJust)
@@ -28,7 +30,9 @@ import Data.Bifunctor (second, bimap)
 import Tunebank.Model.AbcMetadata (AbcMetadata(..))
 import qualified Tunebank.Model.NewTune as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
+import Tunebank.Types
 import Tunebank.Model.User (UserName(..))
+import Tunebank.TypeConversion.Transcode (transcodeTo)
 
 import Debug.Trace (trace)
 
@@ -95,6 +99,14 @@ getTuneMetadata genre tuneId =
         lookup tracedTuneId scandiMetadata
     _ ->
       Nothing
+
+getTunePdf :: Genre -> TuneRef.TuneId -> AppM (Either ByteString ByteString)
+getTunePdf genre tuneId =
+  case (getTuneMetadata genre tuneId) of
+    Nothing ->
+      pure $ Left $ packChars ("tune name not recognized")
+    Just metadata ->
+      transcodeTo Pdf genre metadata
 
 scandiAbc :: [ Text ]
 scandiAbc =

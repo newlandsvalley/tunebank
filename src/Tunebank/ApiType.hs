@@ -5,10 +5,12 @@ module Tunebank.ApiType where
 
 import Data.Text
 import Data.Time (UTCTime)
+import Data.ByteString.Lazy (ByteString)
 import Servant.API
 import Tunebank.Model.User (User, UserName, UserId)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
+import Tunebank.Types (PDF)
 import Tunebank.Model.AbcMetadata (AbcMetadata)
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (Comment, CommentId)
@@ -53,6 +55,14 @@ type AbcTuneAPI1 =
                 :> "tune"
                 :> Capture "tune" TuneId
                 :> Get '[JSON] AbcMetadata
+
+     :<|> "tunebank" :> "genre"
+                     :> Capture "genre" Genre
+                     :> "tune"
+                     :> Capture "tune" TuneId
+                     :> "pdf"
+                     :> Get '[PDF] ByteString
+
 
      :<|> "tunebank" :> "genre"
                      :> Capture "genre" Genre

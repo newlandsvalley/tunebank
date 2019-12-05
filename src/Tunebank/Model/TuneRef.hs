@@ -9,8 +9,9 @@ import Data.Aeson
 import Data.Aeson.Types
 import qualified Data.Aeson.Parser
 import Web.Internal.HttpApiData
-import Data.Text (Text, pack, toLower)
+import Data.Text (Text, pack, unpack, toLower)
 import Data.Either (Either(..))
+import Data.Char (isAlphaNum)
 
 -- | the unique ID of a tune (within a genre)
 newtype TuneId = TuneId Text
@@ -35,6 +36,10 @@ instance ToHttpApiData TuneId
 tuneId :: Text -> Text -> TuneId
 tuneId title rhythm =
   TuneId ((toLower title) <> (pack "-") <> (toLower rhythm))
+
+safeFileName :: TuneId -> String
+safeFileName (TuneId t) =
+  filter isAlphaNum (unpack t)
 
 -- | this is data returned within tune lists
 data TuneRef = TuneRef

@@ -8,4 +8,4 @@ import Data.Configurator
 main :: IO ()
 main = do
   config <- load [ Required "conf/tunebank.conf" ]
-  run 8081 (userApp $ AppCtx config)
+  run 8081 (tuneApp $ AppCtx config)

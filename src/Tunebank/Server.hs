@@ -18,7 +18,7 @@ import Control.Monad.Reader
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Attoparsec.ByteString
-import Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy as Lazy (ByteString)
 import Data.List hiding (lookup)
 import Data.Maybe
 import Data.Text (Text, pack)
@@ -40,7 +40,7 @@ import Data.Configurator.Types (Config)
 import Data.Configurator
 
 import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
-import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune)
+import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune, getTunePdf)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..))
@@ -95,17 +95,26 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
            pure "Y"
 
 tuneServer :: ServerT AbcTuneAPI1 AppM
-tuneServer = tuneHandler :<|> tuneListHandler :<|> newTuneHandler
+tuneServer = tuneHandler :<|> tunePdfHandler :<|> tuneListHandler :<|> newTuneHandler
   where
     tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
     tuneHandler genre tuneId = do
       -- let's just prove that lookup config works OK
-      mhost <- Config.lookupString "tunebank.server.host"
+      sorcePath <- Config.transcodeSourcePath genre
       case (getTuneMetadata genre tuneId) of
         Nothing -> do
           throwError (err404 {errBody = "tune not found"})
         Just metadata ->
           pure metadata
+
+    tunePdfHandler :: Genre -> TuneId -> AppM Lazy.ByteString
+    tunePdfHandler genre tuneId = do
+      tunePdf <- getTunePdf genre tuneId
+      case tunePdf of
+        Left err ->
+          throwError (err400 {errBody = err})
+        Right bytes ->
+          pure bytes
 
     tuneListHandler :: Genre -> AppM [TuneRef]
     tuneListHandler genre = do

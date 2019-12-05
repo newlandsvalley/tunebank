@@ -22,8 +22,10 @@ import Servant.Client
 import Test.Hspec
 import Test.Hspec.Wai
 
+import Data.ByteString.Lazy (ByteString)
+
 import Tunebank.ApiType (AbcTuneAPI1)
-import Tunebank.Types (AppCtx(..))
+import Tunebank.Types
 import Tunebank.Server (tuneApp)
 import Tunebank.Model.User
 import Tunebank.Model.NewTune
@@ -34,9 +36,10 @@ import TestData
 
 
 tune ::  Genre -> TuneId -> ClientM Metadata.AbcMetadata
+tunePdf ::  Genre -> TuneId -> ClientM ByteString
 tunes ::  Genre ->  ClientM [TuneRef]
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
-tune :<|> tunes :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
+tune :<|> tunePdf :<|> tunes :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =
