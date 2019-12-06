@@ -3,7 +3,7 @@ module Tunebank.TestData.AbcTune
     getTuneMetadata
   , getTuneList
   , postNewTune
-  , getTunePdf
+  , getTuneBinary
   ) where
 
 import Prelude ()
@@ -100,13 +100,13 @@ getTuneMetadata genre tuneId =
     _ ->
       Nothing
 
-getTunePdf :: Genre -> TuneRef.TuneId -> AppM (Either ByteString ByteString)
-getTunePdf genre tuneId =
+getTuneBinary :: Transcodable -> Genre -> TuneRef.TuneId -> AppM (Either ByteString ByteString)
+getTuneBinary binaryFormat genre tuneId =
   case (getTuneMetadata genre tuneId) of
     Nothing ->
       pure $ Left $ packChars ("tune name not recognized")
     Just metadata ->
-      transcodeTo Pdf genre metadata
+      transcodeTo binaryFormat genre metadata
 
 scandiAbc :: [ Text ]
 scandiAbc =
@@ -146,8 +146,8 @@ fastan =
   <> "L: 1/16\r\n"
   <> "| (3A4F4G4 A2B2 | (3:4:3c2d2B4c4 A2F2 | (3F4E4D4 B,2D2 | EA3 A8- |\r\n"
   <> "| (3A4F4G4 A2B2 | (3:4:3c2d2B4c4 A2F2 | (3F4E4D4 G2A2 | AF3 F8- |\r\n"
-  <> "| (3:5:3F4B4cBA2 B2d2 | ge3 c4 A4- | (3:5:3A4B4cBA2 B2d2 | de3 c8- |\r\n"
-  <> "| (3:5:3F4B4cBA2 B2d2 | (3:4:3g2a2f4g4 e4- | (3:c4B4A4 F2G2 | ef3 F8 |\r\n"
+  <> "| (3:5:3F4B4cBA2 B2d2 | ge3 c4 A4- | (3:5:3A4B4cBA2 B2d2 | de3 c8 |\r\n"
+  <> "| (3:5:3F4B4cBA2 B2d2 | (3:4:3g2a2f4g4 e4 | (3:c4B4A4 F2G2 | ef3 F8 |\r\n"
 
 cig :: String
 cig =

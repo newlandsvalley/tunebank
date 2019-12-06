@@ -40,7 +40,7 @@ import Data.Configurator.Types (Config)
 import Data.Configurator
 
 import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
-import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune, getTunePdf)
+import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune, getTuneBinary)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..))
@@ -95,7 +95,9 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
            pure "Y"
 
 tuneServer :: ServerT AbcTuneAPI1 AppM
-tuneServer = tuneHandler :<|> tunePdfHandler :<|> tuneListHandler :<|> newTuneHandler
+tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
+              :<|> tunePngHandler :<|> tuneMidiHandler
+              :<|> tuneListHandler :<|> newTuneHandler
   where
     tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
     tuneHandler genre tuneId = do
@@ -108,13 +110,20 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tuneListHandler :<|> newTuneHa
           pure metadata
 
     tunePdfHandler :: Genre -> TuneId -> AppM Lazy.ByteString
-    tunePdfHandler genre tuneId = do
-      tunePdf <- getTunePdf genre tuneId
-      case tunePdf of
-        Left err ->
-          throwError (err400 {errBody = err})
-        Right bytes ->
-          pure bytes
+    tunePdfHandler genre tuneId =
+      binaryHandler Pdf genre tuneId
+
+    tunePostScriptHandler :: Genre -> TuneId -> AppM Lazy.ByteString
+    tunePostScriptHandler genre tuneId =
+      binaryHandler PostScript genre tuneId
+
+    tunePngHandler :: Genre -> TuneId -> AppM Lazy.ByteString
+    tunePngHandler genre tuneId =
+      binaryHandler Png genre tuneId
+
+    tuneMidiHandler :: Genre -> TuneId -> AppM Lazy.ByteString
+    tuneMidiHandler genre tuneId =
+      binaryHandler Midi genre tuneId
 
     tuneListHandler :: Genre -> AppM [TuneRef]
     tuneListHandler genre = do
@@ -127,6 +136,16 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tuneListHandler :<|> newTuneHa
           throwError (err400 {errBody = err})
         Right tuneId ->
           pure tuneId
+
+-- | generic handler for all binary tune formats
+binaryHandler :: Transcodable -> Genre -> TuneId -> AppM Lazy.ByteString
+binaryHandler binaryFormat genre tuneId = do
+  tuneBinary <- getTuneBinary binaryFormat genre tuneId
+  case tuneBinary of
+    Left err ->
+      throwError (err400 {errBody = err})
+    Right bytes ->
+      pure bytes
 
 commentServer :: ServerT CommentAPI1 AppM
 commentServer = commentHandler :<|> commentListHandler

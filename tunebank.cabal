@@ -21,7 +21,9 @@ executable tunebank
                      , base-compat
                      , configurator >= 0.3.0 && < 0.4.0
                      , bytestring
+                     , strict-io >= 0.2.2
                      , containers
+                     , process
                      , transformers
                      , servant
                      , aeson
@@ -84,7 +86,9 @@ test-suite tests
                      , containers
                      , unordered-containers
                      , bytestring
+                     , strict-io >= 0.2.2
                      , containers
+                     , process
                      , directory
                      , string-conversions
                      , transformers

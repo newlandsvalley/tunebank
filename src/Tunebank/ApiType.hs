@@ -10,7 +10,7 @@ import Servant.API
 import Tunebank.Model.User (User, UserName, UserId)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
-import Tunebank.Types (PDF)
+import Tunebank.Types (PDF, PNG, PostScript, MIDI)
 import Tunebank.Model.AbcMetadata (AbcMetadata)
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (Comment, CommentId)
@@ -63,6 +63,26 @@ type AbcTuneAPI1 =
                      :> "pdf"
                      :> Get '[PDF] ByteString
 
+     :<|> "tunebank" :> "genre"
+                     :> Capture "genre" Genre
+                     :> "tune"
+                     :> Capture "tune" TuneId
+                     :> "ps"
+                     :> Get '[PostScript] ByteString
+
+     :<|> "tunebank" :> "genre"
+                     :> Capture "genre" Genre
+                     :> "tune"
+                     :> Capture "tune" TuneId
+                     :> "png"
+                     :> Get '[PNG] ByteString
+
+     :<|> "tunebank" :> "genre"
+                     :> Capture "genre" Genre
+                     :> "tune"
+                     :> Capture "tune" TuneId
+                     :> "midi"
+                     :> Get '[MIDI] ByteString
 
      :<|> "tunebank" :> "genre"
                      :> Capture "genre" Genre

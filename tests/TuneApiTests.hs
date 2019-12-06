@@ -36,10 +36,14 @@ import TestData
 
 
 tune ::  Genre -> TuneId -> ClientM Metadata.AbcMetadata
-tunePdf ::  Genre -> TuneId -> ClientM ByteString
+tunePdf  ::  Genre -> TuneId -> ClientM ByteString
+tunePs   ::  Genre -> TuneId -> ClientM ByteString
+tunePng  ::  Genre -> TuneId -> ClientM ByteString
+tuneMidi ::  Genre -> TuneId -> ClientM ByteString
 tunes ::  Genre ->  ClientM [TuneRef]
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
-tune :<|> tunePdf :<|> tunes :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
+tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi 
+      :<|> tunes :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =

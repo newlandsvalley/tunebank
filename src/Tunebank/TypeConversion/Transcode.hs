@@ -8,66 +8,115 @@ module Tunebank.TypeConversion.Transcode
 -- | implemented by calling out to command line services
 -- | which work through the file cache
 
+-- | ByteStrings required by Servant are Lazy.  However, Lazy File IO is bug-ridden
+-- | and so we use strict ByteStrings in file IO and convert using fromStrict
+-- | wherever necessary
+
 
 import Prelude ()
 import Prelude.Compat hiding (readFile)
 
 import Control.Exception
 import System.IO hiding (readFile, hGetContents)
+import System.Exit (ExitCode(..))
+import System.Directory (doesFileExist)
+import System.Process
 import Tunebank.Types
 import Tunebank.Model.AbcMetadata
 import Control.Monad.Reader
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Data.Map (Map, fromList, elems, lookup)
-import Data.ByteString.Lazy (ByteString, readFile, hGetContents)
+import qualified Data.ByteString as Strict (ByteString, readFile, hGetContents)
+import Data.ByteString.Lazy (ByteString, empty, fromStrict)
 import Data.ByteString.Lazy.Internal (packChars)
 import Data.Genre (Genre(..))
-import Data.Text (Text)
+import Data.Text (Text, unpack)
+import Data.Maybe (Maybe, maybe)
 import Data.Bifunctor (first)
 import Tunebank.Config
 
-data TranscodeParams = TranscodeParams
-  {
-    scriptName :: String
-  , fileExtension :: String
-  }
+import Debug.Trace (traceM)
 
-type MimeEntry = (Transcodable, TranscodeParams)
-type MimeTargets = Map Transcodable TranscodeParams
-
-mimeEntries :: MimeTargets
-mimeEntries =
-  fromList
-    [ (Pdf, TranscodeParams "abc2pdf.sh" "pdf")
-    , (PostScript, TranscodeParams "abc2ps.sh" "ps")
-    , (Png, TranscodeParams "abc2png.sh" "png")
-    , (Midi, TranscodeParams "abc2midi.sh" "midi")
-    ]
 
 transcodeTo :: Transcodable -> Genre -> AbcMetadata -> AppM (Either ByteString ByteString)
 transcodeTo target genre abcMetadata = do
   let
     fileBase = TuneRef.safeFileName $ TuneRef.tuneId (title abcMetadata) (rhythm abcMetadata)
-    (script, fileExtension) =
+    (scriptName, fileExtension) =
       case target of
         Pdf -> ("abc2pdf.sh", "pdf")
         PostScript -> ("abc2ps.sh", "ps")
         Png -> ("abc2png.sh", "png")
         Midi -> ("abc2midi.sh", "midi")
-  -- pure $ Left "not yet implemented"
-  readTargetFile genre fileBase fileExtension
+  targetFilePath <- buildTargetFilePath genre fileBase fileExtension
+  exists <- liftIO $ doesFileExist targetFilePath
+  if exists
+    then readTargetFile targetFilePath
+    -- else pure $ Left "well, we'll need to transcode"
+    else do
+      sourceDir <- transcodeSourcePath genre
+      targetDir <- transcodeTargetPath genre
+      scriptDir <- transcodeScriptPath
+      sourceFilePath <- buildSourceFilePath genre fileBase
+      let
+        script = scriptDir <> "/" <> scriptName
+      _ <- liftIO $ writeTextFile sourceFilePath (abc abcMetadata)
+      transcodeError <- liftIO $ runTranscodeScript script sourceDir targetDir fileBase
+      case transcodeError of
+        Just error -> pure $ Left (fromStrict error)
+        Nothing -> do
+          readTargetFile targetFilePath
 
-readTargetFile :: Genre -> String -> String -> AppM (Either ByteString ByteString)
-readTargetFile genre fileBase fileExtension = do
-  basePath <- transcodeTargetPath genre
-  let
-    filePath = basePath <> "/" <> fileBase <> "." <> fileExtension 
+
+runTranscodeScript :: String -> String -> String -> String -> IO (Maybe Strict.ByteString)
+runTranscodeScript script sourcePath targetPath name = do
+  (_, hout, herr, hp) <-
+      createProcess (proc script [sourcePath, targetPath, name]){ std_err = CreatePipe }
+  exitCode <- waitForProcess hp
+  traceM ("transcode exit code: " <> (show exitCode))
+  case exitCode of
+    ExitSuccess -> do
+      let
+        _ = fmap hClose herr
+      pure Nothing
+    _ -> do
+      let
+        sErr = sequence $ fmap Strict.hGetContents herr
+        _ = fmap hClose herr
+      sErr
+
+readTargetFile :: FilePath -> AppM (Either ByteString ByteString)
+readTargetFile filePath = do
   result <- liftIO $ readBinaryFile filePath
   pure $ first (const $ packChars $ "not found: " <> filePath) result
 
+buildSourceFilePath :: Genre -> String -> AppM FilePath
+buildSourceFilePath genre fileBase  = do
+  basePath <- transcodeSourcePath genre
+  pure $ basePath <> "/" <> fileBase <> "." <> "abc"
+
+buildTargetFilePath :: Genre -> String -> String -> AppM FilePath
+buildTargetFilePath genre fileBase fileExtension = do
+  basePath <- transcodeTargetPath genre
+  pure $ basePath <> "/" <> fileBase <> "." <> fileExtension
+
+-- | read a binary file which has been created as the result of transcoding
 readBinaryFile :: FilePath -> IO (Either IOException ByteString)
 readBinaryFile filePath = do
   result <- try $ do
     handle <- openBinaryFile filePath ReadMode
-    hGetContents handle
+    contents <- Strict.hGetContents handle
+    --  _ <- hClose handle
+    pure $ fromStrict contents
+  pure result
+
+-- | write the ABC as a text file as a source for the transcoding
+writeTextFile :: FilePath -> Text -> IO (Either IOException ())
+writeTextFile filePath abc = do
+  let
+    contents = unpack abc
+  result <- try $ do
+    handle <- openFile filePath WriteMode
+    _ <- hPutStr handle contents
+    hClose handle
   pure result
