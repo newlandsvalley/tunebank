@@ -1,6 +1,9 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Tunebank.TestData.AbcTune
   (
     getTuneMetadata
+  , search
   , getTuneList
   , postNewTune
   , getTuneBinary
@@ -27,7 +30,7 @@ import Data.Abc.Parser (abcParse, headersParse)
 import Data.Abc
 import Data.Genre
 import Data.Bifunctor (second, bimap)
-import Tunebank.Model.AbcMetadata (AbcMetadata(..))
+import Tunebank.Model.AbcMetadata (AbcMetadata(..), Title(..), Rhythm(..), TuneKey(..))
 import qualified Tunebank.Model.NewTune as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Tunebank.Types
@@ -53,7 +56,7 @@ buildMetadata (UserName submitter) genre abcText =
         fromValid  (V.ValidatedHeaders title _ key rhythm )  =
           let
             k = TuneRef.tuneId title rhythm
-            k' = trace ("map key: " <> show k) k
+            !k' = trace ("map key: " <> show k) k
           in
             (k', AbcMetadata title key rhythm submitter transcription abcText)
       in
@@ -68,6 +71,16 @@ buildTuneRef metadata =
     , TuneRef.abc = abc metadata
     , TuneRef.ts = (fromGregorian 1683  3 1)
     }
+
+-- at the moment, we don't properly apply search parameters - just log them
+search :: Genre -> Maybe Title -> Maybe Rhythm -> Maybe TuneKey -> [TuneRef.TuneRef]
+search genre mTitle mRhythm mKey =
+  let
+    !p1 = trace ("title param: " <> show mTitle) mTitle
+    !p2 = trace ("rhythm param: " <> show mRhythm) mRhythm
+    !p3 = trace ("key param: " <> show mKey) mKey
+  in
+    getTuneList genre
 
 getTuneList :: Genre -> [TuneRef.TuneRef]
 getTuneList genre =

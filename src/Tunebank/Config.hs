@@ -1,5 +1,6 @@
 module Tunebank.Config
-  ( transcodeScriptPath
+  ( getPort
+  , transcodeScriptPath
   , transcodeSourcePath
   , transcodeTargetPath
   ) where
@@ -59,3 +60,7 @@ lookupInt item = do
   val <- liftIO $ (require config (pack item) :: IO Int)
   traceM ("looking up int: " <> item <> " - value: " <> show val)
   pure val
+
+getPort :: Config -> IO Int
+getPort config =
+  (require config (pack "tunebank.server.port") :: IO Int)

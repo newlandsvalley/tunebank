@@ -40,7 +40,7 @@ import Data.Configurator.Types (Config)
 import Data.Configurator
 
 import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
-import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, postNewTune, getTuneBinary)
+import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, search, postNewTune, getTuneBinary)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..))
@@ -48,7 +48,7 @@ import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Types
 import qualified Tunebank.Config as Config
-import Tunebank.Model.AbcMetadata (AbcMetadata(..))
+import Tunebank.Model.AbcMetadata (AbcMetadata, Title, Rhythm, TuneKey)
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (CommentId, Comment)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
@@ -125,9 +125,10 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
     tuneMidiHandler genre tuneId =
       binaryHandler Midi genre tuneId
 
-    tuneListHandler :: Genre -> AppM [TuneRef]
-    tuneListHandler genre = do
-      pure $ getTuneList genre
+    tuneListHandler :: Genre -> Maybe Title -> Maybe Rhythm -> Maybe TuneKey-> AppM [TuneRef]
+    tuneListHandler genre mTitle mRhythm mKey = do
+      -- pure $ getTuneList genre
+      pure $ search genre mTitle mRhythm mKey
 
     newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do
