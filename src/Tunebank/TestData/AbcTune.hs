@@ -27,10 +27,10 @@ import Data.Validation (Validation(..), toEither)
 import Data.Abc.Validator (buildHeaderMap, validateHeaders)
 import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
 import Data.Abc.Parser (abcParse, headersParse)
-import Data.Abc
+import qualified Data.Abc as ABC
 import Data.Genre
 import Data.Bifunctor (second, bimap)
-import Tunebank.Model.AbcMetadata (AbcMetadata(..), Title(..), Rhythm(..), TuneKey(..))
+import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.NewTune as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Tunebank.Types
@@ -51,14 +51,18 @@ buildMetadata (UserName submitter) genre abcText =
         headerMap = buildHeaderMap headerList
         validated = toEither $ validateHeaders genre headerMap
         transcription :: Maybe Text
-        transcription = lookup Transcription headerMap
+        source = lookup ABC.Source headerMap
+        origin = lookup ABC.Origin headerMap
+        composer = lookup ABC.Composer headerMap
+        transcription = lookup ABC.Transcription headerMap
         fromValid :: V.ValidatedHeaders -> MetadataEntry
         fromValid  (V.ValidatedHeaders title _ key rhythm )  =
           let
             k = TuneRef.tuneId title rhythm
             !k' = trace ("map key: " <> show k) k
           in
-            (k', AbcMetadata title key rhythm submitter transcription abcText)
+            (k', AbcMetadata title key rhythm submitter
+                   source origin composer transcription abcText)
       in
         bimap concat fromValid validated
 
@@ -73,12 +77,26 @@ buildTuneRef metadata =
     }
 
 -- at the moment, we don't properly apply search parameters - just log them
-search :: Genre -> Maybe Title -> Maybe Rhythm -> Maybe TuneKey -> [TuneRef.TuneRef]
-search genre mTitle mRhythm mKey =
+search :: Genre
+       -> Maybe Title
+       -> Maybe Rhythm
+       -> Maybe TuneKey
+       -> Maybe Source
+       -> Maybe Origin
+       -> Maybe Composer
+       -> Maybe Transcriber
+       -> [TuneRef.TuneRef]
+search genre mTitle mRhythm mKey mSource mOrigin
+         mComposer mTranscriber  =
   let
+    -- we'll get rid of this logging quite soon
     !p1 = trace ("title param: " <> show mTitle) mTitle
     !p2 = trace ("rhythm param: " <> show mRhythm) mRhythm
     !p3 = trace ("key param: " <> show mKey) mKey
+    !p4 = trace ("source param: " <> show mSource) mSource
+    !p5 = trace ("origin param: " <> show mOrigin) mOrigin
+    !p6 = trace ("composer param: " <> show mComposer) mComposer
+    !p7 = trace ("transcriber param: " <> show mTranscriber) mTranscriber
   in
     getTuneList genre
 
