@@ -133,11 +133,12 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
                     -> Maybe Origin
                     -> Maybe Composer
                     -> Maybe Transcriber
+                    -> Maybe SortKey
                     -> AppM [TuneRef]
     tuneListHandler genre mTitle mRhythm mKey mSource mOrigin
-                     mComposer mTranscriber = do
+                     mComposer mTranscriber mSortKey = do
       -- pure $ getTuneList genre
-      pure $ search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
+      pure $ search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber mSortKey
 
     newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do

@@ -85,9 +85,10 @@ search :: Genre
        -> Maybe Origin
        -> Maybe Composer
        -> Maybe Transcriber
+       -> Maybe SortKey
        -> [TuneRef.TuneRef]
 search genre mTitle mRhythm mKey mSource mOrigin
-         mComposer mTranscriber  =
+         mComposer mTranscriber mSortKey =
   let
     -- we'll get rid of this logging quite soon
     !p1 = trace ("title param: " <> show mTitle) mTitle
@@ -97,6 +98,7 @@ search genre mTitle mRhythm mKey mSource mOrigin
     !p5 = trace ("origin param: " <> show mOrigin) mOrigin
     !p6 = trace ("composer param: " <> show mComposer) mComposer
     !p7 = trace ("transcriber param: " <> show mTranscriber) mTranscriber
+    !p8 = trace ("sort param: " <> show mSortKey) mSortKey
   in
     getTuneList genre
 

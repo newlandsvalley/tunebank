@@ -1,5 +1,6 @@
 
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- | ABC Metadata for a tune and the related query parameters for selecting it
 
@@ -132,7 +133,20 @@ instance ToHttpApiData Transcriber
     toUrlPiece (Transcriber v) = v
 
 -- | Sort Criteria
-data Sort
+data SortKey
   = Alpha
   | Date
-    deriving (Eq, Ord, Show, Enum)    
+    deriving (Eq, Ord, Show, Enum)
+
+instance FromHttpApiData SortKey
+  where
+    parseUrlPiece s =
+      case s of
+        "date" -> Right Date
+        _ -> Right Alpha
+
+-- required for client testing
+instance ToHttpApiData SortKey
+  where
+    toUrlPiece Date = "date"
+    toUrlPiece Alpha = "alpha"

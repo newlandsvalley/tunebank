@@ -11,7 +11,7 @@ import Tunebank.Model.User (User, UserName, UserId)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.NewTune as NewTune (Submission)
 import Tunebank.Types (PDF, PNG, PostScript, MIDI)
-import Tunebank.Model.AbcMetadata 
+import Tunebank.Model.AbcMetadata
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (Comment, CommentId)
 import Tunebank.Model.Genre ()
@@ -94,6 +94,7 @@ type AbcTuneAPI1 =
                      :> QueryParam "origin" Origin
                      :> QueryParam "composer" Composer
                      :> QueryParam "transcriber" Transcriber
+                     :> QueryParam "sort" SortKey
                      :>  Get '[JSON] [TuneRef]
 
      :<|> "tunebank" :> BasicAuth "tunebank-realm" UserName

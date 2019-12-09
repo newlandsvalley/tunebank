@@ -48,6 +48,7 @@ tunes ::  Genre
        -> Maybe Meta.Origin
        -> Maybe Meta.Composer
        -> Maybe Meta.Transcriber
+       -> Maybe Meta.SortKey
        -> ClientM [TuneRef]
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
 tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi
@@ -77,7 +78,7 @@ tuneApiSpec config =
     describe "Get tunes" $ do
       it "should get all tunes from the genre" $ do
         result <- runClientM
-                    (tunes Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+                    (tunes Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
                     clientEnv
         (second length result) `shouldBe` (Right 3)
 
