@@ -35,7 +35,7 @@ import Data.Configurator.Types (Config)
 import TestData
 
 
-tune ::  Genre -> TuneId -> ClientM Meta.AbcMetadata
+tune ::  Genre -> TuneId -> Maybe AcceptMime -> ClientM Meta.AbcMetadata
 tunePdf  ::  Genre -> TuneId -> ClientM ByteString
 tunePs   ::  Genre -> TuneId -> ClientM ByteString
 tunePng  ::  Genre -> TuneId -> ClientM ByteString
@@ -72,7 +72,7 @@ tuneApiSpec config =
 
     describe "Get tune" $ do
       it "should get a tune (without need for authorization)" $ do
-        result <- runClientM (tune Scandi augustssonId) clientEnv
+        result <- runClientM (tune Scandi augustssonId applicationJson) clientEnv
         (second Meta.rhythm result) `shouldBe` (Right  "Engelska")
 
     describe "Get tunes" $ do
@@ -86,3 +86,17 @@ tuneApiSpec config =
       it "should accept a new tune " $ do
         result <- runClientM (newTune normalUser Scandi (Submission $ pack augustsson)) clientEnv
         result `shouldBe` (Right augustssonId)
+
+
+-- MIME types for content negotiation
+textPlain :: Maybe AcceptMime
+textPlain =
+  Just $ AcceptMime "text/plain"
+
+textAbc :: Maybe AcceptMime
+textAbc =
+  Just $ AcceptMime "text/vnd.abc"
+
+applicationJson :: Maybe AcceptMime
+applicationJson =
+  Just $ AcceptMime "application/json"

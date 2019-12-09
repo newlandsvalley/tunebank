@@ -99,8 +99,8 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
               :<|> tunePngHandler :<|> tuneMidiHandler
               :<|> tuneListHandler :<|> newTuneHandler
   where
-    tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
-    tuneHandler genre tuneId = do
+    tuneHandler :: Genre -> TuneId -> Maybe AcceptMime -> AppM AbcMetadata
+    tuneHandler genre tuneId acceptMime = do
       -- let's just prove that lookup config works OK
       sorcePath <- Config.transcodeSourcePath genre
       case (getTuneMetadata genre tuneId) of

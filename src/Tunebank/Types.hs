@@ -11,6 +11,7 @@ import Servant.Server (Handler)
 import Network.HTTP.Media ((//), (/:))
 import Servant.API.ContentTypes
 import Data.Configurator.Types (Config)
+import Web.Internal.HttpApiData
 import Data.Text (Text)
 import Data.Genre (Genre)
 import Data.Either (Either(..))
@@ -73,3 +74,16 @@ data Transcodable
   | Png
   | Midi
     deriving (Eq, Ord, Show, Enum)
+
+-- | an Accept request header contents
+newtype AcceptMime =  AcceptMime Text
+  deriving (Eq, Ord, Show)
+
+instance FromHttpApiData AcceptMime
+  where
+    parseUrlPiece  = Right . AcceptMime
+
+-- required for client testing
+instance ToHttpApiData AcceptMime
+  where
+    toUrlPiece (AcceptMime v) = v
