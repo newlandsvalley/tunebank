@@ -31,7 +31,7 @@ import qualified Data.Abc as ABC
 import Data.Genre
 import Data.Bifunctor (second, bimap)
 import Tunebank.Model.AbcMetadata
-import qualified Tunebank.Model.NewTune as S (Submission(..))
+import qualified Tunebank.Model.TuneText as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Tunebank.Types
 import Tunebank.Model.User (UserName(..))

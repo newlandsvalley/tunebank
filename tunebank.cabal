@@ -50,7 +50,7 @@ executable tunebank
                    , Tunebank.Model.UserRegistration
                    , Tunebank.Model.AbcMetadata
                    , Tunebank.Model.TuneRef
-                   , Tunebank.Model.NewTune
+                   , Tunebank.Model.TuneText
                    , Tunebank.Model.Comment
                    , Tunebank.Authentication.BasicAuth
                    , Tunebank.TestData.User

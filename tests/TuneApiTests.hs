@@ -28,18 +28,19 @@ import Tunebank.ApiType (AbcTuneAPI1)
 import Tunebank.Types
 import Tunebank.Server (tuneApp)
 import Tunebank.Model.User
-import Tunebank.Model.NewTune
+import Tunebank.Model.TuneText
 import Tunebank.Model.TuneRef
 import qualified Tunebank.Model.AbcMetadata as Meta
 import Data.Configurator.Types (Config)
 import TestData
 
 
-tune ::  Genre -> TuneId -> Maybe AcceptMime -> ClientM Meta.AbcMetadata
+tune ::  Genre -> TuneId -> ClientM Meta.AbcMetadata
 tunePdf  ::  Genre -> TuneId -> ClientM ByteString
 tunePs   ::  Genre -> TuneId -> ClientM ByteString
 tunePng  ::  Genre -> TuneId -> ClientM ByteString
 tuneMidi ::  Genre -> TuneId -> ClientM ByteString
+tuneAbc  ::  Genre -> TuneId -> ClientM Text
 tunes ::  Genre
        -> Maybe Meta.Title
        -> Maybe Meta.Rhythm
@@ -51,7 +52,7 @@ tunes ::  Genre
        -> Maybe Meta.SortKey
        -> ClientM [TuneRef]
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
-tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi
+tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi :<|> tuneAbc
       :<|> tunes :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
 
 withUserApp :: Config -> IO () -> IO ()
@@ -72,8 +73,13 @@ tuneApiSpec config =
 
     describe "Get tune" $ do
       it "should get a tune (without need for authorization)" $ do
-        result <- runClientM (tune Scandi augustssonId applicationJson) clientEnv
+        result <- runClientM (tune Scandi augustssonId) clientEnv
         (second Meta.rhythm result) `shouldBe` (Right  "Engelska")
+
+    describe "Get tune ABC" $ do
+      it "should get the tune ABC text" $ do
+        result <- runClientM (tuneAbc Scandi augustssonId) clientEnv
+        (second (take 3 . unpack) result) `shouldBe` (Right  "X:1")
 
     describe "Get tunes" $ do
       it "should get all tunes from the genre" $ do

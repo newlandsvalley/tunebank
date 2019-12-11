@@ -2,6 +2,7 @@ cache
 dist
 dist-*
 cabal-dev
+deprecated
 *.o
 *.hi
 *.chi

@@ -45,7 +45,7 @@ import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
-import qualified Tunebank.Model.NewTune as NewTune (Submission)
+import qualified Tunebank.Model.TuneText as TuneText (Submission)
 import Tunebank.Types
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata
@@ -97,10 +97,11 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
 tuneServer :: ServerT AbcTuneAPI1 AppM
 tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
               :<|> tunePngHandler :<|> tuneMidiHandler
+              :<|> tuneAbcHandler
               :<|> tuneListHandler :<|> newTuneHandler
   where
-    tuneHandler :: Genre -> TuneId -> Maybe AcceptMime -> AppM AbcMetadata
-    tuneHandler genre tuneId acceptMime = do
+    tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
+    tuneHandler genre tuneId = do
       -- let's just prove that lookup config works OK
       sorcePath <- Config.transcodeSourcePath genre
       case (getTuneMetadata genre tuneId) of
@@ -125,6 +126,15 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
     tuneMidiHandler genre tuneId =
       binaryHandler Midi genre tuneId
 
+    tuneAbcHandler :: Genre -> TuneId -> AppM Text
+    tuneAbcHandler genre tuneId = do
+      case (getTuneMetadata genre tuneId) of
+        Nothing -> do
+          throwError (err404 {errBody = "tune not found"})
+        Just metadata ->
+          pure (abc metadata)
+
+
     tuneListHandler :: Genre
                     -> Maybe Title
                     -> Maybe Rhythm
@@ -140,7 +150,7 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
       -- pure $ getTuneList genre
       pure $ search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber mSortKey
 
-    newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
+    newTuneHandler :: UserName -> Genre -> TuneText.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do
       case (postNewTune userName genre submission) of
         Left err ->
