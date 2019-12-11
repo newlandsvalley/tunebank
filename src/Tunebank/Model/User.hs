@@ -11,6 +11,7 @@ import qualified Data.Aeson.Parser
 import Web.Internal.HttpApiData
 import Data.Text (Text, pack, toLower)
 import Data.Maybe (Maybe)
+import Tunebank.Model.Pagination (Pagination(..))
 
 data Role =
     Administrator
@@ -64,3 +65,12 @@ instance FromHttpApiData UserId
 instance ToHttpApiData UserId
   where
     toUrlPiece (UserId u) = u
+
+data UserList = UserList
+  { users :: [User]
+  , pagination :: Pagination
+  }
+    deriving (Eq, Show, Generic)
+
+instance ToJSON UserList
+instance FromJSON UserList

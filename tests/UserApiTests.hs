@@ -45,11 +45,11 @@ import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
 import Data.Configurator.Types (Config)
 import TestData
 
-users :: BasicAuthData -> ClientM [User]
+userList :: BasicAuthData -> ClientM UserList
 newUser :: UReg.Submission -> ClientM User
 checkUser :: BasicAuthData -> ClientM Text
 validateUser :: UserId -> ClientM Text
-users :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy UserAPI)
+userList :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy UserAPI)
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =
@@ -75,10 +75,10 @@ userApiSpec config =
 
     describe "GET users" $ do
       it "should get a user list " $ do
-        result <- runClientM  (users admin) clientEnv
-        (second length result) `shouldBe` (Right 4)
+        result <- runClientM  (userList admin) clientEnv
+        (second (length . users) result) `shouldBe` (Right 4)
       it "should reject a non-admin (normal) user auth" $ do
-        result <- runClientM  (users normalUser) clientEnv
+        result <- runClientM  (userList normalUser) clientEnv
         (isLeft result) `shouldBe` True
 
     describe "check user" $ do

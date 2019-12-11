@@ -52,6 +52,7 @@ executable tunebank
                    , Tunebank.Model.TuneRef
                    , Tunebank.Model.TuneText
                    , Tunebank.Model.Comment
+                   , Tunebank.Model.Pagination
                    , Tunebank.Authentication.BasicAuth
                    , Tunebank.TestData.User
                    , Tunebank.TestData.AbcTune

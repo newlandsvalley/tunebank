@@ -7,12 +7,12 @@ import Data.Text
 import Data.Time (UTCTime)
 import Data.ByteString.Lazy (ByteString)
 import Servant.API
-import Tunebank.Model.User (User, UserName, UserId)
+import Tunebank.Model.User (User, UserName, UserId, UserList)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as TuneText (Submission)
 import Tunebank.Types (PDF, PNG, PostScript, MIDI, AcceptMime)
 import Tunebank.Model.AbcMetadata
-import Tunebank.Model.TuneRef (TuneId, TuneRef)
+import Tunebank.Model.TuneRef (TuneId, TuneRef, TuneList)
 import Tunebank.Model.Comment (Comment, CommentId)
 import Tunebank.Model.Genre ()
 import Data.Genre (Genre)
@@ -20,7 +20,7 @@ import Data.Genre (Genre)
 
 type UserAPI = "tunebank" :> "users"
                           :> BasicAuth "tunebank-realm" UserName
-                          :>  Get '[JSON] [User]
+                          :>  Get '[JSON] UserList
                 -- equivalent to 'GET /tunebank/users'
 
                :<|> "tunebank" :> "user"
@@ -102,7 +102,7 @@ type AbcTuneAPI1 =
                      :> QueryParam "composer" Composer
                      :> QueryParam "transcriber" Transcriber
                      :> QueryParam "sort" SortKey
-                     :>  Get '[JSON] [TuneRef]
+                     :>  Get '[JSON] TuneList
 
      :<|> "tunebank" :> BasicAuth "tunebank-realm" UserName
                      :> "genre"

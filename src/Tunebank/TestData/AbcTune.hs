@@ -33,6 +33,7 @@ import Data.Bifunctor (second, bimap)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.TuneText as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
+import Tunebank.Model.Pagination
 import Tunebank.Types
 import Tunebank.Model.User (UserName(..))
 import Tunebank.TypeConversion.Transcode (transcodeTo)
@@ -86,7 +87,7 @@ search :: Genre
        -> Maybe Composer
        -> Maybe Transcriber
        -> Maybe SortKey
-       -> [TuneRef.TuneRef]
+       -> TuneRef.TuneList
 search genre mTitle mRhythm mKey mSource mOrigin
          mComposer mTranscriber mSortKey =
   let
@@ -102,13 +103,20 @@ search genre mTitle mRhythm mKey mSource mOrigin
   in
     getTuneList genre
 
-getTuneList :: Genre -> [TuneRef.TuneRef]
+getTuneList :: Genre -> TuneRef.TuneList
 getTuneList genre =
   case genre of
     Scandi ->
-      map buildTuneRef $ elems scandiMetadata
+      let
+        tunes = map buildTuneRef $ elems scandiMetadata
+        pagination = Pagination 1 1
+      in
+        TuneRef.TuneList tunes pagination
     _ ->
-      []
+      let
+        pagination = Pagination 0 0
+      in
+        TuneRef.TuneList [] pagination
 
 postNewTune :: UserName -> Genre -> S.Submission -> Either ByteString TuneRef.TuneId
 postNewTune userName genre submission =

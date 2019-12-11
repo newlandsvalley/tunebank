@@ -41,7 +41,7 @@ tunePs   ::  Genre -> TuneId -> ClientM ByteString
 tunePng  ::  Genre -> TuneId -> ClientM ByteString
 tuneMidi ::  Genre -> TuneId -> ClientM ByteString
 tuneAbc  ::  Genre -> TuneId -> ClientM Text
-tunes ::  Genre
+tuneList ::  Genre
        -> Maybe Meta.Title
        -> Maybe Meta.Rhythm
        -> Maybe Meta.TuneKey
@@ -50,10 +50,10 @@ tunes ::  Genre
        -> Maybe Meta.Composer
        -> Maybe Meta.Transcriber
        -> Maybe Meta.SortKey
-       -> ClientM [TuneRef]
+       -> ClientM TuneList
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
 tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi :<|> tuneAbc
-      :<|> tunes :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
+      :<|> tuneList :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =
@@ -84,9 +84,9 @@ tuneApiSpec config =
     describe "Get tunes" $ do
       it "should get all tunes from the genre" $ do
         result <- runClientM
-                    (tunes Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+                    (tuneList Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
                     clientEnv
-        (second length result) `shouldBe` (Right 3)
+        (second (length . tunes) result) `shouldBe` (Right 3)
 
     describe "POST tune" $ do
       it "should accept a new tune " $ do

@@ -12,6 +12,7 @@ import Web.Internal.HttpApiData
 import Data.Text (Text, pack, unpack, toLower)
 import Data.Either (Either(..))
 import Data.Char (isAlphaNum)
+import Tunebank.Model.Pagination (Pagination(..))
 
 -- | the unique ID of a tune (within a genre)
 newtype TuneId = TuneId Text
@@ -53,3 +54,12 @@ data TuneRef = TuneRef
 instance ToJSON TuneRef
 
 instance FromJSON TuneRef
+
+data TuneList = TuneList
+  { tunes :: [TuneRef]
+  , pagination :: Pagination
+  }
+    deriving (Eq, Show, Generic)
+
+instance ToJSON TuneList
+instance FromJSON TuneList

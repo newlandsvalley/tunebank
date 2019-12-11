@@ -11,8 +11,9 @@ module Tunebank.TestData.User
 import Prelude ()
 import Prelude.Compat hiding (lookup)
 
-import Tunebank.Model.User (User(..), Role(..), UserName(..), UserId(..))
+import Tunebank.Model.User (User(..), Role(..), UserName(..), UserId(..), UserList(..))
 import qualified Tunebank.Model.UserRegistration as Reg (Submission(..))
+import Tunebank.Model.Pagination (Pagination(..))
 import Data.Text (Text, pack, unpack, toUpper)
 import Data.Time.Calendar
 import Data.Tuple (snd)
@@ -36,9 +37,13 @@ usersById :: [KeyedById]
 usersById =
   map (\u -> (uid u, u)) userList
 
-getUsers :: [User]
+getUsers :: UserList
 getUsers =
-  userList
+  let
+    users = userList
+    pagination = Pagination 1 1
+  in
+    UserList users pagination
 
 validateUser :: Text -> Text -> Bool
 validateUser name suppliedPassword =

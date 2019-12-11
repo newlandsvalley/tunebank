@@ -43,13 +43,13 @@ import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistrati
 import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, search, postNewTune, getTuneBinary)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
-import Tunebank.Model.User (User(..), UserName(..), UserId(..))
+import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as TuneText (Submission)
 import Tunebank.Types
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata
-import Tunebank.Model.TuneRef (TuneId, TuneRef)
+import Tunebank.Model.TuneRef (TuneId, TuneRef, TuneList)
 import Tunebank.Model.Comment (CommentId, Comment)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 
@@ -69,7 +69,7 @@ userServer :: ServerT UserAPI AppM
 userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
               :<|> validateUserRegistrationHandler
    where
-     usersHandler :: UserName -> AppM [User]
+     usersHandler :: UserName -> AppM UserList
      usersHandler userName = do
        if (not $ hasAdminRole userName)
          then throwError (err404 {errBody = "not authorized"})
@@ -144,7 +144,7 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
                     -> Maybe Composer
                     -> Maybe Transcriber
                     -> Maybe SortKey
-                    -> AppM [TuneRef]
+                    -> AppM TuneList
     tuneListHandler genre mTitle mRhythm mKey mSource mOrigin
                      mComposer mTranscriber mSortKey = do
       -- pure $ getTuneList genre
