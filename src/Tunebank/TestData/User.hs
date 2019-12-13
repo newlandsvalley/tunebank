@@ -37,13 +37,18 @@ usersById :: [KeyedById]
 usersById =
   map (\u -> (uid u, u)) userList
 
-getUsers :: UserList
-getUsers =
+getUsers :: Int -> Int -> UserList
+getUsers page size =
   let
     users = userList
-    pagination = Pagination 1 1
+    maxPages = (countUsers + size - 1) `quot` size
+    pagination = Pagination page maxPages
   in
     UserList users pagination
+
+countUsers :: Int
+countUsers =
+  length userList
 
 validateUser :: Text -> Text -> Bool
 validateUser name suppliedPassword =

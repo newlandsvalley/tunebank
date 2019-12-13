@@ -3,6 +3,7 @@ dist
 dist-*
 cabal-dev
 deprecated
+tunebank-database
 *.o
 *.hi
 *.chi

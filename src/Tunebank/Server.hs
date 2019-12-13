@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -49,32 +50,37 @@ import qualified Tunebank.Model.TuneText as TuneText (Submission)
 import Tunebank.Types
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata
-import Tunebank.Model.TuneRef (TuneId, TuneRef, TuneList)
+import Tunebank.Model.TuneRef (TuneId, TuneRef)
+import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment)
+import Tunebank.Model.Pagination (paginationHeaderContent)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 
 
 import Data.Genre (Genre)
 import Debug.Trace (trace, traceM)
 
-{-}
-type AppM = ReaderT AppCtx Handler
-
-data AppCtx = AppCtx {
-  _getConfig :: Config
-  }
--}
 
 userServer :: ServerT UserAPI AppM
 userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
               :<|> validateUserRegistrationHandler
    where
-     usersHandler :: UserName -> AppM UserList
-     usersHandler userName = do
+     usersHandler :: UserName
+                  -> Maybe Int
+                  -> Maybe Int
+                  -> AppM (Headers '[Header "Musicrest-Pagination" Text] UserList)
+     usersHandler userName mPage mSize = do
+       let
+         page = fromMaybe 1 mPage
+       size <- Config.getPageSize mSize
        if (not $ hasAdminRole userName)
          then throwError (err404 {errBody = "not authorized"})
-         else
-           pure getUsers
+         else do
+           let
+             userList = getUsers page size
+             -- get the pagination header contents from the user list
+             paginationHeaderText = paginationHeaderContent (pagination userList)
+           pure $ addHeader paginationHeaderText userList
 
      newUserHandler :: UserReg.Submission -> AppM User
      newUserHandler submission = do
@@ -144,11 +150,20 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
                     -> Maybe Composer
                     -> Maybe Transcriber
                     -> Maybe SortKey
-                    -> AppM TuneList
+                    -> Maybe Int
+                    -> Maybe Int
+                    -> AppM  (Headers '[Header "Musicrest-Pagination" Text] TuneRef.TuneList)
     tuneListHandler genre mTitle mRhythm mKey mSource mOrigin
-                     mComposer mTranscriber mSortKey = do
-      -- pure $ getTuneList genre
-      pure $ search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber mSortKey
+                     mComposer mTranscriber mSortKey mPage mSize = do
+      size <- Config.getPageSize mSize
+      let
+        page = fromMaybe 1 mPage
+        tuneList =
+          search genre mTitle mRhythm mKey mSource mOrigin
+               mComposer mTranscriber mSortKey page size
+        paginationHeaderText =
+          paginationHeaderContent (TuneRef.pagination tuneList)
+      pure $ addHeader paginationHeaderText tuneList
 
     newTuneHandler :: UserName -> Genre -> TuneText.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do

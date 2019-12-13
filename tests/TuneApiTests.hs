@@ -50,7 +50,9 @@ tuneList ::  Genre
        -> Maybe Meta.Composer
        -> Maybe Meta.Transcriber
        -> Maybe Meta.SortKey
-       -> ClientM TuneList
+       -> Maybe Int
+       -> Maybe Int
+       -> ClientM (Headers '[Header "Musicrest-Pagination" Text] TuneList)
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
 tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi :<|> tuneAbc
       :<|> tuneList :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
@@ -83,10 +85,16 @@ tuneApiSpec config =
 
     describe "Get tunes" $ do
       it "should get all tunes from the genre" $ do
-        result <- runClientM
-                    (tuneList Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+        eResult <- runClientM
+                    (tuneList Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
                     clientEnv
-        (second (length . tunes) result) `shouldBe` (Right 3)
+        case eResult of
+          Left _ ->
+            expectationFailure "unexpected tuneList error"
+          Right hdrs -> do
+            let
+              result = getResponse hdrs
+            (length $ tunes result) `shouldBe` 3
 
     describe "POST tune" $ do
       it "should accept a new tune " $ do

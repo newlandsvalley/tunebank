@@ -3,6 +3,7 @@ module Tunebank.Config
   , transcodeScriptPath
   , transcodeSourcePath
   , transcodeTargetPath
+  , getPageSize
   ) where
 
 -- | Utilities for reading configuration values
@@ -25,7 +26,7 @@ transcodeScriptPath =
 
 transcodeSourcePath :: Genre -> AppM String
 transcodeSourcePath genre = do
-  path <- transcodePath genre True
+  path <- transcodePath genre True 
   traceM ("transcode source path: " <> path)
   pure path
 
@@ -43,6 +44,16 @@ transcodePath genre isSourcePath = do
         else "pdf/"
   base <- lookupString "tunebank.transcode.cacheDir"
   pure $ base <> "/core/" <> dirName  <> (map toLower $ show genre)
+
+getPageSize :: Maybe Int -> AppM Int
+getPageSize mSize = do
+  defaultSize <- lookupInt "tunebank.paging.defaultSize"
+  case mSize of
+    Nothing -> pure defaultSize
+    Just size -> do
+      if (size < 5 ||  size > 100)
+        then pure defaultSize
+        else pure size
 
 
 -- | lookup a String-valued configuration item

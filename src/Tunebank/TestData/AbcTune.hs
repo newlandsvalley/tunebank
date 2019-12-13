@@ -87,9 +87,11 @@ search :: Genre
        -> Maybe Composer
        -> Maybe Transcriber
        -> Maybe SortKey
+       -> Int
+       -> Int
        -> TuneRef.TuneList
 search genre mTitle mRhythm mKey mSource mOrigin
-         mComposer mTranscriber mSortKey =
+         mComposer mTranscriber mSortKey page size =
   let
     -- we'll get rid of this logging quite soon
     !p1 = trace ("title param: " <> show mTitle) mTitle
@@ -100,23 +102,32 @@ search genre mTitle mRhythm mKey mSource mOrigin
     !p6 = trace ("composer param: " <> show mComposer) mComposer
     !p7 = trace ("transcriber param: " <> show mTranscriber) mTranscriber
     !p8 = trace ("sort param: " <> show mSortKey) mSortKey
+    count = countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
+    maxPages = (count + size - 1) `quot` size
+    pagination = Pagination page maxPages
   in
-    getTuneList genre
+    TuneRef.TuneList (getTuneList genre) pagination
 
-getTuneList :: Genre -> TuneRef.TuneList
+countTunes :: Genre
+           -> Maybe Title
+           -> Maybe Rhythm
+           -> Maybe TuneKey
+           -> Maybe Source
+           -> Maybe Origin
+           -> Maybe Composer
+           -> Maybe Transcriber
+           -> Int
+countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber =
+  length $ getTuneList genre
+
+
+getTuneList :: Genre -> [TuneRef.TuneRef]
 getTuneList genre =
   case genre of
     Scandi ->
-      let
-        tunes = map buildTuneRef $ elems scandiMetadata
-        pagination = Pagination 1 1
-      in
-        TuneRef.TuneList tunes pagination
+      map buildTuneRef $ elems scandiMetadata
     _ ->
-      let
-        pagination = Pagination 0 0
-      in
-        TuneRef.TuneList [] pagination
+      []
 
 postNewTune :: UserName -> Genre -> S.Submission -> Either ByteString TuneRef.TuneId
 postNewTune userName genre submission =

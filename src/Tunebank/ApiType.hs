@@ -20,7 +20,9 @@ import Data.Genre (Genre)
 
 type UserAPI = "tunebank" :> "users"
                           :> BasicAuth "tunebank-realm" UserName
-                          :>  Get '[JSON] UserList
+                          :> QueryParam "page" Int
+                          :> QueryParam "size" Int
+                          :>  Get '[JSON] (Headers '[Header "Musicrest-Pagination" Text] UserList)
                 -- equivalent to 'GET /tunebank/users'
 
                :<|> "tunebank" :> "user"
@@ -102,7 +104,9 @@ type AbcTuneAPI1 =
                      :> QueryParam "composer" Composer
                      :> QueryParam "transcriber" Transcriber
                      :> QueryParam "sort" SortKey
-                     :>  Get '[JSON] TuneList
+                     :> QueryParam "page" Int
+                     :> QueryParam "size" Int
+                     :>  Get '[JSON] (Headers '[Header "Musicrest-Pagination" Text] TuneList)
 
      :<|> "tunebank" :> BasicAuth "tunebank-realm" UserName
                      :> "genre"
