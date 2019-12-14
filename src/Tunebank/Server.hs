@@ -99,11 +99,16 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
            pure "Y"
 
 tuneServer :: ServerT AbcTuneAPI1 AppM
-tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
+tuneServer =  welcomeHandler
+              :<|> tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
               :<|> tunePngHandler :<|> tuneMidiHandler
               :<|> tuneAbcHandler
               :<|> tuneListHandler :<|> newTuneHandler
   where
+    welcomeHandler :: AppM Text
+    welcomeHandler =
+      pure "Welcome to tunebank versionn 0.1.0.0."
+
     tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
     tuneHandler genre tuneId = do
       -- let's just prove that lookup config works OK

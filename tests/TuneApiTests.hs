@@ -34,7 +34,7 @@ import qualified Tunebank.Model.AbcMetadata as Meta
 import Data.Configurator.Types (Config)
 import TestData
 
-
+welcome :: ClientM Text
 tune ::  Genre -> TuneId -> ClientM Meta.AbcMetadata
 tunePdf  ::  Genre -> TuneId -> ClientM ByteString
 tunePs   ::  Genre -> TuneId -> ClientM ByteString
@@ -54,7 +54,8 @@ tuneList ::  Genre
        -> Maybe Int
        -> ClientM TuneList
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
-tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi :<|> tuneAbc
+welcome :<|> tune :<|> tunePdf :<|> tunePs :<|> tunePng
+      :<|> tuneMidi :<|> tuneAbc
       :<|> tuneList :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
 
 withUserApp :: Config -> IO () -> IO ()
@@ -72,6 +73,11 @@ tuneApiSpec config =
     base <- runIO $ parseBaseUrl "http://localhost:8888"
     mgr <- runIO $ newManager defaultManagerSettings
     let clientEnv = mkClientEnv mgr base
+
+    describe "Welcome" $ do
+      it "should provide a wecome message" $ do
+        result <- runClientM welcome clientEnv
+        result `shouldBe` (Right  "Welcome to tunebank versionn 0.1.0.0.")
 
     describe "Get tune" $ do
       it "should get a tune (without need for authorization)" $ do

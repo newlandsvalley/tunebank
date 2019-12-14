@@ -51,8 +51,10 @@ type UserAPI = "tunebank" :> "users"
 type UserAPI1 = "tunebank" :> "users"
                            :> Get '[JSON] [User]
 
-type AbcTuneAPI1 =
-     "tunebank" :> "genre"
+type AbcTuneAPI1 = "tunebank"
+                :>  Get '[PlainText] Text
+
+     :<|>  "tunebank" :> "genre"
                 :> Capture "genre" Genre
                 :> "tune"
                 :> Capture "tune" TuneId
