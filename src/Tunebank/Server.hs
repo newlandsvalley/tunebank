@@ -68,7 +68,7 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
      usersHandler :: UserName
                   -> Maybe Int
                   -> Maybe Int
-                  -> AppM (Headers '[Header "Musicrest-Pagination" Text] UserList)
+                  -> AppM UserList
      usersHandler userName mPage mSize = do
        let
          page = fromMaybe 1 mPage
@@ -78,9 +78,7 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
          else do
            let
              userList = getUsers page size
-             -- get the pagination header contents from the user list
-             paginationHeaderText = paginationHeaderContent (pagination userList)
-           pure $ addHeader paginationHeaderText userList
+           pure $ userList
 
      newUserHandler :: UserReg.Submission -> AppM User
      newUserHandler submission = do
@@ -152,7 +150,7 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
                     -> Maybe SortKey
                     -> Maybe Int
                     -> Maybe Int
-                    -> AppM  (Headers '[Header "Musicrest-Pagination" Text] TuneRef.TuneList)
+                    -> AppM  TuneRef.TuneList
     tuneListHandler genre mTitle mRhythm mKey mSource mOrigin
                      mComposer mTranscriber mSortKey mPage mSize = do
       size <- Config.getPageSize mSize
@@ -161,9 +159,7 @@ tuneServer = tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
         tuneList =
           search genre mTitle mRhythm mKey mSource mOrigin
                mComposer mTranscriber mSortKey page size
-        paginationHeaderText =
-          paginationHeaderContent (TuneRef.pagination tuneList)
-      pure $ addHeader paginationHeaderText tuneList
+      pure $ tuneList
 
     newTuneHandler :: UserName -> Genre -> TuneText.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do

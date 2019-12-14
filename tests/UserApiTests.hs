@@ -45,7 +45,7 @@ import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
 import Data.Configurator.Types (Config)
 import TestData
 
-userList :: BasicAuthData -> Maybe Int -> Maybe Int -> ClientM (Headers '[Header "Musicrest-Pagination" Text] UserList)
+userList :: BasicAuthData -> Maybe Int -> Maybe Int -> ClientM UserList
 newUser :: UReg.Submission -> ClientM User
 checkUser :: BasicAuthData -> ClientM Text
 validateUser :: UserId -> ClientM Text
@@ -79,10 +79,8 @@ userApiSpec config =
         case eResult of
           Left _ ->
             expectationFailure "unexpected userList error"
-          Right hdrs -> do
-            let
-              ul = getResponse hdrs
-            (length $ users ul) `shouldBe` 4
+          Right uList -> do
+            (length $ users uList) `shouldBe` 4
       it "should reject a non-admin (normal) user auth" $ do
         result <- runClientM  (userList normalUser Nothing Nothing) clientEnv
         (isLeft result) `shouldBe` True

@@ -22,7 +22,7 @@ type UserAPI = "tunebank" :> "users"
                           :> BasicAuth "tunebank-realm" UserName
                           :> QueryParam "page" Int
                           :> QueryParam "size" Int
-                          :>  Get '[JSON] (Headers '[Header "Musicrest-Pagination" Text] UserList)
+                          :>  Get '[JSON] UserList
                 -- equivalent to 'GET /tunebank/users'
 
                :<|> "tunebank" :> "user"
@@ -106,7 +106,7 @@ type AbcTuneAPI1 =
                      :> QueryParam "sort" SortKey
                      :> QueryParam "page" Int
                      :> QueryParam "size" Int
-                     :>  Get '[JSON] (Headers '[Header "Musicrest-Pagination" Text] TuneList)
+                     :>  Get '[JSON] TuneList
 
      :<|> "tunebank" :> BasicAuth "tunebank-realm" UserName
                      :> "genre"

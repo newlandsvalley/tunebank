@@ -52,7 +52,7 @@ tuneList ::  Genre
        -> Maybe Meta.SortKey
        -> Maybe Int
        -> Maybe Int
-       -> ClientM (Headers '[Header "Musicrest-Pagination" Text] TuneList)
+       -> ClientM TuneList
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
 tune :<|> tunePdf :<|> tunePs :<|> tunePng :<|> tuneMidi :<|> tuneAbc
       :<|> tuneList :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
@@ -91,10 +91,8 @@ tuneApiSpec config =
         case eResult of
           Left _ ->
             expectationFailure "unexpected tuneList error"
-          Right hdrs -> do
-            let
-              result = getResponse hdrs
-            (length $ tunes result) `shouldBe` 3
+          Right tList -> do
+            (length $ tunes tList) `shouldBe` 3
 
     describe "POST tune" $ do
       it "should accept a new tune " $ do
