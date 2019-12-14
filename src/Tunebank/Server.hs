@@ -53,7 +53,7 @@ import Tunebank.Model.AbcMetadata
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment)
-import Tunebank.Model.Pagination (paginationHeaderContent)
+-- import Tunebank.Model.Pagination (paginationHeaderContent)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 
 

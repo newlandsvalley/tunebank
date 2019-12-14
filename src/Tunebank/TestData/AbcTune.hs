@@ -104,7 +104,7 @@ search genre mTitle mRhythm mKey mSource mOrigin
     !p8 = trace ("sort param: " <> show mSortKey) mSortKey
     count = countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
     maxPages = (count + size - 1) `quot` size
-    pagination = Pagination page maxPages
+    pagination = Pagination page size maxPages
   in
     TuneRef.TuneList (getTuneList genre) pagination
 

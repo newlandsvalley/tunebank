@@ -42,7 +42,7 @@ getUsers page size =
   let
     users = userList
     maxPages = (countUsers + size - 1) `quot` size
-    pagination = Pagination page maxPages
+    pagination = Pagination page size maxPages
   in
     UserList users pagination
 
