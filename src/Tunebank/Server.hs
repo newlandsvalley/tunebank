@@ -30,6 +30,7 @@ import Lucid
 import Network.HTTP.Media ((//), (/:))
 import Network.Wai
 import Network.Wai.Handler.Warp
+import Network.Wai.Middleware.Cors
 import Servant
 import System.Directory
 import Text.Blaze
@@ -49,7 +50,8 @@ import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as TuneText (Submission)
 import Tunebank.Types
 import qualified Tunebank.Config as Config
-import Tunebank.Model.AbcMetadata
+import Tunebank.Model.AbcMetadata hiding (Origin(..))
+import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment)
@@ -149,7 +151,7 @@ tuneServer =  welcomeHandler
                     -> Maybe Rhythm
                     -> Maybe TuneKey
                     -> Maybe Source
-                    -> Maybe Origin
+                    -> Maybe AbcMetadata.Origin
                     -> Maybe Composer
                     -> Maybe Transcriber
                     -> Maybe SortKey
@@ -215,6 +217,7 @@ commentAPI = Proxy
 overallAPI :: Proxy OverallAPI
 overallAPI = Proxy
 
+
 -- 'serve' comes from servant and hands you a WAI Application,
 -- which you can think of as an "abstract" web application,
 -- not yet a webserver.  userApp is the only one so far to
@@ -236,3 +239,23 @@ commentApp ctx =
   serveWithContext commentAPI basicAuthServerContext $
     hoistServerWithContext commentAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
       (flip runReaderT ctx) commentServer
+
+{-}
+fullApp :: AppCtx -> Application
+fullApp ctx =
+  cors (const $ Just policy)
+    $ provideOptions overallAPI
+    $ serveWithContext overallAPI basicAuthServerContext $
+        hoistServerWithContext overallAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+          (flip runReaderT ctx) overallServer
+  where
+    policy = simpleCorsResourcePolicy
+           { corsRequestHeaders = [ "content-type" ] }
+-}
+
+fullApp :: AppCtx -> Application
+fullApp ctx =
+  simpleCors $
+    serveWithContext overallAPI basicAuthServerContext $
+        hoistServerWithContext overallAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+          (flip runReaderT ctx) overallServer

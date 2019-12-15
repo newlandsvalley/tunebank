@@ -43,6 +43,7 @@ extra-deps:
 - git: https://github.com/newlandsvalley/abc-header-parser.git
   commit: d0717c165bef29d1b0748d6159ab66427e4c889f
 - servant-quickcheck-0.0.7.4@sha256:a981a06792e9547d13fa2f9f0f55ba46d28113881a0661e49016c18d9e6358cc,3776
+- servant-options-0.1.0.0@sha256:39f50166a68006250e79370372f553ca476f14d06d93fa0c401050253aeba803,914
 - strict-io-0.2.2@sha256:1cc96f9a123a919ff9ee479f740cbc9fa9edf7c8ac65334de3fdce07638949ed,1012
 
 

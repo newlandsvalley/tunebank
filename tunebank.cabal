@@ -40,6 +40,7 @@ executable tunebank
                      , errors
                      , validation
                      , wai
+                     , wai-cors
                      , warp
   other-modules:     Tunebank.ApiType
                    , Tunebank.Types
@@ -112,6 +113,7 @@ test-suite tests
                      , lucid
                      , lens
                      , wai
+                     , wai-cors
                      , warp
                      , errors
                      , validation
