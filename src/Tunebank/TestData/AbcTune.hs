@@ -26,6 +26,7 @@ import Data.ByteString.Lazy.Internal (ByteString, packChars)
 import Data.Validation (Validation(..), toEither)
 import Data.Abc.Validator (buildHeaderMap, validateHeaders)
 import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
+import Data.Abc.Serializer (serializeHeaders)
 import Data.Abc.Parser (abcParse, headersParse)
 import qualified Data.Abc as ABC
 import Data.Genre
@@ -44,12 +45,13 @@ type MetadataEntry = (TuneRef.TuneId, AbcMetadata)
 
 buildMetadata :: UserName -> Genre -> Text -> Either String MetadataEntry
 buildMetadata (UserName submitter) genre abcText =
-  case (headersParse abcText) of
+  case (abcParse abcText) of
     Left err ->
       Left err
-    Right headerList ->
+    Right abc ->
       let
-        headerMap = buildHeaderMap headerList
+        headerText = serializeHeaders (ABC.headers abc)
+        headerMap = buildHeaderMap $ ABC.headers abc
         validated = toEither $ validateHeaders genre headerMap
         transcription :: Maybe Text
         source = lookup ABC.Source headerMap
@@ -63,7 +65,7 @@ buildMetadata (UserName submitter) genre abcText =
             !k' = trace ("map key: " <> show k) k
           in
             (k', AbcMetadata title key rhythm submitter
-                   source origin composer transcription abcText)
+                   source origin composer transcription headerText (ABC.body abc))
       in
         bimap concat fromValid validated
 
@@ -73,7 +75,8 @@ buildTuneRef metadata =
     { TuneRef.uri = TuneRef.tuneId (title metadata) (rhythm metadata)
     , TuneRef.title = title metadata
     , TuneRef.rhythm = rhythm metadata
-    , TuneRef.abc = abc metadata
+    , TuneRef.abcHeaders = abcHeaders metadata
+    , TuneRef.abc = abcBody metadata
     , TuneRef.ts = (fromGregorian 1683  3 1)
     }
 

@@ -142,8 +142,10 @@ tuneServer =  welcomeHandler
       case (getTuneMetadata genre tuneId) of
         Nothing -> do
           throwError (err404 {errBody = "tune not found"})
-        Just metadata ->
-          pure (abc metadata)
+        Just metadata -> do
+          let
+            abcText = (abcHeaders metadata) <> (abcBody metadata)
+          pure abcText
 
 
     tuneListHandler :: Genre

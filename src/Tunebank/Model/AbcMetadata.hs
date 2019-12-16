@@ -26,7 +26,8 @@ data AbcMetadata = AbcMetadata
     , origin :: Maybe Text
     , composer :: Maybe Text
     , transcriber :: Maybe Text
-    , abc :: Text
+    , abcHeaders :: Text
+    , abcBody :: Text     
     } deriving (Eq, Show, Generic)
 
 

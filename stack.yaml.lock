@@ -6,18 +6,18 @@
 packages:
 - completed:
     cabal-file:
-      size: 1456
-      sha256: 4bdaaa95ff04c5d97bd24726f62605086ed1c0fe98399121c304757570d96ede
+      size: 1499
+      sha256: 6f011946ca95569a534d5acd236c40e538df7f384e572003bf3a1b12b185f694
     name: abc-header-parser
     version: 0.1.0.0
     git: https://github.com/newlandsvalley/abc-header-parser.git
     pantry-tree:
-      size: 726
-      sha256: ada614423d05db728f8dc518a4a067ff9b8499f7e26b336d2463feaa1235870d
-    commit: d0717c165bef29d1b0748d6159ab66427e4c889f
+      size: 792
+      sha256: 879c392eda3e737d058282902260adca7f5ac80971a43709a954be12a9271f48
+    commit: 8e4ed0130bf152530818c35b11a3e3db120c67f0
   original:
     git: https://github.com/newlandsvalley/abc-header-parser.git
-    commit: d0717c165bef29d1b0748d6159ab66427e4c889f
+    commit: 8e4ed0130bf152530818c35b11a3e3db120c67f0
 - completed:
     hackage: servant-quickcheck-0.0.7.4@sha256:a981a06792e9547d13fa2f9f0f55ba46d28113881a0661e49016c18d9e6358cc,3776
     pantry-tree:
@@ -25,13 +25,6 @@ packages:
       sha256: 652ea0bf673822956b0e87b7fcb5e35023299f3e1711462e4a3493e233728fb9
   original:
     hackage: servant-quickcheck-0.0.7.4@sha256:a981a06792e9547d13fa2f9f0f55ba46d28113881a0661e49016c18d9e6358cc,3776
-- completed:
-    hackage: servant-options-0.1.0.0@sha256:39f50166a68006250e79370372f553ca476f14d06d93fa0c401050253aeba803,914
-    pantry-tree:
-      size: 293
-      sha256: 7812baf1b27c62068ba634207fbd7077b886424d666b36739a78c6d4008a1fd4
-  original:
-    hackage: servant-options-0.1.0.0@sha256:39f50166a68006250e79370372f553ca476f14d06d93fa0c401050253aeba803,914
 - completed:
     hackage: strict-io-0.2.2@sha256:1cc96f9a123a919ff9ee479f740cbc9fa9edf7c8ac65334de3fdce07638949ed,1012
     pantry-tree:

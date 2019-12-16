@@ -60,7 +60,8 @@ transcodeTo target genre abcMetadata = do
       sourceFilePath <- buildSourceFilePath genre fileBase
       let
         script = scriptDir <> "/" <> scriptName
-      _ <- liftIO $ writeTextFile sourceFilePath (abc abcMetadata)
+        abcText = (abcHeaders abcMetadata) <> (abcBody abcMetadata)
+      _ <- liftIO $ writeTextFile sourceFilePath abcText
       transcodeError <- liftIO $ runTranscodeScript script sourceDir targetDir fileBase
       case transcodeError of
         Just error -> pure $ Left (fromStrict error)

@@ -47,7 +47,8 @@ data TuneRef = TuneRef
    { uri   :: TuneId
    , title :: Text
    , rhythm :: Text
-   , abc :: Text
+   , abcHeaders :: Text
+   , abc :: Text    -- the body
    , ts  :: Day
    } deriving (Eq, Show, Generic)
 
