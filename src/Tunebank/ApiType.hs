@@ -58,7 +58,7 @@ type AbcTuneAPI1 = "tunebank"
                 :> Capture "genre" Genre
                 :> "tune"
                 :> Capture "tune" TuneId
-                :> Get '[JSON] AbcMetadata
+                :> Get '[JSON, ABC] AbcMetadata
 
      :<|> "tunebank" :> "genre"
                      :> Capture "genre" Genre

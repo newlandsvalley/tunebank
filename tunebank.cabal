@@ -123,4 +123,5 @@ test-suite tests
   default-language:    Haskell2010
   other-modules:     UserApiTests
                    , TuneApiTests
+                   , TranscodingTests
                    , TestData

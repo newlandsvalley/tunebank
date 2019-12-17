@@ -33,11 +33,11 @@ validateableUid =
 
 
 -- tunes
-badAbc :: String
+badAbc :: Text
 badAbc =
   "foo\r\n"
 
-augustsson :: String
+augustsson :: Text
 augustsson =
   "X:1\r\n"
   <> "T:Engelska efter Albert Augustsson\r\n"
@@ -58,7 +58,7 @@ augustssonId =
   TuneId "engelska efter albert augustsson-engelska"
 
 
-norefno :: String
+norefno :: Text
 norefno =
   "T: Fastan\r\n"
   <> "R: Polska\r\n"
@@ -67,7 +67,7 @@ norefno =
   <> "L: 1/16\r\n"
   <> "| (3A4F4G4 A2B2 | (3:4:3c2d2B4c4 A2F2 | (3F4E4D4 B,2D2 | EA3 A8- |\r\n"
 
-notitle :: String
+notitle :: Text
 notitle =
   "X:1\r\n"
   <> "R: Polska\r\n"
@@ -76,7 +76,7 @@ notitle =
   <> "L: 1/16\r\n"
   <> "| (3A4F4G4 A2B2 | (3:4:3c2d2B4c4 A2F2 | (3F4E4D4 B,2D2 | EA3 A8- |\r\n"
 
-badrhythm :: String
+badrhythm :: Text
 badrhythm =
   "X:1\r\n"
   <>  "T: Fastan\r\n"

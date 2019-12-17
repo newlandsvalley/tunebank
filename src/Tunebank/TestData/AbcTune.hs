@@ -21,16 +21,9 @@ import Data.Time.Calendar
 import Data.Tuple (fst)
 import Control.Error.Util (hush)
 
-import Data.ByteString.Lazy.Internal (ByteString, packChars)
 
-import Data.Validation (Validation(..), toEither)
-import Data.Abc.Validator (buildHeaderMap, validateHeaders)
-import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
-import Data.Abc.Serializer (serializeHeaders)
-import Data.Abc.Parser (abcParse, headersParse)
-import qualified Data.Abc as ABC
+import Data.ByteString.Lazy.Internal (ByteString, packChars)
 import Data.Genre
-import Data.Bifunctor (second, bimap)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.TuneText as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
@@ -43,31 +36,16 @@ import Debug.Trace (trace)
 
 type MetadataEntry = (TuneRef.TuneId, AbcMetadata)
 
-buildMetadata :: UserName -> Genre -> Text -> Either String MetadataEntry
-buildMetadata (UserName submitter) genre abcText =
-  case (abcParse abcText) of
+buildMetadataEntry :: UserName -> Genre -> Text -> Either String MetadataEntry
+buildMetadataEntry userName genre abcText =
+  case (buildMetadata userName genre abcText) of
     Left err ->
       Left err
-    Right abc ->
+    Right metadata ->
       let
-        headerText = serializeHeaders (ABC.headers abc)
-        headerMap = buildHeaderMap $ ABC.headers abc
-        validated = toEither $ validateHeaders genre headerMap
-        transcription :: Maybe Text
-        source = lookup ABC.Source headerMap
-        origin = lookup ABC.Origin headerMap
-        composer = lookup ABC.Composer headerMap
-        transcription = lookup ABC.Transcription headerMap
-        fromValid :: V.ValidatedHeaders -> MetadataEntry
-        fromValid  (V.ValidatedHeaders title _ key rhythm )  =
-          let
-            k = TuneRef.tuneId title rhythm
-            !k' = trace ("map key: " <> show k) k
-          in
-            (k', AbcMetadata title key rhythm submitter
-                   source origin composer transcription headerText (ABC.body abc))
+        tuneKey = TuneRef.tuneId (title metadata) (rhythm metadata)
       in
-        bimap concat fromValid validated
+        Right (tuneKey, metadata)
 
 buildTuneRef :: AbcMetadata -> TuneRef.TuneRef
 buildTuneRef metadata =
@@ -138,7 +116,7 @@ postNewTune userName genre submission =
     theText = S.abc submission
     tracedText = trace ("new tune text: " <> (show theText)) theText
   in
-    case (buildMetadata userName genre $ S.abc submission) of
+    case (buildMetadataEntry userName genre $ S.abc submission) of
       Left err ->
         Left $ packChars err
       Right metadata ->
@@ -172,7 +150,7 @@ scandiMetadata =
   let
     submitter = UserName (pack "Administrator")
   in
-    fromList $ catMaybes $ map (hush . buildMetadata submitter Scandi) scandiAbc
+    fromList $ catMaybes $ map (hush . buildMetadataEntry submitter Scandi) scandiAbc
 
 
 augustsson :: String

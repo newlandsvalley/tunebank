@@ -1,10 +1,16 @@
 
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 -- | ABC Metadata for a tune and the related query parameters for selecting it
 
 module Tunebank.Model.AbcMetadata where
+
+
+import Prelude ()
+import Prelude.Compat hiding (lookup)
 
 import Data.Time.Calendar
 import GHC.Generics
@@ -14,6 +20,21 @@ import qualified Data.Aeson.Parser
 import Web.Internal.HttpApiData
 import Data.Text (Text, pack, toLower)
 import Data.Maybe (Maybe)
+import Data.Map (Map, fromList, elems, lookup)
+import Data.Typeable
+import Data.Bifunctor (second, bimap)
+import Servant.API.ContentTypes
+import Network.HTTP.Media ((//), (/:))
+import qualified Data.Text.Encoding as TextS (encodeUtf8, decodeUtf8')
+import Data.ByteString.Lazy (fromStrict, toStrict)
+import Data.Abc.Serializer (serializeHeaders)
+import Data.Abc.Parser (abcParse, headersParse)
+import qualified Data.Abc as ABC
+import Data.Genre (Genre(..))
+import Tunebank.Model.User (UserName(..))
+import Data.Validation (Validation(..), toEither)
+import Data.Abc.Validator (buildHeaderMap, validateHeaders)
+import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
 
 -- | a tune represented in ABC notation with the important header metadata
 -- | made more easily searchable
@@ -22,16 +43,20 @@ data AbcMetadata = AbcMetadata
     , key :: Text
     , rhythm :: Text
     , submitter ::Text
+    , abcHeaders :: Text
+    , abcBody :: Text
+    , abc :: Text
     , source :: Maybe Text
     , origin :: Maybe Text
     , composer :: Maybe Text
     , transcriber :: Maybe Text
-    , abcHeaders :: Text
-    , abcBody :: Text     
     } deriving (Eq, Show, Generic)
 
 
-instance ToJSON AbcMetadata
+instance ToJSON AbcMetadata where
+    -- For efficiency, we write a simple toEncoding implementation, as
+    -- the default version uses toJSON.
+    toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON AbcMetadata
 
@@ -151,3 +176,45 @@ instance ToHttpApiData SortKey
   where
     toUrlPiece Date = "date"
     toUrlPiece Alpha = "alpha"
+
+
+data ABC deriving Typeable
+
+instance Accept ABC where
+  contentType _ = "text" // "vnd.abc"
+
+instance MimeRender ABC AbcMetadata where
+  mimeRender _ metadata  =
+    (fromStrict . TextS.encodeUtf8) $ abc metadata
+
+-- not really needed accept by servant-client
+instance MimeUnrender ABC AbcMetadata where
+  mimeUnrender _ abcBytes =
+    case ((TextS.decodeUtf8' . toStrict) abcBytes) of
+      Left err ->
+        Left "illegal ABC chars"
+      Right abcText ->
+        buildMetadata (UserName "fred") Scandi abcText
+
+buildMetadata :: UserName -> Genre -> Text -> Either String AbcMetadata
+buildMetadata (UserName submitter) genre abcText =
+  case (abcParse abcText) of
+    Left err ->
+      Left err
+    Right abc ->
+      let
+        headerText = serializeHeaders (ABC.headers abc)
+        headerMap = buildHeaderMap $ ABC.headers abc
+        validated = toEither $ validateHeaders genre headerMap
+        source = lookup ABC.Source headerMap
+        origin = lookup ABC.Origin headerMap
+        composer = lookup ABC.Composer headerMap
+        transcriber = lookup ABC.Transcription headerMap
+        fromValid :: V.ValidatedHeaders -> AbcMetadata
+        fromValid  (V.ValidatedHeaders title _ key rhythm ) =
+          AbcMetadata title key rhythm submitter
+                      headerText (ABC.body abc)
+                      (headerText <> (ABC.body abc))
+                      source origin composer transcriber
+      in
+        bimap concat fromValid validated

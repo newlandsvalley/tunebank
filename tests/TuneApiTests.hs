@@ -102,7 +102,7 @@ tuneApiSpec config =
 
     describe "POST tune" $ do
       it "should accept a new tune " $ do
-        result <- runClientM (newTune normalUser Scandi (Submission $ pack augustsson)) clientEnv
+        result <- runClientM (newTune normalUser Scandi (Submission augustsson)) clientEnv
         result `shouldBe` (Right augustssonId)
 
 
