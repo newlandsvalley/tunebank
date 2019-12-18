@@ -59,6 +59,7 @@ executable tunebank
                    , Tunebank.TestData.AbcTune
                    , Tunebank.TestData.Comment
                    , Tunebank.TypeConversion.Transcode
+                   , Tunebank.Utils.Timestamps
 
   build-depends:
                      blaze-html   >= 0.9.0.1 && < 0.10

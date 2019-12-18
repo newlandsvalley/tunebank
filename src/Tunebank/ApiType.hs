@@ -13,12 +13,12 @@ import qualified Tunebank.Model.TuneText as TuneText (Submission)
 import Tunebank.Types (PDF, PNG, PostScript, MIDI, AcceptMime)
 import Tunebank.Model.AbcMetadata
 import Tunebank.Model.TuneRef (TuneId, TuneRef, TuneList)
-import Tunebank.Model.Comment (Comment, CommentId)
+import Tunebank.Model.Comment (Comment, CommentId, CommentList)
 import Tunebank.Model.Genre ()
 import Data.Genre (Genre)
 
 
-type UserAPI = "tunebank" :> "users"
+type UserAPI = "tunebank" :> "user"
                           :> BasicAuth "tunebank-realm" UserName
                           :> QueryParam "page" Int
                           :> QueryParam "size" Int
@@ -126,6 +126,6 @@ type CommentAPI =
                       :> "tune"
                       :> Capture "tune" TuneId
                       :> "comments"
-                      :> Get '[JSON] [Comment]
+                      :> Get '[JSON] CommentList
 
 type OverallAPI = UserAPI :<|> AbcTuneAPI :<|> CommentAPI

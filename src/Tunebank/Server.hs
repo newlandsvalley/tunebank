@@ -54,7 +54,7 @@ import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
-import Tunebank.Model.Comment (CommentId, Comment)
+import Tunebank.Model.Comment (CommentId, Comment, CommentList)
 -- import Tunebank.Model.Pagination (paginationHeaderContent)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 
@@ -72,6 +72,7 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
                   -> Maybe Int
                   -> AppM UserList
      usersHandler userName mPage mSize = do
+       _ <- traceM ("get users: " <> (show userName))
        let
          page = fromMaybe 1 mPage
        size <- Config.getPageSize mSize
@@ -200,8 +201,9 @@ commentServer = commentHandler :<|> commentListHandler
         Just comment ->
           pure comment
 
-    commentListHandler :: Genre -> TuneId -> AppM [Comment]
-    commentListHandler genre tuneId =
+    commentListHandler :: Genre -> TuneId -> AppM CommentList
+    commentListHandler genre tuneId = do
+      _ <- traceM ("get comments for: " <> (show tuneId))
       pure $ getTuneComments genre tuneId
 
 overallServer :: ServerT OverallAPI AppM

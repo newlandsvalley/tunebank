@@ -67,7 +67,7 @@ userApiSpec config =
       it "should create a user " $ do
         result <- runClientM (newUser sampleNewUser) clientEnv
         (second name result) `shouldBe` (Right  "fred")
-        (second registered result)  `shouldBe` (Right False)
+        (second valid result)  `shouldBe` (Right False)
 
     describe "GET users" $ do
       it "should get a user list " $ do

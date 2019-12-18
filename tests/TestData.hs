@@ -17,7 +17,7 @@ sampleNewUser = UReg.Submission "fred" "fred@gmail.com" "pwd" "pwd" "http://loca
 
 admin :: BasicAuthData
 admin =
-  BasicAuthData "Administrator" "password"
+  BasicAuthData "administrator" "password"
 
 normalUser :: BasicAuthData
 normalUser =

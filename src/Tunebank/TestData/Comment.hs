@@ -1,13 +1,18 @@
+
+{-# LANGUAGE OverloadedStrings #-}
+
 module Tunebank.TestData.Comment
   (
     getTuneComments
   , getTuneComment
   ) where
 
+-- | the only test data comments we have belong tp fastan, polska
+
 import Prelude ()
 import Prelude.Compat
 
-import Tunebank.Model.Comment (Comment(..), CommentId(..))
+import Tunebank.Model.Comment (Comment(..), CommentId(..), CommentList(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Data.Time.Calendar
 import GHC.Generics
@@ -16,15 +21,20 @@ import Data.Tuple (snd)
 import Data.Genre
 import Data.Map (Map, fromList, elems)
 import qualified Data.Map as Map (lookup)
+import qualified Tunebank.Model.TuneRef as TuneRef
+import Tunebank.Utils.Timestamps
 
 
 import Debug.Trace (trace)
 
 type CommentEntry = (CommentId, Comment)
 
-getTuneComments :: Genre -> TuneRef.TuneId -> [Comment]
+getTuneComments :: Genre -> TuneRef.TuneId -> CommentList
 getTuneComments genre tuneId =
-  map snd commentsList
+  if (genre == Scandi && tuneId == TuneRef.tuneId "fastan" "polska") then
+    CommentList $ map snd commentsList
+  else
+    CommentList []
 
 getTuneComment :: Genre -> TuneRef.TuneId -> CommentId -> Maybe Comment
 getTuneComment genre tuneId commentId =
@@ -40,11 +50,12 @@ getTuneComment genre tuneId commentId =
 commentsList :: [CommentEntry]
 commentsList =
   let
-    c1 = CommentId $ pack "c1"
-    c2 = CommentId $ pack "c2"
-    c3 = CommentId $ pack "c3"
+    c1 = CommentId $ day2timestamp $ (fromGregorian 2019  12 10)
+    c2 = CommentId $ day2timestamp $ (fromGregorian 2019  12 14)
+    c3 = CommentId $ day2timestamp $ (fromGregorian 2019  12 17)
+    tuneId = TuneRef.tuneId "fastan" "polska"
   in
-    [ ( c1, Comment c1 (pack "administrator") (pack "as played by Fred") (pack "Fred link") )
-    , ( c2, Comment c2 (pack "administrator") (pack "as played by Bert") (pack "Bert link") )
-    , ( c3, Comment c3 (pack "john") (pack "as played by Joe") (pack "Joe link") )
+    [ ( c1, Comment c1 tuneId "administrator" "as played by Fred" "Fred link" )
+    , ( c2, Comment c2 tuneId "administrator" "as played by Bert" "Bert link" )
+    , ( c3, Comment c3 tuneId "john" "as played by Joe" "Joe link" )
     ]

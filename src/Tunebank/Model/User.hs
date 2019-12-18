@@ -28,7 +28,7 @@ data User = User
   , password :: Text
   , role :: Role
   , registration_date :: Day
-  , registered :: Bool
+  , valid :: Bool
   , uid :: UserId
   } deriving (Eq, Show, Generic)
 
