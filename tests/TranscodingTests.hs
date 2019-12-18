@@ -14,7 +14,6 @@ import Data.Genre (Genre(..))
 
 import Test.Hspec
 
-import Tunebank.ApiType (AbcTuneAPI1)
 import Tunebank.Types
 import Tunebank.Server (tuneApp)
 import Tunebank.Model.User

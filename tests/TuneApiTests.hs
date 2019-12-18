@@ -24,7 +24,7 @@ import Test.Hspec.Wai
 
 import Data.ByteString.Lazy (ByteString)
 
-import Tunebank.ApiType (AbcTuneAPI1)
+import Tunebank.ApiType (AbcTuneAPI)
 import Tunebank.Types
 import Tunebank.Server (tuneApp)
 import Tunebank.Model.User
@@ -56,7 +56,7 @@ tuneList ::  Genre
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
 welcome :<|> tune :<|> tunePdf :<|> tunePs :<|> tunePng
       :<|> tuneMidi :<|> tuneAbc
-      :<|> tuneList :<|> newTune = client (Proxy :: Proxy AbcTuneAPI1)
+      :<|> tuneList :<|> newTune = client (Proxy :: Proxy AbcTuneAPI)
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =

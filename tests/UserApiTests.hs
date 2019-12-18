@@ -23,18 +23,14 @@ import           Data.Text                        (Text, unpack)
 import           Network.HTTP.Client       hiding (Proxy)
 import qualified Network.Wai.Handler.Warp         as Warp
 
--- import           Control.Error.Util (hush)
 import           Data.Either (isLeft)
 import           Data.Bifunctor (second)
 
 import           Servant
 import           Servant.Client
--- import           Servant.QuickCheck
--- import           Servant.QuickCheck.Internal (serverDoesntSatisfy)
 
 import           Test.Hspec
 import           Test.Hspec.Wai
--- import           Test.Hspec.Wai.Matcher
 
 
 import Tunebank.ApiType (UserAPI)

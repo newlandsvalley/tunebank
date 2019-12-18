@@ -48,10 +48,7 @@ type UserAPI = "tunebank" :> "users"
                -- equivalent to 'DELETE /tunebank/user/:username'
             -}
 
-type UserAPI1 = "tunebank" :> "users"
-                           :> Get '[JSON] [User]
-
-type AbcTuneAPI1 = "tunebank"
+type AbcTuneAPI = "tunebank"
                 :>  Get '[PlainText] Text
 
      :<|>  "tunebank" :> "genre"
@@ -117,7 +114,7 @@ type AbcTuneAPI1 = "tunebank"
                      :> ReqBody '[FormUrlEncoded] TuneText.Submission
                      :> Post '[JSON] TuneId
 
-type CommentAPI1 =
+type CommentAPI =
     "tunebank" :> "genre"
                :> Capture "genre" Genre
                :> "tune" :> Capture "tune" TuneId
@@ -131,4 +128,4 @@ type CommentAPI1 =
                       :> "comments"
                       :> Get '[JSON] [Comment]
 
-type OverallAPI = UserAPI :<|> AbcTuneAPI1 :<|> CommentAPI1
+type OverallAPI = UserAPI :<|> AbcTuneAPI :<|> CommentAPI

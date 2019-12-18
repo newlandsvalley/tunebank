@@ -44,7 +44,7 @@ import Data.Configurator
 import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
 import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, search, postNewTune, getTuneBinary)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
-import Tunebank.ApiType (UserAPI, AbcTuneAPI1, CommentAPI1, OverallAPI)
+import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as TuneText (Submission)
@@ -90,8 +90,9 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
      -- at the moment, the client doesn't really expect much from the response
      -- once it passes authentication
      checkUserHandler :: UserName -> AppM Text
-     checkUserHandler userName =
-        pure  "Y"
+     checkUserHandler userName = do
+       _ <- traceM ("check user: " <> (show userName))
+       pure  "Y"
 
      validateUserRegistrationHandler :: UserId -> AppM Text
      validateUserRegistrationHandler userId = do
@@ -100,7 +101,7 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
          else
            pure "Y"
 
-tuneServer :: ServerT AbcTuneAPI1 AppM
+tuneServer :: ServerT AbcTuneAPI AppM
 tuneServer =  welcomeHandler
               :<|> tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
               :<|> tunePngHandler :<|> tuneMidiHandler
@@ -188,7 +189,7 @@ binaryHandler binaryFormat genre tuneId = do
     Right bytes ->
       pure bytes
 
-commentServer :: ServerT CommentAPI1 AppM
+commentServer :: ServerT CommentAPI AppM
 commentServer = commentHandler :<|> commentListHandler
   where
     commentHandler :: Genre -> TuneId -> CommentId -> AppM Comment
@@ -210,10 +211,10 @@ overallServer =
 userAPI :: Proxy UserAPI
 userAPI = Proxy
 
-abcTuneAPI :: Proxy AbcTuneAPI1
+abcTuneAPI :: Proxy AbcTuneAPI
 abcTuneAPI = Proxy
 
-commentAPI :: Proxy CommentAPI1
+commentAPI :: Proxy CommentAPI
 commentAPI = Proxy
 
 overallAPI :: Proxy OverallAPI
@@ -257,7 +258,15 @@ fullApp ctx =
 
 fullApp :: AppCtx -> Application
 fullApp ctx =
-  simpleCors $
+  -- simpleCors $
+  corsWithAuth $
     serveWithContext overallAPI basicAuthServerContext $
         hoistServerWithContext overallAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
           (flip runReaderT ctx) overallServer
+
+-- | Allow Auth header with CORS.  This would be otherwise banned.
+corsWithAuth :: Middleware
+corsWithAuth = cors (const $ Just policy)
+  where
+    policy = simpleCorsResourcePolicy
+     { corsRequestHeaders = ["Authorization"] }
