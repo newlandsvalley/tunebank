@@ -6,6 +6,7 @@ module Tunebank.TestData.User
   , validateUser
   , getUserRole
   , hasAdminRole
+  , hasDeletePermission
   ) where
 
 import Prelude ()
@@ -73,6 +74,12 @@ validateUserRegistration suppliedUserId =
 hasAdminRole :: UserName -> Bool
 hasAdminRole userName =
   maybe False (== Administrator) (getUserRole userName)
+
+
+-- permission to delete a tune or a comment
+hasDeletePermission :: UserName -> Text -> Bool
+hasDeletePermission userName submitter =
+  hasAdminRole userName || userName == (UserName submitter)
 
 getUserRole :: UserName -> Maybe Role
 getUserRole (UserName userName) =

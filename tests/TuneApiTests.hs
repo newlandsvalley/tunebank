@@ -13,7 +13,7 @@ import Network.HTTP.Client hiding (Proxy)
 import qualified Network.Wai.Handler.Warp as Warp
 
 import Data.Either (isLeft)
-import Data.Bifunctor (second)
+import Data.Bifunctor (first, second)
 import Data.Genre (Genre(..))
 
 import Servant
@@ -54,9 +54,12 @@ tuneList ::  Genre
        -> Maybe Int
        -> ClientM TuneList
 newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
+deleteTune :: BasicAuthData -> Genre ->  TuneId -> ClientM ()
 welcome :<|> tune :<|> tunePdf :<|> tunePs :<|> tunePng
       :<|> tuneMidi :<|> tuneAbc
-      :<|> tuneList :<|> newTune = client (Proxy :: Proxy AbcTuneAPI)
+      :<|> tuneList :<|> newTune
+      :<|> deleteTune = client (Proxy :: Proxy AbcTuneAPI)
+
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =
@@ -104,6 +107,19 @@ tuneApiSpec config =
       it "should accept a new tune " $ do
         result <- runClientM (newTune normalUser Scandi (Submission augustsson)) clientEnv
         result `shouldBe` (Right augustssonId)
+
+    describe "DELETE tune" $ do
+      it "is allowed by an administrator" $ do
+        result <- runClientM (deleteTune admin Scandi augustssonId) clientEnv
+        result `shouldBe` (Right ())
+      it "is barred for a normal user who didn't submit the tune" $ do
+        eresult <- runClientM (deleteTune normalUser Scandi augustssonId) clientEnv
+        case eresult of
+          Left _ ->
+            (isLeft eresult) `shouldBe` True
+          Right _ -> do
+            expectationFailure "unexpected deletion by non-owner"
+
 
 
 -- MIME types for content negotiation

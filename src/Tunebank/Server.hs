@@ -42,8 +42,8 @@ import Data.Configurator.Types (Config)
 import Data.Configurator
 
 import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
-import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, search, postNewTune, getTuneBinary)
-import Tunebank.TestData.Comment (getTuneComment, getTuneComments)
+import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, search, postNewTune, getTuneBinary, deleteTune)
+import Tunebank.TestData.Comment (getTuneComment, getTuneComments, postNewComment, deleteComment)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
@@ -55,7 +55,7 @@ import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment, CommentList)
--- import Tunebank.Model.Pagination (paginationHeaderContent)
+import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 
 
@@ -110,6 +110,7 @@ tuneServer =  welcomeHandler
               :<|> tunePngHandler :<|> tuneMidiHandler
               :<|> tuneAbcHandler
               :<|> tuneListHandler :<|> newTuneHandler
+              :<|> deleteTuneHandler
   where
     welcomeHandler :: AppM Text
     welcomeHandler =
@@ -183,6 +184,15 @@ tuneServer =  welcomeHandler
         Right tuneId ->
           pure tuneId
 
+    deleteTuneHandler :: UserName -> Genre -> TuneId -> AppM ()
+    deleteTuneHandler userName genre tuneId = do
+      _ <- traceM ("delete tune: " <> (show tuneId))
+      case (deleteTune userName genre tuneId) of
+        Left err ->
+          throwError (err400 {errBody = err})
+        Right tuneId ->
+          pure ()
+
 -- | generic handler for all binary tune formats
 binaryHandler :: Transcodable -> Genre -> TuneId -> AppM Lazy.ByteString
 binaryHandler binaryFormat genre tuneId = do
@@ -195,6 +205,7 @@ binaryHandler binaryFormat genre tuneId = do
 
 commentServer :: ServerT CommentAPI AppM
 commentServer = commentHandler :<|> commentListHandler
+                :<|> newCommentHandler :<|> deleteCommentHandler
   where
     commentHandler :: Genre -> TuneId -> CommentId -> AppM Comment
     commentHandler  genre tuneId commentId = do
@@ -208,6 +219,24 @@ commentServer = commentHandler :<|> commentListHandler
     commentListHandler genre tuneId = do
       _ <- traceM ("get comments for: " <> (show tuneId))
       pure $ getTuneComments genre tuneId
+
+    newCommentHandler :: UserName -> Genre -> TuneId -> NewComment.Submission -> AppM CommentId
+    newCommentHandler userName genre tuneId submission = do
+      _ <- traceM ("new comment: " <> (show submission))
+      case (postNewComment userName genre tuneId submission) of
+        Left err ->
+          throwError (err400 {errBody = err})
+        Right commentId ->
+          pure commentId
+
+    deleteCommentHandler :: UserName -> Genre -> TuneId -> CommentId -> AppM ()
+    deleteCommentHandler userName genre tuneId commentId = do
+      _ <- traceM ("delete comment: " <> (show commentId))
+      case (deleteComment userName genre tuneId commentId) of
+        Left err ->
+          throwError (err400 {errBody = err})
+        Right tuneId ->
+          pure ()
 
 overallServer :: ServerT OverallAPI AppM
 overallServer =

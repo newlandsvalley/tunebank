@@ -5,6 +5,8 @@ module Tunebank.TestData.Comment
   (
     getTuneComments
   , getTuneComment
+  , postNewComment
+  , deleteComment
   ) where
 
 -- | the only test data comments we have belong tp fastan, polska
@@ -20,8 +22,12 @@ import Data.Text (Text, pack)
 import Data.Tuple (snd)
 import Data.Genre
 import Data.Map (Map, fromList, elems)
+import Data.ByteString.Lazy.Internal (ByteString, packChars)
 import qualified Data.Map as Map (lookup)
 import qualified Tunebank.Model.TuneRef as TuneRef
+import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
+import Tunebank.Model.User (UserName(..))
+import Tunebank.TestData.User (hasDeletePermission)
 import Tunebank.Utils.Timestamps
 
 
@@ -46,6 +52,24 @@ getTuneComment genre tuneId commentId =
         Map.lookup tracedCommentId $ fromList commentsList
     _ ->
       Nothing
+
+
+postNewComment :: UserName -> Genre -> TuneRef.TuneId -> NewComment.Submission -> Either ByteString CommentId
+postNewComment userName genre tuneId submission =
+  Right $ NewComment.cid submission
+
+deleteComment :: UserName -> Genre -> TuneRef.TuneId -> CommentId -> Either ByteString ()
+deleteComment userName genre tuneId commentId =
+  case (getTuneComment genre tuneId commentId) of
+  Nothing ->
+    Left $ packChars ("comment not recognized")
+  Just comment -> do
+    if (hasDeletePermission userName (user comment))
+      then
+        Right ()
+    else
+      Left $ packChars ("permission denied")
+
 
 commentsList :: [CommentEntry]
 commentsList =

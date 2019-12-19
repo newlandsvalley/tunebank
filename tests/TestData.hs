@@ -12,6 +12,7 @@ import Tunebank.Model.TuneRef
 import Tunebank.Model.Comment
 import Tunebank.Utils.Timestamps
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
+import qualified Tunebank.Model.CommentSubmission as NewComment
 
 
 -- users
@@ -38,6 +39,8 @@ sampleCommentId :: CommentId
 sampleCommentId =
   CommentId $ day2timestamp $ (fromGregorian 2019  12 14)
 
+sampleNewComment :: NewComment.Submission
+sampleNewComment = NewComment.Submission (CommentId "cid") "user" "subject" "text"
 
 -- tunes
 badAbc :: Text

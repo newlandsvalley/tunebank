@@ -26,14 +26,17 @@ import Tunebank.Types (AppCtx(..))
 import Tunebank.Server (commentApp)
 import Tunebank.Model.User
 import Tunebank.Model.Comment
+import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Data.Configurator.Types (Config)
 import Data.Genre
 import TestData
 
-singleComment ::  Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
+singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
 commentList ::  Genre -> TuneRef.TuneId -> ClientM CommentList
-singleComment :<|> commentList = client (Proxy :: Proxy CommentAPI)
+postComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> NewComment.Submission -> ClientM CommentId
+deleteComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> CommentId -> ClientM ()
+singleComment :<|> commentList :<|> postComment :<|> deleteComment = client (Proxy :: Proxy CommentAPI)
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =
@@ -68,3 +71,24 @@ commentApiSpec config =
             expectationFailure "unexpected comment list error"
           Right cList -> do
             (length $ comment cList) `shouldBe` 3
+
+    describe "POST comment" $ do
+      it "should post a comment " $ do
+        eResult <- runClientM (postComment normalUser Scandi (TuneRef.tuneId "fastan" "polska") sampleNewComment) clientEnv
+        case eResult of
+          Left _ ->
+            expectationFailure "unexpected post comment error"
+          Right commentId -> do
+            commentId `shouldBe` (CommentId "cid")
+
+    describe "DELETE comment" $ do
+      it "is allowed by an administrator" $ do
+        result <- runClientM (deleteComment admin Scandi augustssonId sampleCommentId) clientEnv
+        result `shouldBe` (Right ())
+      it "is barred for a normal user who didn't submit the comment" $ do
+        eresult <- runClientM (deleteComment normalUser Scandi augustssonId sampleCommentId) clientEnv
+        case eresult of
+          Left _ ->
+            (isLeft eresult) `shouldBe` True
+          Right _ -> do
+            expectationFailure "unexpected deletion by non-owner"

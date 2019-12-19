@@ -14,6 +14,7 @@ import Tunebank.Types (PDF, PNG, PostScript, MIDI, AcceptMime)
 import Tunebank.Model.AbcMetadata
 import Tunebank.Model.TuneRef (TuneId, TuneRef, TuneList)
 import Tunebank.Model.Comment (Comment, CommentId, CommentList)
+import qualified Tunebank.Model.CommentSubmission as NewComment (Submission)
 import Tunebank.Model.Genre ()
 import Data.Genre (Genre)
 
@@ -114,6 +115,13 @@ type AbcTuneAPI = "tunebank"
                      :> ReqBody '[FormUrlEncoded] TuneText.Submission
                      :> Post '[JSON] TuneId
 
+     :<|> "tunebank" :> BasicAuth "tunebank-realm" UserName
+                     :> "genre"
+                     :> Capture "genre" Genre
+                     :> "tune"
+                     :> Capture "tune" TuneId
+                     :> Delete '[JSON] ()
+
 type CommentAPI =
     "tunebank" :> "genre"
                :> Capture "genre" Genre
@@ -127,5 +135,24 @@ type CommentAPI =
                       :> Capture "tune" TuneId
                       :> "comments"
                       :> Get '[JSON] CommentList
+
+     :<|>  "tunebank" :> BasicAuth "tunebank-realm" UserName
+                      :> "genre"
+                      :> Capture "genre" Genre
+                      :> "tune"
+                      :> Capture "tune" TuneId
+                      :> "comment"
+                      :> ReqBody '[FormUrlEncoded] NewComment.Submission
+                      :> Post '[JSON] CommentId
+
+     :<|>  "tunebank" :> BasicAuth "tunebank-realm" UserName
+                      :> "genre"
+                      :> Capture "genre" Genre
+                      :> "tune"
+                      :> Capture "tune" TuneId
+                      :> "comment"
+                      :> Capture "comment" CommentId
+                      :> Delete '[JSON] ()
+
 
 type OverallAPI = UserAPI :<|> AbcTuneAPI :<|> CommentAPI

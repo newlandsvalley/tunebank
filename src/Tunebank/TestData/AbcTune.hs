@@ -7,6 +7,7 @@ module Tunebank.TestData.AbcTune
   , getTuneList
   , postNewTune
   , getTuneBinary
+  , deleteTune
   ) where
 
 import Prelude ()
@@ -31,6 +32,7 @@ import Tunebank.Model.Pagination
 import Tunebank.Types
 import Tunebank.Model.User (UserName(..))
 import Tunebank.TypeConversion.Transcode (transcodeTo)
+import Tunebank.TestData.User (hasDeletePermission)
 
 import Debug.Trace (trace)
 
@@ -121,6 +123,18 @@ postNewTune userName genre submission =
         Left $ packChars err
       Right metadata ->
         Right (fst metadata)
+
+deleteTune :: UserName -> Genre -> TuneRef.TuneId -> Either ByteString ()
+deleteTune userName genre tuneId =
+  case (getTuneMetadata genre tuneId) of
+    Nothing ->
+      Left $ packChars ("tune name not recognized")
+    Just metadata -> do
+      if (hasDeletePermission userName (submitter metadata))
+        then
+          Right ()
+        else
+          Left $ packChars ("permission denied")
 
 getTuneMetadata :: Genre -> TuneRef.TuneId -> Maybe AbcMetadata
 getTuneMetadata genre tuneId =
