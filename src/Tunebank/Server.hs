@@ -20,6 +20,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import Data.Attoparsec.ByteString
 import qualified Data.ByteString.Lazy as Lazy (ByteString)
+import Data.ByteString.Internal (packChars)
 import Data.List hiding (lookup)
 import Data.Maybe
 import Data.Text (Text, pack)
@@ -28,9 +29,11 @@ import Data.Time.Calendar
 import GHC.Generics
 import Lucid
 import Network.HTTP.Media ((//), (/:))
+-- import Network.HTTP.Types (StdMethod( DELETE ))
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.Middleware.Cors
+import Network.HTTP.Types.Method (Method)
 import Servant
 import System.Directory
 import Text.Blaze
@@ -209,6 +212,7 @@ commentServer = commentHandler :<|> commentListHandler
   where
     commentHandler :: Genre -> TuneId -> CommentId -> AppM Comment
     commentHandler  genre tuneId commentId = do
+      _ <- traceM ("get comment: " <> (show commentId))
       case (getTuneComment genre tuneId commentId) of
         Nothing ->
           throwError (err404 {errBody = "comment not found"})
@@ -293,14 +297,19 @@ fullApp ctx =
 fullApp :: AppCtx -> Application
 fullApp ctx =
   -- simpleCors $
-  corsWithAuth $
+  corsWithAuthAndDelete $
     serveWithContext overallAPI basicAuthServerContext $
         hoistServerWithContext overallAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
           (flip runReaderT ctx) overallServer
 
--- | Allow Auth header with CORS.  This would be otherwise banned.
-corsWithAuth :: Middleware
-corsWithAuth = cors (const $ Just policy)
+-- | extend simple CORS with the following (which would otherwise be banned):
+-- | * Authorization request header
+-- | * DELETE HTTP method
+corsWithAuthAndDelete :: Middleware
+corsWithAuthAndDelete = cors (const $ Just policy)
   where
+    methods = simpleMethods <> ["DELETE"]
     policy = simpleCorsResourcePolicy
-     { corsRequestHeaders = ["Authorization"] }
+     { corsRequestHeaders = ["Authorization"]
+     , corsMethods = methods
+     }
