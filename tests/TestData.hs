@@ -5,9 +5,12 @@ module TestData where
 import Prelude ()
 import Prelude.Compat
 import Data.Text (Text)
+import Data.Time.Calendar
 import Servant
 import Tunebank.Model.User
 import Tunebank.Model.TuneRef
+import Tunebank.Model.Comment
+import Tunebank.Utils.Timestamps
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
 
 
@@ -30,6 +33,10 @@ badUser =
 validateableUid :: UserId
 validateableUid =
   UserId "FRED"
+
+sampleCommentId :: CommentId
+sampleCommentId =
+  CommentId $ day2timestamp $ (fromGregorian 2019  12 14)
 
 
 -- tunes

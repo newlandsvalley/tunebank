@@ -18,10 +18,17 @@ newtype CommentId = CommentId Text
 instance ToJSON CommentId
 instance FromJSON CommentId
 
--- | this instance supports Capture text of type CommentId w
+-- | this instance supports Capture text of type UserId which are
+-- | all in one piece when found in the URL component that validates
+-- | a new user request
 instance FromHttpApiData CommentId
   where
-    parseUrlPiece t = Right $ CommentId t
+    parseUrlPiece v = Right $ CommentId v
+
+-- required for client testing
+instance ToHttpApiData CommentId
+  where
+    toUrlPiece (CommentId v) = v
 
 -- | A comment on a tune
 data Comment = Comment

@@ -85,6 +85,7 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
 
      newUserHandler :: UserReg.Submission -> AppM User
      newUserHandler submission = do
+       _ <- traceM ("new user: " <> (show submission))
        pure $ registerNewUser submission
 
      -- check user is pre-checked with basic authentication
@@ -97,6 +98,7 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
 
      validateUserRegistrationHandler :: UserId -> AppM Text
      validateUserRegistrationHandler userId = do
+       _ <- traceM ("validate user: " <> (show userId))
        if (not $ validateUserRegistration userId)
          then throwError (err404 {errBody = "user registration not recognized"})
          else
@@ -174,6 +176,7 @@ tuneServer =  welcomeHandler
 
     newTuneHandler :: UserName -> Genre -> TuneText.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do
+      _ <- traceM ("new tune: " <> (show submission))
       case (postNewTune userName genre submission) of
         Left err ->
           throwError (err400 {errBody = err})
