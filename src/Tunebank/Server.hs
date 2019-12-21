@@ -29,7 +29,6 @@ import Data.Time.Calendar
 import GHC.Generics
 import Lucid
 import Network.HTTP.Media ((//), (/:))
--- import Network.HTTP.Types (StdMethod( DELETE ))
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.Middleware.Cors
@@ -60,6 +59,7 @@ import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment, CommentList)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
+import qualified Tunebank.Email.Client as Email (sendConfirmation)
 
 
 import Data.Genre (Genre)
@@ -86,10 +86,17 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
              userList = getUsers page size
            pure $ userList
 
-     newUserHandler :: UserReg.Submission -> AppM User
+     newUserHandler :: UserReg.Submission -> AppM Text
      newUserHandler submission = do
        _ <- traceM ("new user: " <> (show submission))
-       pure $ registerNewUser submission
+       let
+         eUser = registerNewUser submission
+       case eUser of
+         Left _ ->
+           throwError (err404 {errBody = "registration failed"})
+         Right user -> do
+           _ <- Email.sendConfirmation (email user) (uid user)
+           pure "we've sent you an email to complete the registration process"
 
      -- check user is pre-checked with basic authentication
      -- at the moment, the client doesn't really expect much from the response

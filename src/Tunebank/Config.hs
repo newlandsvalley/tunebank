@@ -1,9 +1,15 @@
 module Tunebank.Config
   ( getPort
+  , thisServerBaseUrl
   , transcodeScriptPath
   , transcodeSourcePath
   , transcodeTargetPath
   , getPageSize
+  , mailHost
+  , mailPort
+  , mailLogin
+  , mailPassword
+  , mailFromAddress
   ) where
 
 -- | Utilities for reading configuration values
@@ -11,14 +17,22 @@ module Tunebank.Config
 import Prelude ()
 import Prelude.Compat hiding (lookup)
 import Control.Monad.Reader
-import Data.Text (pack)
+import Network.Socket (PortNumber)
+import Data.Text (Text, pack)
 import Tunebank.Types
 import Data.Configurator.Types (Config)
 import Data.Configurator
 import Data.Genre (Genre)
 import Data.Char (toLower)
+import Unsafe.Coerce
 
 import Debug.Trace (traceM)
+
+thisServerBaseUrl :: AppM String
+thisServerBaseUrl = do
+  host <- lookupString "tunebank.server.host"
+  port <- lookupInt "tunebank.server.port"
+  pure $ "http://" <> host <>":" <> (show port)
 
 transcodeScriptPath :: AppM String
 transcodeScriptPath =
@@ -26,7 +40,7 @@ transcodeScriptPath =
 
 transcodeSourcePath :: Genre -> AppM String
 transcodeSourcePath genre = do
-  path <- transcodePath genre True 
+  path <- transcodePath genre True
   traceM ("transcode source path: " <> path)
   pure path
 
@@ -55,6 +69,27 @@ getPageSize mSize = do
         then pure defaultSize
         else pure size
 
+mailHost :: AppM String
+mailHost =
+  lookupString "tunebank.mail.host"
+
+mailPort :: AppM PortNumber
+mailPort = do
+  portNumber <- lookupInt "tunebank.mail.port"
+  pure $ unsafeCoerce portNumber
+
+mailFromAddress :: AppM Text
+mailFromAddress = do
+  addr <- lookupString "tunebank.mail.fromAddress"
+  pure $ pack addr
+
+mailLogin :: AppM String
+mailLogin = do
+  lookupString "tunebank.mail.login"
+
+mailPassword :: AppM String
+mailPassword = do
+  lookupString "tunebank.mail.password"
 
 -- | lookup a String-valued configuration item
 lookupString :: String -> AppM String

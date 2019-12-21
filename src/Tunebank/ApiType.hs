@@ -28,7 +28,7 @@ type UserAPI = "tunebank" :> "user"
 
                :<|> "tunebank" :> "user"
                                :> ReqBody '[FormUrlEncoded] UserReg.Submission
-                               :> Post '[JSON] User
+                               :> Post '[JSON] Text
                 -- equivalent to 'POST /tunebank/users' with a URL encoded from form
 
                :<|> "tunebank" :> "user" :> "check"

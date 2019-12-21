@@ -42,6 +42,9 @@ executable tunebank
                      , wai
                      , wai-cors
                      , warp
+                     , network
+                     , HaskellNet
+                     , HaskellNet-SSL
   other-modules:     Tunebank.ApiType
                    , Tunebank.Types
                    , Tunebank.Config
@@ -53,6 +56,7 @@ executable tunebank
                    , Tunebank.Model.TuneRef
                    , Tunebank.Model.TuneText
                    , Tunebank.Model.Comment
+                   , Tunebank.Model.CommentSubmission
                    , Tunebank.Model.Pagination
                    , Tunebank.Authentication.BasicAuth
                    , Tunebank.TestData.User
@@ -60,6 +64,7 @@ executable tunebank
                    , Tunebank.TestData.Comment
                    , Tunebank.TypeConversion.Transcode
                    , Tunebank.Utils.Timestamps
+                   , Tunebank.Email.Client
 
   build-depends:
                      blaze-html   >= 0.9.0.1 && < 0.10
@@ -119,6 +124,9 @@ test-suite tests
                      , errors
                      , validation
                      , abc-header-parser
+                     , network
+                     , HaskellNet
+                     , HaskellNet-SSL
                      , hspec
                      , hspec-wai
   default-language:    Haskell2010

@@ -42,7 +42,7 @@ import Data.Configurator.Types (Config)
 import TestData
 
 userList :: BasicAuthData -> Maybe Int -> Maybe Int -> ClientM UserList
-newUser :: UReg.Submission -> ClientM User
+newUser :: UReg.Submission -> ClientM Text
 checkUser :: BasicAuthData -> ClientM Text
 validateUser :: UserId -> ClientM Text
 userList :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy UserAPI)
@@ -66,8 +66,7 @@ userApiSpec config =
     describe "POST user" $ do
       it "should create a user " $ do
         result <- runClientM (newUser sampleNewUser) clientEnv
-        (second name result) `shouldBe` (Right  "fred")
-        (second valid result)  `shouldBe` (Right False)
+        (second (take 52 . unpack) result) `shouldBe` (Right  "we've sent you an email to complete the registration")
 
     describe "GET users" $ do
       it "should get a user list " $ do

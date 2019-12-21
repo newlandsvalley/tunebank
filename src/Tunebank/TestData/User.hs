@@ -20,6 +20,7 @@ import Data.Time.Calendar
 import Data.Tuple (snd)
 import Data.Map (Map, lookup, fromList)
 import Data.Maybe (maybe)
+import Data.ByteString.Lazy.Internal (ByteString)
 import GHC.Generics
 
 
@@ -90,8 +91,8 @@ getUserRole (UserName userName) =
   in
     fmap role $ lookup userName userMap
 
-
-registerNewUser :: Reg.Submission -> User
+-- we need to provide user checks here
+registerNewUser :: Reg.Submission -> Either ByteString User
 registerNewUser submission =
   let
     name = Reg.name submission
@@ -99,7 +100,7 @@ registerNewUser submission =
     password = Reg.password submission
     foo = trace ("Registering new user: " <> (unpack name)) name
   in
-    User name email password NormalUser (fromGregorian 1683  3 1) False (UserId $ toUpper name)
+    Right $ User name email password NormalUser (fromGregorian 1683  3 1) False (UserId $ toUpper name)
 
 userList :: [User]
 userList =
