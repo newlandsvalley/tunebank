@@ -2,8 +2,7 @@
 
 module Tunebank.TestData.AbcTune
   (
-    getTuneMetadata
-  , search
+    search
   , getTuneList
   , postNewTune
   , getTuneBinary
@@ -136,6 +135,14 @@ deleteTune userName genre tuneId =
         else
           Left $ packChars ("permission denied")
 
+getTuneBinary :: Transcodable -> Genre -> TuneRef.TuneId -> AppM (Either ByteString ByteString)
+getTuneBinary binaryFormat genre tuneId =
+  case (getTuneMetadata genre tuneId) of
+    Nothing ->
+      pure $ Left $ packChars ("tune name not recognized")
+    Just metadata ->
+      transcodeTo binaryFormat genre metadata
+
 getTuneMetadata :: Genre -> TuneRef.TuneId -> Maybe AbcMetadata
 getTuneMetadata genre tuneId =
   case genre of
@@ -146,14 +153,6 @@ getTuneMetadata genre tuneId =
         lookup tracedTuneId scandiMetadata
     _ ->
       Nothing
-
-getTuneBinary :: Transcodable -> Genre -> TuneRef.TuneId -> AppM (Either ByteString ByteString)
-getTuneBinary binaryFormat genre tuneId =
-  case (getTuneMetadata genre tuneId) of
-    Nothing ->
-      pure $ Left $ packChars ("tune name not recognized")
-    Just metadata ->
-      transcodeTo binaryFormat genre metadata
 
 scandiAbc :: [ Text ]
 scandiAbc =

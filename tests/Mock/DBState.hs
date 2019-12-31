@@ -19,6 +19,8 @@ import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Tunebank.Model.User
 import Tunebank.Class
 import qualified Mock.MockUser as MockUser
+import qualified Mock.MockTune as MockTune
+import qualified Mock.MockComment as MockComment
 
 data DBState = DBState {
   users :: [User]
@@ -60,3 +62,9 @@ instance DBAccess (DB IO) DBIORef where
    updateUser uid user =
      -- we're not mocking updates
      pure ()
+
+   findTuneById genre tuneId =
+      pure $ MockTune.findTuneById genre tuneId
+
+   findCommentById  genre tuneId commentId =
+      pure $ MockComment.findCommentById genre tuneId commentId

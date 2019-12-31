@@ -58,8 +58,8 @@ import Servant.Server (ServerError)
 import Tunebank.Types
 import Tunebank.Class
 import Tunebank.TestData.User (getUsersTemporary, validateUserTemporary, hasAdminRole)
-import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, search, postNewTune, getTuneBinary, deleteTune)
-import Tunebank.TestData.Comment (getTuneComment, getTuneComments, postNewComment, deleteComment)
+import Tunebank.TestData.AbcTune (getTuneList, search, postNewTune, getTuneBinary, deleteTune)
+import Tunebank.TestData.Comment ( getTuneCommentsTemporary, postNewComment, deleteComment)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
 import Tunebank.DBHelper.User (registerNewUser)
@@ -111,6 +111,18 @@ instance DBAccess (SqlPersistT IO) SqlBackend where
    updateUser :: UserId -> User -> SqlPersistT IO ()
    updateUser uid user =
      pure ()
+
+   findTuneById :: Genre -> TuneId -> SqlPersistT IO (Maybe AbcMetadata)
+   findTuneById genre tuneId =
+     pure Nothing
+
+   findCommentById :: Genre -> TuneId -> CommentId -> SqlPersistT IO (Maybe Comment)
+   findCommentById genre tuneId commentId =
+     pure Nothing
+
+   getComments :: Genre -> TuneId -> SqlPersistT IO CommentList
+   getComments genre tuneId =
+     pure $ getTuneCommentsTemporary genre tuneId
 
 
 userServer :: DBAccess m d => d -> ServerT UserAPI AppM
@@ -169,13 +181,12 @@ userServer conn =
 
 
 
-tuneServer :: ServerT AbcTuneAPI AppM
-tuneServer =  welcomeHandler
-              :<|> tuneHandler :<|> tunePdfHandler :<|> tunePostScriptHandler
-              :<|> tunePngHandler :<|> tuneMidiHandler
-              :<|> tuneAbcHandler
-              :<|> tuneListHandler :<|> newTuneHandler
-              :<|> deleteTuneHandler
+tuneServer :: DBAccess m d => d -> ServerT AbcTuneAPI AppM
+tuneServer conn =
+  welcomeHandler  :<|> tuneHandler :<|> tunePdfHandler
+    :<|> tunePostScriptHandler  :<|> tunePngHandler :<|> tuneMidiHandler
+    :<|> tuneAbcHandler  :<|> tuneListHandler :<|> newTuneHandler
+    :<|> deleteTuneHandler
   where
     welcomeHandler :: AppM Text
     welcomeHandler =
@@ -183,9 +194,8 @@ tuneServer =  welcomeHandler
 
     tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
     tuneHandler genre tuneId = do
-      -- let's just prove that lookup config works OK
-      sorcePath <- Config.transcodeSourcePath genre
-      case (getTuneMetadata genre tuneId) of
+      mMetadata <- runQuery conn $ findTuneById genre tuneId
+      case mMetadata of
         Nothing -> do
           throwError (err404 {errBody = "tune not found"})
         Just metadata ->
@@ -209,7 +219,8 @@ tuneServer =  welcomeHandler
 
     tuneAbcHandler :: Genre -> TuneId -> AppM Text
     tuneAbcHandler genre tuneId = do
-      case (getTuneMetadata genre tuneId) of
+      mMetadata <- runQuery conn $ findTuneById genre tuneId
+      case mMetadata of
         Nothing -> do
           throwError (err404 {errBody = "tune not found"})
         Just metadata -> do
@@ -268,14 +279,16 @@ binaryHandler binaryFormat genre tuneId = do
     Right bytes ->
       pure bytes
 
-commentServer :: ServerT CommentAPI AppM
-commentServer = commentHandler :<|> commentListHandler
+commentServer :: DBAccess m d => d -> ServerT CommentAPI AppM
+commentServer conn =
+  commentHandler :<|> commentListHandler
                 :<|> newCommentHandler :<|> deleteCommentHandler
   where
     commentHandler :: Genre -> TuneId -> CommentId -> AppM Comment
     commentHandler  genre tuneId commentId = do
       _ <- traceM ("get comment: " <> (show commentId))
-      case (getTuneComment genre tuneId commentId) of
+      mComment <- runQuery conn $ findCommentById genre tuneId commentId
+      case mComment of
         Nothing ->
           throwError (err404 {errBody = "comment not found"})
         Just comment ->
@@ -284,7 +297,7 @@ commentServer = commentHandler :<|> commentListHandler
     commentListHandler :: Genre -> TuneId -> AppM CommentList
     commentListHandler genre tuneId = do
       _ <- traceM ("get comments for: " <> (show tuneId))
-      pure $ getTuneComments genre tuneId
+      pure $ getTuneCommentsTemporary genre tuneId
 
     newCommentHandler :: UserName -> Genre -> TuneId -> NewComment.Submission -> AppM CommentId
     newCommentHandler userName genre tuneId submission = do
@@ -306,13 +319,13 @@ commentServer = commentHandler :<|> commentListHandler
 
 overallServer ::  DBAccess m d => d -> ServerT OverallAPI AppM
 overallServer conn =
-  (userServer conn ) :<|> tuneServer :<|> commentServer
+  (userServer conn ) :<|> (tuneServer conn) :<|> (commentServer conn)
 
 userAPI :: Proxy UserAPI
 userAPI = Proxy
 
-abcTuneAPI :: Proxy AbcTuneAPI
-abcTuneAPI = Proxy
+tuneAPI :: Proxy AbcTuneAPI
+tuneAPI = Proxy
 
 commentAPI :: Proxy CommentAPI
 commentAPI = Proxy
@@ -329,17 +342,8 @@ overallAPI = Proxy
 -- these next three apps are only for use in the test module
 -- and will eventually be moved there
 
-tuneApp :: AppCtx -> Application
-tuneApp ctx =
-  serveWithContext abcTuneAPI basicAuthServerContext $
-    hoistServerWithContext abcTuneAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
-      (flip runReaderT ctx) tuneServer
-
-commentApp :: AppCtx -> Application
-commentApp ctx =
-  serveWithContext commentAPI basicAuthServerContext $
-    hoistServerWithContext commentAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
-      (flip runReaderT ctx) commentServer
+{-}
+-}
 
 {-}
 fullApp :: AppCtx -> Application

@@ -7,6 +7,8 @@ import Prelude ()
 import Prelude.Compat
 
 import qualified Control.Concurrent as C
+import Control.Monad.Reader
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Control.Exception (bracket)
 import Data.Text (Text, pack, unpack)
 import Network.HTTP.Client hiding (Proxy)
@@ -26,13 +28,15 @@ import Data.ByteString.Lazy (ByteString)
 
 import Tunebank.ApiType (AbcTuneAPI)
 import Tunebank.Types
-import Tunebank.Server (tuneApp)
+import Tunebank.Server (tuneAPI, tuneServer)
 import Tunebank.Model.User
 import Tunebank.Model.TuneText
 import Tunebank.Model.TuneRef
 import qualified Tunebank.Model.AbcMetadata as Meta
+import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import TestData
+import qualified Mock.DBState as MockDB
 
 welcome :: ClientM Text
 tune ::  Genre -> TuneId -> ClientM Meta.AbcMetadata
@@ -61,11 +65,18 @@ welcome :<|> tune :<|> tunePdf :<|> tunePs :<|> tunePng
       :<|> deleteTune = client (Proxy :: Proxy AbcTuneAPI)
 
 
+tuneApp :: IORef MockDB.DBState ->  AppCtx -> Application
+tuneApp dbRef ctx =
+  serveWithContext tuneAPI basicAuthServerContext $
+    hoistServerWithContext tuneAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+      (flip runReaderT ctx) (tuneServer $ MockDB.DBIORef dbRef)
+
 withUserApp :: Config -> IO () -> IO ()
-withUserApp config action =
+withUserApp config action = do
+  dbRef <- newIORef MockDB.mockedDBState
   -- we can spin up a server in another thread and kill that thread when done
   -- in an exception-safe way
-  bracket (liftIO $ C.forkIO $ Warp.run 8888 (tuneApp $ AppCtx config))
+  bracket (liftIO $ C.forkIO $ Warp.run 8888 (tuneApp dbRef $ AppCtx config))
     C.killThread
     (const action)
 

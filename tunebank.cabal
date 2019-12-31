@@ -143,4 +143,6 @@ test-suite tests
                    , TranscodingTests
                    , TestData
                    , Mock.MockUser
+                   , Mock.MockTune
+                   , Mock.MockComment
                    , Mock.DBState

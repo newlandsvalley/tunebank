@@ -15,7 +15,6 @@ import Data.Genre (Genre(..))
 import Test.Hspec
 
 import Tunebank.Types
-import Tunebank.Server (tuneApp)
 import Tunebank.Model.User
 import Tunebank.Model.TuneText
 import Tunebank.Model.TuneRef

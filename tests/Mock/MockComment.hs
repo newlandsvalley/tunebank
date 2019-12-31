@@ -1,14 +1,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module Tunebank.TestData.Comment
-  (
-    getTuneCommentsTemporary
-  , postNewComment
-  , deleteComment
-  ) where
-
--- | the only test data comments we have belong tp fastan, polska
+module Mock.MockComment where
 
 import Prelude ()
 import Prelude.Compat
@@ -29,20 +22,12 @@ import Tunebank.Model.User (UserName(..))
 import Tunebank.TestData.User (hasDeletePermission)
 import Tunebank.Utils.Timestamps
 
-
 import Debug.Trace (trace)
 
 type CommentEntry = (CommentId, Comment)
 
-getTuneCommentsTemporary :: Genre -> TuneRef.TuneId -> CommentList
-getTuneCommentsTemporary genre tuneId =
-  if (genre == Scandi && tuneId == TuneRef.tuneId "fastan" "polska") then
-    CommentList $ map snd commentsList
-  else
-    CommentList []
-
-getTuneComment :: Genre -> TuneRef.TuneId -> CommentId -> Maybe Comment
-getTuneComment genre tuneId commentId =
+findCommentById :: Genre -> TuneRef.TuneId -> CommentId -> Maybe Comment
+findCommentById genre tuneId commentId =
   case genre of
     Scandi ->
       let
@@ -51,24 +36,6 @@ getTuneComment genre tuneId commentId =
         Map.lookup tracedCommentId $ fromList commentsList
     _ ->
       Nothing
-
-
-postNewComment :: UserName -> Genre -> TuneRef.TuneId -> NewComment.Submission -> Either ByteString CommentId
-postNewComment userName genre tuneId submission =
-  Right $ NewComment.cid submission
-
-deleteComment :: UserName -> Genre -> TuneRef.TuneId -> CommentId -> Either ByteString ()
-deleteComment userName genre tuneId commentId =
-  case (getTuneComment genre tuneId commentId) of
-  Nothing ->
-    Left $ packChars ("comment not recognized")
-  Just comment -> do
-    if (hasDeletePermission userName (user comment))
-      then
-        Right ()
-    else
-      Left $ packChars ("permission denied")
-
 
 commentsList :: [CommentEntry]
 commentsList =

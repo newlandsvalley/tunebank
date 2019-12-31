@@ -8,6 +8,8 @@ import Prelude.Compat
 
 import qualified Control.Concurrent as C
 import Control.Exception (bracket)
+import Control.Monad.Reader
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Data.Text (Text, unpack)
 import Network.HTTP.Client hiding (Proxy)
 import qualified Network.Wai.Handler.Warp as Warp
@@ -23,7 +25,7 @@ import Test.Hspec.Wai
 
 import Tunebank.ApiType (CommentAPI)
 import Tunebank.Types (AppCtx(..))
-import Tunebank.Server (commentApp)
+import Tunebank.Server (commentServer, commentAPI)
 import Tunebank.Model.User
 import Tunebank.Model.Comment
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
@@ -32,7 +34,7 @@ import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import Data.Genre
 import TestData
-import Mock.DBState
+import Mock.DBState as MockDB
 
 singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
 commentList ::  Genre -> TuneRef.TuneId -> ClientM CommentList
@@ -41,12 +43,18 @@ deleteComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> CommentId -> Clie
 singleComment :<|> commentList :<|> postComment :<|> deleteComment = client (Proxy :: Proxy CommentAPI)
 
 
+commentApp :: IORef MockDB.DBState ->  AppCtx -> Application
+commentApp dbRef ctx =
+  serveWithContext commentAPI basicAuthServerContext $
+    hoistServerWithContext commentAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+      (flip runReaderT ctx) (commentServer $ MockDB.DBIORef dbRef)
 
 withUserApp :: Config -> IO () -> IO ()
-withUserApp config action =
+withUserApp config action = do
+  dbRef <- newIORef MockDB.mockedDBState
   -- we can spin up a server in another thread and kill that thread when done
   -- in an exception-safe way
-  bracket (liftIO $ C.forkIO $ Warp.run 8888 (commentApp $ AppCtx config))
+  bracket (liftIO $ C.forkIO $ Warp.run 8888 (commentApp dbRef $ AppCtx config))
     C.killThread
     (const action)
 
