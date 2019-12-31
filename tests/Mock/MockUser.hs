@@ -1,14 +1,12 @@
-module Tunebank.TestData.User
+module Mock.MockUser
   (
-    getUsersTemporary
-  , validateUserTemporary
-  , getUserRole
-  , hasAdminRole
-  , hasDeletePermission
+    getUsers
+  , countUsers
+  , findUserById
+  , findUserByName
+  , userList
+  , validateUser
   ) where
-
--- | this moduld will; be removed completely once we have a database layer
-
 
 import Prelude ()
 import Prelude.Compat hiding (lookup)
@@ -20,7 +18,7 @@ import Data.Text (Text, pack, unpack, toUpper)
 import Data.Time.Calendar
 import Data.Tuple (snd)
 import Data.Map (Map, lookup, fromList)
-import Data.Maybe (maybe, isJust)
+import Data.Maybe (maybe)
 import Data.ByteString.Lazy.Internal (ByteString)
 import GHC.Generics
 
@@ -40,21 +38,29 @@ usersById :: [KeyedById]
 usersById =
   map (\u -> (uid u, u)) userList
 
-getUsersTemporary :: Int -> Int -> UserList
-getUsersTemporary page size =
+getUsers :: Int -> Int -> Int -> UserList
+getUsers page size totalUsers =
   let
     users = userList
-    maxPages = (countUsers + size - 1) `quot` size
+    maxPages = (totalUsers + size - 1) `quot` size
     pagination = Pagination page size maxPages
   in
     UserList users pagination
+
+findUserById :: UserId -> Maybe User
+findUserById userId =
+  lookup userId $ fromList usersById
+
+findUserByName :: Text -> Maybe User
+findUserByName name =
+  lookup name $ fromList usersByName
 
 countUsers :: Int
 countUsers =
   length userList
 
-validateUserTemporary :: Text -> Text -> Bool
-validateUserTemporary name suppliedPassword =
+validateUser :: Text -> Text -> Bool
+validateUser name suppliedPassword =
   let
     foo = trace ("validating user: " <> (show name)) name
     userMap :: UserMap
@@ -62,25 +68,6 @@ validateUserTemporary name suppliedPassword =
     mpwd = fmap password $ lookup name userMap
   in
     maybe False (== suppliedPassword) mpwd
-
-hasAdminRole :: UserName -> Bool
-hasAdminRole userName =
-  maybe False (== Administrator) (getUserRole userName)
-
--- permission to delete a tune or a comment
-hasDeletePermission :: UserName -> Text -> Bool
-hasDeletePermission userName submitter =
-  hasAdminRole userName || userName == (UserName submitter)
-
-getUserRole :: UserName -> Maybe Role
-getUserRole (UserName userName) =
-  let
-    foo = trace ("get user role for: " <> (show userName)) userName
-    userMap :: UserMap
-    userMap = fromList usersByName
-  in
-    fmap role $ lookup userName userMap
-
 
 userList :: [User]
 userList =

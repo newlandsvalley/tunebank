@@ -1,13 +1,15 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE InstanceSigs #-}
 
 module Tunebank.Server where
 
@@ -20,6 +22,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import Data.Attoparsec.ByteString
 import qualified Data.ByteString.Lazy as Lazy (ByteString)
+import qualified Data.ByteString.Lazy.UTF8 as UTF8 (fromString)
 import Data.ByteString.Internal (packChars)
 import Data.List hiding (lookup)
 import Data.Maybe
@@ -43,14 +46,26 @@ import qualified Text.Blaze.Html
 import Data.Configurator.Types (Config)
 import Data.Configurator
 
-import Tunebank.TestData.User (getUsers, registerNewUser, validateUserRegistration, hasAdminRole)
+
+import Control.Monad.Catch (MonadThrow, catch, throwM)
+import Control.Monad.Error.Class (throwError)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Except (ExceptT)
+import Data.Functor.Identity
+import Servant.Server (ServerError)
+
+
+import Tunebank.Types
+import Tunebank.Class
+import Tunebank.TestData.User (getUsersTemporary, validateUserTemporary, hasAdminRole)
 import Tunebank.TestData.AbcTune (getTuneMetadata, getTuneList, search, postNewTune, getTuneBinary, deleteTune)
 import Tunebank.TestData.Comment (getTuneComment, getTuneComments, postNewComment, deleteComment)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
+import Tunebank.DBHelper.User (registerNewUser)
+import Tunebank.Utils.HTTPErrors
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as TuneText (Submission)
-import Tunebank.Types
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
@@ -65,9 +80,42 @@ import qualified Tunebank.Email.Client as Email (sendConfirmation)
 import Data.Genre (Genre)
 import Debug.Trace (trace, traceM)
 
+-- | these two types will eventually be replaced by real database types
+data SqlBackend = SqlBackend
+type SqlPersistT = ReaderT SqlBackend
 
-userServer :: ServerT UserAPI AppM
-userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
+instance DBAccess (SqlPersistT IO) SqlBackend where
+
+   runQuery :: SqlBackend -> SqlPersistT IO a -> AppM a
+   runQuery conn query =
+     -- liftIO $ query
+     throwError (err404 {errBody = "database layer not yet implemented"})
+
+   findUserById uid =
+     pure Nothing
+
+   findUserByName name =
+     pure Nothing
+
+   countUsers =
+     pure 0
+
+   getUsers :: Int -> Int -> SqlPersistT IO UserList
+   getUsers page size =
+     pure $ getUsersTemporary page size
+
+   insertUser :: User -> SqlPersistT IO Bool
+   insertUser user =
+     pure False
+
+   updateUser :: UserId -> User -> SqlPersistT IO ()
+   updateUser uid user =
+     pure ()
+
+
+userServer :: DBAccess m d => d -> ServerT UserAPI AppM
+userServer conn =
+  usersHandler :<|> newUserHandler :<|> checkUserHandler
               :<|> validateUserRegistrationHandler
    where
      usersHandler :: UserName
@@ -82,18 +130,18 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
        if (not $ hasAdminRole userName)
          then throwError (err404 {errBody = "not authorized"})
          else do
-           let
-             userList = getUsers page size
+           userList <- runQuery conn $ getUsers page size
            pure $ userList
+
 
      newUserHandler :: UserReg.Submission -> AppM Text
      newUserHandler submission = do
        _ <- traceM ("new user: " <> (show submission))
-       let
-         eUser = registerNewUser submission
+       eUser <- runQuery conn $ registerNewUser submission
        case eUser of
-         Left _ ->
-           throwError (err404 {errBody = "registration failed"})
+         Left err ->
+           throwError $ badRequest ("registration failed: " <> err)
+           -- (err404 {errBody = ("registration failed: " <> err)})
          Right user -> do
            _ <- Email.sendConfirmation (email user) (uid user)
            pure "we've sent you an email to complete the registration process"
@@ -109,10 +157,17 @@ userServer = usersHandler :<|> newUserHandler :<|> checkUserHandler
      validateUserRegistrationHandler :: UserId -> AppM Text
      validateUserRegistrationHandler userId = do
        _ <- traceM ("validate user: " <> (show userId))
-       if (not $ validateUserRegistration userId)
-         then throwError (err404 {errBody = "user registration not recognized"})
-         else
+       mUser <- runQuery conn $ findUserById userId
+       case mUser of
+         Nothing ->
+           throwError (err404 {errBody = "user registration not recognized"})
+         Just user -> do
+           let
+             updatedUser = user { valid = True }
+           _ <- runQuery conn $ updateUser userId updatedUser
            pure "Y"
+
+
 
 tuneServer :: ServerT AbcTuneAPI AppM
 tuneServer =  welcomeHandler
@@ -162,7 +217,6 @@ tuneServer =  welcomeHandler
             abcText = (abcHeaders metadata) <> (abcBody metadata)
           pure abcText
 
-
     tuneListHandler :: Genre
                     -> Maybe Title
                     -> Maybe Rhythm
@@ -184,6 +238,7 @@ tuneServer =  welcomeHandler
           search genre mTitle mRhythm mKey mSource mOrigin
                mComposer mTranscriber mSortKey page size
       pure $ tuneList
+
 
     newTuneHandler :: UserName -> Genre -> TuneText.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do
@@ -249,9 +304,9 @@ commentServer = commentHandler :<|> commentListHandler
         Right tuneId ->
           pure ()
 
-overallServer :: ServerT OverallAPI AppM
-overallServer =
-  userServer :<|> tuneServer :<|> commentServer
+overallServer ::  DBAccess m d => d -> ServerT OverallAPI AppM
+overallServer conn =
+  (userServer conn ) :<|> tuneServer :<|> commentServer
 
 userAPI :: Proxy UserAPI
 userAPI = Proxy
@@ -270,11 +325,9 @@ overallAPI = Proxy
 -- which you can think of as an "abstract" web application,
 -- not yet a webserver.  userApp is the only one so far to
 -- be fitted with basic authentication
-userApp :: AppCtx -> Application
-userApp ctx =
-  serveWithContext userAPI basicAuthServerContext $
-    hoistServerWithContext userAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
-      (flip runReaderT ctx) userServer
+
+-- these next three apps are only for use in the test module
+-- and will eventually be moved there
 
 tuneApp :: AppCtx -> Application
 tuneApp ctx =
@@ -307,7 +360,7 @@ fullApp ctx =
   corsWithAuthAndDelete $
     serveWithContext overallAPI basicAuthServerContext $
         hoistServerWithContext overallAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
-          (flip runReaderT ctx) overallServer
+          (flip runReaderT ctx) (overallServer (SqlBackend))
 
 -- | extend simple CORS with the following (which would otherwise be banned):
 -- | * Authorization request header

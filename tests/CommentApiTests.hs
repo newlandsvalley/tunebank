@@ -28,15 +28,19 @@ import Tunebank.Model.User
 import Tunebank.Model.Comment
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
+import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import Data.Genre
 import TestData
+import Mock.DBState
 
 singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
 commentList ::  Genre -> TuneRef.TuneId -> ClientM CommentList
 postComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> NewComment.Submission -> ClientM CommentId
 deleteComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> CommentId -> ClientM ()
 singleComment :<|> commentList :<|> postComment :<|> deleteComment = client (Proxy :: Proxy CommentAPI)
+
+
 
 withUserApp :: Config -> IO () -> IO ()
 withUserApp config action =

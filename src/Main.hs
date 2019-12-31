@@ -1,7 +1,7 @@
 module Main where
 
 import Tunebank.Types (AppCtx(..))
-import Tunebank.Server (userApp, tuneApp, commentApp, fullApp)
+import Tunebank.Server (tuneApp, commentApp, fullApp)
 import Network.Wai.Handler.Warp (run)
 import Data.Configurator
 import Tunebank.Config (getPort)

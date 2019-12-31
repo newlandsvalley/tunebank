@@ -21,6 +21,7 @@ executable tunebank
                      , base-compat
                      , configurator >= 0.3.0 && < 0.4.0
                      , bytestring
+                     , utf8-string
                      , strict-io >= 0.2.2
                      , containers
                      , process
@@ -43,12 +44,15 @@ executable tunebank
                      , wai-cors
                      , warp
                      , network
+                     , exceptions
                      , HaskellNet
                      , HaskellNet-SSL
   other-modules:     Tunebank.ApiType
                    , Tunebank.Types
+                   , Tunebank.Class
                    , Tunebank.Config
                    , Tunebank.Server
+                   , Tunebank.DBHelper.User
                    , Tunebank.Model.Genre
                    , Tunebank.Model.User
                    , Tunebank.Model.UserRegistration
@@ -64,6 +68,7 @@ executable tunebank
                    , Tunebank.TestData.Comment
                    , Tunebank.TypeConversion.Transcode
                    , Tunebank.Utils.Timestamps
+                   , Tunebank.Utils.HTTPErrors
                    , Tunebank.Email.Client
 
   build-depends:
@@ -94,6 +99,7 @@ test-suite tests
                      , containers
                      , unordered-containers
                      , bytestring
+                     , utf8-string
                      , strict-io >= 0.2.2
                      , containers
                      , process
@@ -127,6 +133,7 @@ test-suite tests
                      , network
                      , HaskellNet
                      , HaskellNet-SSL
+                     , exceptions
                      , hspec
                      , hspec-wai
   default-language:    Haskell2010
@@ -135,3 +142,5 @@ test-suite tests
                    , CommentApiTests
                    , TranscodingTests
                    , TestData
+                   , Mock.MockUser
+                   , Mock.DBState

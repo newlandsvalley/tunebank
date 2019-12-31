@@ -33,13 +33,18 @@ import           Test.Hspec
 import           Test.Hspec.Wai
 
 
+import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import Control.Monad.Reader
+
 import Tunebank.ApiType (UserAPI)
 import Tunebank.Types (AppCtx(..))
-import Tunebank.Server (userApp)
+import Tunebank.Server (userAPI, userServer)
 import Tunebank.Model.User
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
+import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import TestData
+import qualified Mock.DBState as MockDB
 
 userList :: BasicAuthData -> Maybe Int -> Maybe Int -> ClientM UserList
 newUser :: UReg.Submission -> ClientM Text
@@ -47,13 +52,23 @@ checkUser :: BasicAuthData -> ClientM Text
 validateUser :: UserId -> ClientM Text
 userList :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy UserAPI)
 
+
+userApp :: IORef MockDB.DBState -> AppCtx -> Application
+userApp dbRef ctx = do
+  serveWithContext userAPI basicAuthServerContext $
+    hoistServerWithContext userAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
+      (flip runReaderT ctx) (userServer $ MockDB.DBIORef dbRef)
+
 withUserApp :: Config -> IO () -> IO ()
-withUserApp config action =
+withUserApp config action = do
+  dbRef <- newIORef MockDB.mockedDBState
   -- we can spin up a server in another thread and kill that thread when done
   -- in an exception-safe way
-  bracket (liftIO $ C.forkIO $ Warp.run 8888 (userApp $ AppCtx config))
+  bracket (liftIO $ C.forkIO $ Warp.run 8888 (userApp dbRef (AppCtx config)) )
     C.killThread
     (const action)
+
+
 
 userApiSpec :: Config -> Spec
 userApiSpec config =

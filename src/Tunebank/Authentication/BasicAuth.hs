@@ -28,7 +28,7 @@ import Servant.Server                   (BasicAuthCheck (BasicAuthCheck),
 import Servant.Server.Experimental.Auth (AuthHandler, AuthServerData,
                                            mkAuthHandler)
 import Servant.Server.Experimental.Auth()
-import Tunebank.TestData.User (validateUser)
+import Tunebank.TestData.User (validateUserTemporary)
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
 import Tunebank.Model.User (UserName(..))
@@ -45,7 +45,7 @@ basicAuthServerContext = authCheck :. EmptyContext
 authCheck :: BasicAuthCheck UserName
 authCheck =
   let check (BasicAuthData username password) =
-        if (validateUser (decodeUtf8 username) (decodeUtf8 password))
+        if (validateUserTemporary (decodeUtf8 username) (decodeUtf8 password))
         then return (Authorized (UserName (decodeUtf8 username)))
         else return Unauthorized
   in BasicAuthCheck check

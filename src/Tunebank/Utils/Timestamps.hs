@@ -2,6 +2,7 @@ module Tunebank.Utils.Timestamps
   ( day2timestamp
   , time2timestamp
   , now2timestamp
+  , today
   ) where
 
 import Data.Time.Clock
@@ -29,3 +30,8 @@ fromDay day =
 time2POSIXms :: UTCTime -> Int
 time2POSIXms =
   (1000 *) . round . utcTimeToPOSIXSeconds
+
+today :: IO Day
+today = do
+  t <- getCurrentTime
+  pure $ utctDay t
