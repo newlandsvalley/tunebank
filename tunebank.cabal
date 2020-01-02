@@ -54,6 +54,7 @@ executable tunebank
                    , Tunebank.Server
                    , Tunebank.DBHelper.User
                    , Tunebank.DBHelper.Comment
+                   , Tunebank.DBHelper.Tune
                    , Tunebank.Model.Genre
                    , Tunebank.Model.User
                    , Tunebank.Model.UserRegistration

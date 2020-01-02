@@ -58,22 +58,24 @@ import Servant.Server (ServerError)
 import Tunebank.Types
 import Tunebank.Class
 import Tunebank.TestData.User (validateUserTemporary, hasAdminRole)
-import Tunebank.TestData.AbcTune (getTuneList, search, postNewTune, getTuneBinary, deleteTune)
+import Tunebank.TestData.AbcTune (getTuneList, search)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
 import Tunebank.DBHelper.User (registerNewUser)
 import Tunebank.DBHelper.Comment (deleteCommentIfPermitted, upsertCommentIfPermitted)
+import Tunebank.DBHelper.Tune (deleteTuneIfPermitted, upsertTuneIfPermitted)
 import Tunebank.Utils.HTTPErrors
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
-import qualified Tunebank.Model.TuneText as TuneText (Submission)
+import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
-import Tunebank.Model.TuneRef (TuneId, TuneRef)
+import Tunebank.Model.TuneRef (TuneId, TuneRef, tuneId)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment, CommentList(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.Pagination
+import Tunebank.TypeConversion.Transcode (transcodeTo)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import qualified Tunebank.Email.Client as Email (sendConfirmation)
 
@@ -116,6 +118,18 @@ instance DBAccess (SqlPersistT IO) SqlBackend where
   findTuneById :: Genre -> TuneId -> SqlPersistT IO (Maybe AbcMetadata)
   findTuneById genre tuneId =
     pure Nothing
+
+  getTunes ::  Genre -> Int -> Int -> SqlPersistT IO TuneRef.TuneList
+  getTunes genre page size =
+    pure $ TuneRef.TuneList [] (Pagination 0 0 0)
+
+  insertTune :: UserName -> Genre -> NewTune.Submission -> SqlPersistT IO TuneId
+  insertTune userName genre submission =
+    pure $ tuneId "not" "complete"
+
+  deleteTune :: Genre -> TuneId -> SqlPersistT IO ()
+  deleteTune genre tuneId  =
+    pure ()
 
   findCommentById :: Genre -> TuneId -> CommentId -> SqlPersistT IO (Maybe Comment)
   findCommentById genre tuneId commentId =
@@ -212,19 +226,19 @@ tuneServer conn =
 
     tunePdfHandler :: Genre -> TuneId -> AppM Lazy.ByteString
     tunePdfHandler genre tuneId =
-      binaryHandler Pdf genre tuneId
+      binaryHandler conn Pdf genre tuneId
 
     tunePostScriptHandler :: Genre -> TuneId -> AppM Lazy.ByteString
     tunePostScriptHandler genre tuneId =
-      binaryHandler PostScript genre tuneId
+      binaryHandler conn PostScript genre tuneId
 
     tunePngHandler :: Genre -> TuneId -> AppM Lazy.ByteString
     tunePngHandler genre tuneId =
-      binaryHandler Png genre tuneId
+      binaryHandler conn Png genre tuneId
 
     tuneMidiHandler :: Genre -> TuneId -> AppM Lazy.ByteString
     tuneMidiHandler genre tuneId =
-      binaryHandler Midi genre tuneId
+      binaryHandler conn Midi genre tuneId
 
     tuneAbcHandler :: Genre -> TuneId -> AppM Text
     tuneAbcHandler genre tuneId = do
@@ -260,33 +274,41 @@ tuneServer conn =
       pure $ tuneList
 
 
-    newTuneHandler :: UserName -> Genre -> TuneText.Submission -> AppM TuneId
+    newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do
       _ <- traceM ("new tune: " <> (show submission))
-      case (postNewTune userName genre submission) of
-        Left err ->
-          throwError (err400 {errBody = err})
+      eTuneId <- runQuery conn $ upsertTuneIfPermitted userName genre submission
+      case eTuneId of
+        Left serverError ->
+          throwError serverError
         Right tuneId ->
           pure tuneId
 
     deleteTuneHandler :: UserName -> Genre -> TuneId -> AppM ()
     deleteTuneHandler userName genre tuneId = do
       _ <- traceM ("delete tune: " <> (show tuneId))
-      case (deleteTune userName genre tuneId) of
-        Left err ->
-          throwError (err400 {errBody = err})
+      ePermitted <- runQuery conn $ deleteTuneIfPermitted userName genre tuneId
+      case ePermitted of
+        Left serverError ->
+          throwError serverError
         Right tuneId ->
           pure ()
 
--- | generic handler for all binary tune formats
-binaryHandler :: Transcodable -> Genre -> TuneId -> AppM Lazy.ByteString
-binaryHandler binaryFormat genre tuneId = do
-  tuneBinary <- getTuneBinary binaryFormat genre tuneId
-  case tuneBinary of
-    Left err ->
-      throwError (err400 {errBody = err})
-    Right bytes ->
-      pure bytes
+
+binaryHandler :: DBAccess m d => d -> Transcodable -> Genre -> TuneId -> AppM Lazy.ByteString
+binaryHandler conn binaryFormat genre tuneId = do
+  mMetadata <- runQuery conn $ findTuneById genre tuneId
+  case mMetadata of
+    Nothing ->
+      throwError $ notFound ("not found tune: " <> show tuneId)
+    Just metadata -> do
+      eTranscoded <- transcodeTo binaryFormat genre metadata
+      case eTranscoded of
+        Left error ->
+          throwError $ badRequest "made up error"
+        Right binary ->
+          pure binary
+
 
 commentServer :: DBAccess m d => d -> ServerT CommentAPI AppM
 commentServer conn =

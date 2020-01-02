@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Tunebank.TypeConversion.Transcode
-  (transcodeTo) where
+  ( transcodeTo ) where
 
 -- | Transcode ABC to a variety of target formats:
 -- | PDF, PS, MIDI, PNG
@@ -36,7 +36,6 @@ import Data.Bifunctor (first)
 import Tunebank.Config
 
 import Debug.Trace (traceM)
-
 
 transcodeTo :: Transcodable -> Genre -> AbcMetadata -> AppM (Either ByteString ByteString)
 transcodeTo target genre abcMetadata = do

@@ -4,9 +4,6 @@ module Tunebank.TestData.AbcTune
   (
     search
   , getTuneList
-  , postNewTune
-  , getTuneBinary
-  , deleteTune
   ) where
 
 import Prelude ()
@@ -111,30 +108,7 @@ getTuneList genre =
     _ ->
       []
 
-postNewTune :: UserName -> Genre -> S.Submission -> Either ByteString TuneRef.TuneId
-postNewTune userName genre submission =
-  let
-    theText = S.abc submission
-    tracedText = trace ("new tune text: " <> (show theText)) theText
-  in
-    case (buildMetadataEntry userName genre $ S.abc submission) of
-      Left err ->
-        Left $ packChars err
-      Right metadata ->
-        Right (fst metadata)
-
-deleteTune :: UserName -> Genre -> TuneRef.TuneId -> Either ByteString ()
-deleteTune userName genre tuneId =
-  case (getTuneMetadata genre tuneId) of
-    Nothing ->
-      Left $ packChars ("tune name not recognized")
-    Just metadata -> do
-      if (hasDeletePermission userName (submitter metadata))
-        then
-          Right ()
-        else
-          Left $ packChars ("permission denied")
-
+{-}
 getTuneBinary :: Transcodable -> Genre -> TuneRef.TuneId -> AppM (Either ByteString ByteString)
 getTuneBinary binaryFormat genre tuneId =
   case (getTuneMetadata genre tuneId) of
@@ -153,6 +127,7 @@ getTuneMetadata genre tuneId =
         lookup tracedTuneId scandiMetadata
     _ ->
       Nothing
+-}
 
 scandiAbc :: [ Text ]
 scandiAbc =

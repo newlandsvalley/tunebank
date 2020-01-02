@@ -1,5 +1,6 @@
 module Mock.MockTune
   ( findTuneById
+  , getTuneList
   ) where
 
 
@@ -35,6 +36,28 @@ findTuneById genre tuneId =
         lookup tracedTuneId scandiMetadata
     _ ->
       Nothing
+
+
+getTuneList :: Genre -> [TuneRef.TuneRef]
+getTuneList genre =
+  case genre of
+    Scandi ->
+      map buildTuneRef $ elems scandiMetadata
+    _ ->
+      []
+
+
+buildTuneRef :: AbcMetadata -> TuneRef.TuneRef
+buildTuneRef metadata =
+  TuneRef.TuneRef
+    { TuneRef.uri = TuneRef.tuneId (title metadata) (rhythm metadata)
+    , TuneRef.title = title metadata
+    , TuneRef.rhythm = rhythm metadata
+    , TuneRef.abcHeaders = abcHeaders metadata
+    , TuneRef.abc = abcBody metadata
+    , TuneRef.ts = (fromGregorian 1683  3 1)
+    }
+
 
 buildMetadataEntry :: UserName -> Genre -> Text -> Either String MetadataEntry
 buildMetadataEntry userName genre abcText =
