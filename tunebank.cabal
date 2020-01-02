@@ -53,6 +53,7 @@ executable tunebank
                    , Tunebank.Config
                    , Tunebank.Server
                    , Tunebank.DBHelper.User
+                   , Tunebank.DBHelper.Comment
                    , Tunebank.Model.Genre
                    , Tunebank.Model.User
                    , Tunebank.Model.UserRegistration
@@ -65,7 +66,6 @@ executable tunebank
                    , Tunebank.Authentication.BasicAuth
                    , Tunebank.TestData.User
                    , Tunebank.TestData.AbcTune
-                   , Tunebank.TestData.Comment
                    , Tunebank.TypeConversion.Transcode
                    , Tunebank.Utils.Timestamps
                    , Tunebank.Utils.HTTPErrors

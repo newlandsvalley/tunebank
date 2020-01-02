@@ -1,7 +1,6 @@
 module Tunebank.TestData.User
   (
-    getUsersTemporary
-  , validateUserTemporary
+    validateUserTemporary
   , getUserRole
   , hasAdminRole
   , hasDeletePermission
@@ -39,19 +38,6 @@ usersByName =
 usersById :: [KeyedById]
 usersById =
   map (\u -> (uid u, u)) userList
-
-getUsersTemporary :: Int -> Int -> UserList
-getUsersTemporary page size =
-  let
-    users = userList
-    maxPages = (countUsers + size - 1) `quot` size
-    pagination = Pagination page size maxPages
-  in
-    UserList users pagination
-
-countUsers :: Int
-countUsers =
-  length userList
 
 validateUserTemporary :: Text -> Text -> Bool
 validateUserTemporary name suppliedPassword =

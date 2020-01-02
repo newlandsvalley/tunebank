@@ -37,6 +37,13 @@ findCommentById genre tuneId commentId =
     _ ->
       Nothing
 
+getComments :: Genre -> TuneRef.TuneId -> CommentList
+getComments genre tuneId =
+  if (genre == Scandi && tuneId == TuneRef.tuneId "fastan" "polska") then
+    CommentList $ map snd commentsList
+  else
+    CommentList []
+
 commentsList :: [CommentEntry]
 commentsList =
   let

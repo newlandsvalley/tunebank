@@ -11,3 +11,7 @@ badRequest cause =
 notFound :: String -> ServerError
 notFound cause =
   err404 {errBody = UTF8.fromString cause }
+
+notAuthorized :: String -> ServerError
+notAuthorized cause =
+  err401 {errBody = UTF8.fromString cause }

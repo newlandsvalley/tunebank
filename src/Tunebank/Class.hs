@@ -8,10 +8,11 @@ import Control.Monad.Catch (MonadThrow, catch, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Text (Text)
 import Tunebank.Types
-import Tunebank.Model.User (UserId, User, UserList)
+import Tunebank.Model.User (UserId, UserName, User, UserList)
 import Tunebank.Model.AbcMetadata (AbcMetadata)
 import Tunebank.Model.TuneRef (TuneId)
 import Tunebank.Model.Comment (CommentId, Comment, CommentList)
+import qualified Tunebank.Model.CommentSubmission as NewComment (Submission)
 import Data.Genre (Genre)
 
 -- | This is a very abstract interface into the DB layer allowing
@@ -39,3 +40,7 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
   findCommentById :: Genre -> TuneId -> CommentId -> m (Maybe Comment)
 
   getComments :: Genre -> TuneId -> m CommentList
+
+  insertComment :: UserName -> Genre -> TuneId -> NewComment.Submission -> m CommentId
+
+  deleteComment :: Genre -> TuneId -> CommentId -> m ()

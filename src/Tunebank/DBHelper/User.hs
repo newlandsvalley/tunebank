@@ -3,7 +3,7 @@
 module Tunebank.DBHelper.User where
 
 import Data.Text
-import Servant.Server (errBody, err404)
+import Servant.Server (ServerError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Time.Calendar
 import Tunebank.Types
@@ -11,6 +11,7 @@ import Tunebank.Class
 import Tunebank.Model.User
 import qualified Tunebank.Model.UserRegistration as Reg (Submission(..))
 import Tunebank.Utils.Timestamps (today)
+import Tunebank.Utils.HTTPErrors
 
 -- | These 'helper' queries can be run through the database and they
 -- | expand the results thus obtained so as to matck the required
@@ -38,7 +39,7 @@ getUserRole (UserName userName) = do
   pure $ fmap role mUser
 
 -- we need to provide user checks here
-registerNewUser :: DBAccess m d =>  Reg.Submission -> m (Either String User)
+registerNewUser :: DBAccess m d =>  Reg.Submission -> m (Either ServerError User)
 registerNewUser submission =
   let
     name = Reg.name submission
@@ -50,7 +51,7 @@ registerNewUser submission =
       mUser <- findUserByName name
       case mUser of
         Just _ ->
-          pure $ Left  "user already exists"
+          pure $ Left $ badRequest "user already exists"
         _ -> do
           date <- liftIO today
           pure $ Right $ User name email password NormalUser date False (UserId $ toUpper name)

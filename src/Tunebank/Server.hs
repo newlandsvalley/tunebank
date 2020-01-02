@@ -57,12 +57,12 @@ import Servant.Server (ServerError)
 
 import Tunebank.Types
 import Tunebank.Class
-import Tunebank.TestData.User (getUsersTemporary, validateUserTemporary, hasAdminRole)
+import Tunebank.TestData.User (validateUserTemporary, hasAdminRole)
 import Tunebank.TestData.AbcTune (getTuneList, search, postNewTune, getTuneBinary, deleteTune)
-import Tunebank.TestData.Comment ( getTuneCommentsTemporary, postNewComment, deleteComment)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
 import Tunebank.DBHelper.User (registerNewUser)
+import Tunebank.DBHelper.Comment (deleteCommentIfPermitted, upsertCommentIfPermitted)
 import Tunebank.Utils.HTTPErrors
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as TuneText (Submission)
@@ -71,8 +71,9 @@ import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
-import Tunebank.Model.Comment (CommentId, Comment, CommentList)
+import Tunebank.Model.Comment (CommentId, Comment, CommentList(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
+import Tunebank.Model.Pagination
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import qualified Tunebank.Email.Client as Email (sendConfirmation)
 
@@ -86,43 +87,51 @@ type SqlPersistT = ReaderT SqlBackend
 
 instance DBAccess (SqlPersistT IO) SqlBackend where
 
-   runQuery :: SqlBackend -> SqlPersistT IO a -> AppM a
-   runQuery conn query =
+  runQuery :: SqlBackend -> SqlPersistT IO a -> AppM a
+  runQuery conn query =
      -- liftIO $ query
-     throwError (err404 {errBody = "database layer not yet implemented"})
+    throwError (err404 {errBody = "database layer not yet implemented"})
 
-   findUserById uid =
-     pure Nothing
+  findUserById uid =
+    pure Nothing
 
-   findUserByName name =
-     pure Nothing
+  findUserByName name =
+    pure Nothing
 
-   countUsers =
-     pure 0
+  countUsers =
+    pure 0
 
-   getUsers :: Int -> Int -> SqlPersistT IO UserList
-   getUsers page size =
-     pure $ getUsersTemporary page size
+  getUsers :: Int -> Int -> SqlPersistT IO UserList
+  getUsers page size =
+    pure $ UserList [] (Pagination 0 0 0)
 
-   insertUser :: User -> SqlPersistT IO Bool
-   insertUser user =
-     pure False
+  insertUser :: User -> SqlPersistT IO Bool
+  insertUser user =
+    pure False
 
-   updateUser :: UserId -> User -> SqlPersistT IO ()
-   updateUser uid user =
-     pure ()
+  updateUser :: UserId -> User -> SqlPersistT IO ()
+  updateUser uid user =
+    pure ()
 
-   findTuneById :: Genre -> TuneId -> SqlPersistT IO (Maybe AbcMetadata)
-   findTuneById genre tuneId =
-     pure Nothing
+  findTuneById :: Genre -> TuneId -> SqlPersistT IO (Maybe AbcMetadata)
+  findTuneById genre tuneId =
+    pure Nothing
 
-   findCommentById :: Genre -> TuneId -> CommentId -> SqlPersistT IO (Maybe Comment)
-   findCommentById genre tuneId commentId =
-     pure Nothing
+  findCommentById :: Genre -> TuneId -> CommentId -> SqlPersistT IO (Maybe Comment)
+  findCommentById genre tuneId commentId =
+    pure Nothing
 
-   getComments :: Genre -> TuneId -> SqlPersistT IO CommentList
-   getComments genre tuneId =
-     pure $ getTuneCommentsTemporary genre tuneId
+  getComments :: Genre -> TuneId -> SqlPersistT IO CommentList
+  getComments genre tuneId =
+    pure $ CommentList []
+
+  insertComment :: UserName -> Genre -> TuneId -> NewComment.Submission -> SqlPersistT IO CommentId
+  insertComment userName genre tuneId submission =
+    pure $ NewComment.cid submission
+
+  deleteComment :: Genre -> TuneId -> CommentId -> SqlPersistT IO ()
+  deleteComment genre tuneId commentId =
+    pure ()
 
 
 userServer :: DBAccess m d => d -> ServerT UserAPI AppM
@@ -151,8 +160,8 @@ userServer conn =
        _ <- traceM ("new user: " <> (show submission))
        eUser <- runQuery conn $ registerNewUser submission
        case eUser of
-         Left err ->
-           throwError $ badRequest ("registration failed: " <> err)
+         Left serverError ->
+           throwError serverError
            -- (err404 {errBody = ("registration failed: " <> err)})
          Right user -> do
            _ <- Email.sendConfirmation (email user) (uid user)
@@ -297,24 +306,26 @@ commentServer conn =
     commentListHandler :: Genre -> TuneId -> AppM CommentList
     commentListHandler genre tuneId = do
       _ <- traceM ("get comments for: " <> (show tuneId))
-      pure $ getTuneCommentsTemporary genre tuneId
+      runQuery conn $ getComments genre tuneId
 
     newCommentHandler :: UserName -> Genre -> TuneId -> NewComment.Submission -> AppM CommentId
     newCommentHandler userName genre tuneId submission = do
       _ <- traceM ("new comment: " <> (show submission))
-      case (postNewComment userName genre tuneId submission) of
-        Left err ->
-          throwError (err400 {errBody = err})
+      eUpserted <- runQuery conn $ upsertCommentIfPermitted userName genre tuneId submission
+      case eUpserted of
+        Left serverError ->
+          throwError serverError
         Right commentId ->
           pure commentId
 
     deleteCommentHandler :: UserName -> Genre -> TuneId -> CommentId -> AppM ()
     deleteCommentHandler userName genre tuneId commentId = do
       _ <- traceM ("delete comment: " <> (show commentId))
-      case (deleteComment userName genre tuneId commentId) of
-        Left err ->
-          throwError (err400 {errBody = err})
-        Right tuneId ->
+      ePermitted <- runQuery conn $ deleteCommentIfPermitted userName genre tuneId commentId
+      case ePermitted of
+        Left serverError ->
+          throwError serverError
+        Right _ ->
           pure ()
 
 overallServer ::  DBAccess m d => d -> ServerT OverallAPI AppM

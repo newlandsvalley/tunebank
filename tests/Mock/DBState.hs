@@ -17,6 +17,7 @@ import Control.Monad.Reader (MonadReader, ReaderT, ask, runReaderT)
 import Servant.Server (ServerError, errBody, err404)
 import Data.IORef (IORef, newIORef, readIORef, writeIORef)
 import Tunebank.Model.User
+import Tunebank.Model.CommentSubmission 
 import Tunebank.Class
 import qualified Mock.MockUser as MockUser
 import qualified Mock.MockTune as MockTune
@@ -68,3 +69,13 @@ instance DBAccess (DB IO) DBIORef where
 
    findCommentById  genre tuneId commentId =
       pure $ MockComment.findCommentById genre tuneId commentId
+
+   getComments genre tuneId =
+      pure $ MockComment.getComments genre tuneId
+
+   insertComment userName genre tuneId submission =
+     pure (cid submission)
+
+   deleteComment genre tuneId commentId =
+     -- we're not mocking deletes
+     pure ()
