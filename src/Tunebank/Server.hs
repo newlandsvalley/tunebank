@@ -57,11 +57,10 @@ import Servant.Server (ServerError)
 
 import Tunebank.Types
 import Tunebank.Class
-import Tunebank.TestData.User (validateUserTemporary, hasAdminRole)
-import Tunebank.TestData.AbcTune (getTuneList, search)
+import Tunebank.TestData.User (validateUserTemporary)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
-import Tunebank.DBHelper.User (registerNewUser)
+import Tunebank.DBHelper.User (registerNewUser, hasAdminRole, getUsersIfPermitted)
 import Tunebank.DBHelper.Comment (deleteCommentIfPermitted, upsertCommentIfPermitted)
 import Tunebank.DBHelper.Tune (deleteTuneIfPermitted, upsertTuneIfPermitted)
 import Tunebank.Utils.HTTPErrors
@@ -79,7 +78,6 @@ import Tunebank.TypeConversion.Transcode (transcodeTo)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import qualified Tunebank.Email.Client as Email (sendConfirmation)
 
-
 import Data.Genre (Genre)
 import Debug.Trace (trace, traceM)
 
@@ -92,7 +90,7 @@ instance DBAccess (SqlPersistT IO) SqlBackend where
   runQuery :: SqlBackend -> SqlPersistT IO a -> AppM a
   runQuery conn query =
      -- liftIO $ query
-    throwError (err404 {errBody = "database layer not yet implemented"})
+    throwError $ badRequest "database layer not yet implemented"
 
   findUserById uid =
     pure Nothing
@@ -123,9 +121,24 @@ instance DBAccess (SqlPersistT IO) SqlBackend where
   getTunes genre page size =
     pure $ TuneRef.TuneList [] (Pagination 0 0 0)
 
+  search :: Genre
+         -> Maybe Title
+         -> Maybe Rhythm
+         -> Maybe TuneKey
+         -> Maybe Source
+         -> Maybe AbcMetadata.Origin
+         -> Maybe Composer
+         -> Maybe Transcriber
+         -> SortKey
+         -> Int
+         -> Int
+         -> SqlPersistT IO TuneRef.TuneList
+  search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sort page size =
+    pure $ TuneRef.TuneList [] (Pagination 0 0 0)
+
   insertTune :: UserName -> Genre -> NewTune.Submission -> SqlPersistT IO TuneId
   insertTune userName genre submission =
-    pure $ tuneId "not" "complete"
+    pure $ tuneId "not" "implemented"
 
   deleteTune :: Genre -> TuneId -> SqlPersistT IO ()
   deleteTune genre tuneId  =
@@ -162,12 +175,12 @@ userServer conn =
        let
          page = fromMaybe 1 mPage
        size <- Config.getPageSize mSize
-       if (not $ hasAdminRole userName)
-         then throwError (err404 {errBody = "not authorized"})
-         else do
-           userList <- runQuery conn $ getUsers page size
-           pure $ userList
-
+       eUserList <- runQuery conn $ getUsersIfPermitted userName page size
+       case eUserList of
+         Left serverError ->
+           throwError serverError
+         Right userList ->
+           pure userList
 
      newUserHandler :: UserReg.Submission -> AppM Text
      newUserHandler submission = do
@@ -195,7 +208,7 @@ userServer conn =
        mUser <- runQuery conn $ findUserById userId
        case mUser of
          Nothing ->
-           throwError (err404 {errBody = "user registration not recognized"})
+           throwError $ badRequest "user registration not recognized"
          Just user -> do
            let
              updatedUser = user { valid = True }
@@ -220,7 +233,7 @@ tuneServer conn =
       mMetadata <- runQuery conn $ findTuneById genre tuneId
       case mMetadata of
         Nothing -> do
-          throwError (err404 {errBody = "tune not found"})
+          throwError $ notFound ("not found tune: " <> show tuneId)
         Just metadata ->
           pure metadata
 
@@ -244,12 +257,10 @@ tuneServer conn =
     tuneAbcHandler genre tuneId = do
       mMetadata <- runQuery conn $ findTuneById genre tuneId
       case mMetadata of
-        Nothing -> do
-          throwError (err404 {errBody = "tune not found"})
-        Just metadata -> do
-          let
-            abcText = (abcHeaders metadata) <> (abcBody metadata)
-          pure abcText
+        Nothing ->
+          throwError $ notFound ("not found tune: " <> show tuneId)
+        Just metadata ->
+          pure $ (abcHeaders metadata) <> (abcBody metadata)
 
     tuneListHandler :: Genre
                     -> Maybe Title
@@ -268,11 +279,11 @@ tuneServer conn =
       size <- Config.getPageSize mSize
       let
         page = fromMaybe 1 mPage
-        tuneList =
+        sortKey = fromMaybe Alpha mSortKey
+      tuneList <- runQuery conn $
           search genre mTitle mRhythm mKey mSource mOrigin
-               mComposer mTranscriber mSortKey page size
+             mComposer mTranscriber sortKey page size
       pure $ tuneList
-
 
     newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do
@@ -294,7 +305,7 @@ tuneServer conn =
         Right tuneId ->
           pure ()
 
-
+-- | find the requested tune and transcode to the requested binary format
 binaryHandler :: DBAccess m d => d -> Transcodable -> Genre -> TuneId -> AppM Lazy.ByteString
 binaryHandler conn binaryFormat genre tuneId = do
   mMetadata <- runQuery conn $ findTuneById genre tuneId
@@ -304,8 +315,8 @@ binaryHandler conn binaryFormat genre tuneId = do
     Just metadata -> do
       eTranscoded <- transcodeTo binaryFormat genre metadata
       case eTranscoded of
-        Left error ->
-          throwError $ badRequest "made up error"
+        Left errorBytes ->
+          throwError $ badRequestLazy errorBytes
         Right binary ->
           pure binary
 
@@ -321,7 +332,7 @@ commentServer conn =
       mComment <- runQuery conn $ findCommentById genre tuneId commentId
       case mComment of
         Nothing ->
-          throwError (err404 {errBody = "comment not found"})
+          throwError $ notFound "comment not found"
         Just comment ->
           pure comment
 
@@ -375,8 +386,6 @@ overallAPI = Proxy
 -- these next three apps are only for use in the test module
 -- and will eventually be moved there
 
-{-}
--}
 
 {-}
 fullApp :: AppCtx -> Application

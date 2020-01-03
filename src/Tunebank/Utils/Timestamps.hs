@@ -3,6 +3,8 @@ module Tunebank.Utils.Timestamps
   , time2timestamp
   , now2timestamp
   , today
+  , fromDay
+  , timeNow
   ) where
 
 import Data.Time.Clock
@@ -35,3 +37,8 @@ today :: IO Day
 today = do
   t <- getCurrentTime
   pure $ utctDay t
+
+timeNow :: IO UTCTime
+timeNow = do
+  day <- today
+  pure $ fromDay day

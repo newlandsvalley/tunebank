@@ -13,6 +13,7 @@ import Prelude ()
 import Prelude.Compat hiding (lookup)
 
 import Data.Time.Calendar
+import Data.Time.Clock (UTCTime)
 import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Types
@@ -32,6 +33,7 @@ import Data.Abc.Parser (abcParse, headersParse)
 import qualified Data.Abc as ABC
 import Data.Genre (Genre(..))
 import Tunebank.Model.User (UserName(..))
+import Tunebank.Utils.Timestamps (fromDay)
 import Data.Validation (Validation(..), toEither)
 import Data.Abc.Validator (buildHeaderMap, validateHeaders)
 import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
@@ -42,7 +44,8 @@ data AbcMetadata = AbcMetadata
     { title :: Text
     , key :: Text
     , rhythm :: Text
-    , submitter ::Text
+    , submitter :: Text
+    , utcTime :: UTCTime
     , abcHeaders :: Text
     , abcBody :: Text
     , abc :: Text
@@ -194,10 +197,13 @@ instance MimeUnrender ABC AbcMetadata where
       Left err ->
         Left "illegal ABC chars"
       Right abcText ->
-        buildMetadata (UserName "fred") Scandi abcText
+        let
+          time = fromDay $ fromGregorian 2020 1 1
+        in
+          buildMetadata (UserName "fred") time Scandi abcText
 
-buildMetadata :: UserName -> Genre -> Text -> Either String AbcMetadata
-buildMetadata (UserName submitter) genre abcText =
+buildMetadata :: UserName -> UTCTime -> Genre -> Text ->  Either String AbcMetadata
+buildMetadata (UserName submitter) utcTime genre abcText  =
   case (abcParse abcText) of
     Left err ->
       Left err
@@ -212,7 +218,7 @@ buildMetadata (UserName submitter) genre abcText =
         transcriber = lookup ABC.Transcription headerMap
         fromValid :: V.ValidatedHeaders -> AbcMetadata
         fromValid  (V.ValidatedHeaders title _ key rhythm ) =
-          AbcMetadata title key rhythm submitter
+          AbcMetadata title key rhythm submitter utcTime
                       headerText (ABC.body abc)
                       (headerText <> (ABC.body abc))
                       source origin composer transcriber

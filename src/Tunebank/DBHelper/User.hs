@@ -55,3 +55,13 @@ registerNewUser submission =
         _ -> do
           date <- liftIO today
           pure $ Right $ User name email password NormalUser date False (UserId $ toUpper name)
+
+getUsersIfPermitted :: DBAccess m d => UserName -> Int -> Int -> m (Either ServerError UserList)
+getUsersIfPermitted userName page size = do
+  canQuery <- hasAdminRole userName
+  if canQuery
+    then do
+      userList <- getUsers page size
+      pure $ Right userList
+    else
+      pure $ Left $ notAuthorized ("querying users not allowed for user: " <> (show userName))

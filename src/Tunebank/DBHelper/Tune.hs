@@ -2,6 +2,8 @@
 
 module Tunebank.DBHelper.Tune where
 
+
+import Control.Monad.IO.Class (liftIO)
 import Servant.Server (ServerError)
 import Tunebank.Types
 import Tunebank.Class
@@ -15,6 +17,7 @@ import Tunebank.Utils.Timestamps (today)
 import Data.Genre
 import Tunebank.Utils.HTTPErrors
 import Tunebank.DBHelper.User
+import Tunebank.Utils.Timestamps (timeNow)
 
 
 deleteTuneIfPermitted :: DBAccess m d => UserName -> Genre -> TuneRef.TuneId -> m (Either ServerError ())
@@ -33,8 +36,9 @@ deleteTuneIfPermitted  userName genre tuneId  = do
 
 upsertTuneIfPermitted ::  DBAccess m d => UserName -> Genre -> NewTune.Submission -> m (Either ServerError TuneRef.TuneId)
 upsertTuneIfPermitted userName genre submission = do
+  time <- liftIO $ timeNow
   let
-    eMetadata = buildMetadata userName genre (NewTune.abc submission)
+    eMetadata = buildMetadata userName time genre (NewTune.abc submission)
   case eMetadata of
     Left errorText -> do
       pure $ Left $ badRequest errorText

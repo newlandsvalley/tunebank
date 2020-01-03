@@ -66,7 +66,6 @@ executable tunebank
                    , Tunebank.Model.Pagination
                    , Tunebank.Authentication.BasicAuth
                    , Tunebank.TestData.User
-                   , Tunebank.TestData.AbcTune
                    , Tunebank.TypeConversion.Transcode
                    , Tunebank.Utils.Timestamps
                    , Tunebank.Utils.HTTPErrors

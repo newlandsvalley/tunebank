@@ -1,9 +1,6 @@
 module Tunebank.TestData.User
   (
     validateUserTemporary
-  , getUserRole
-  , hasAdminRole
-  , hasDeletePermission
   ) where
 
 -- | this moduld will; be removed completely once we have a database layer
@@ -49,6 +46,8 @@ validateUserTemporary name suppliedPassword =
   in
     maybe False (== suppliedPassword) mpwd
 
+
+{-}
 hasAdminRole :: UserName -> Bool
 hasAdminRole userName =
   maybe False (== Administrator) (getUserRole userName)
@@ -66,7 +65,7 @@ getUserRole (UserName userName) =
     userMap = fromList usersByName
   in
     fmap role $ lookup userName userMap
-
+-}
 
 userList :: [User]
 userList =

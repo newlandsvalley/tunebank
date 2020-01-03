@@ -72,6 +72,9 @@ instance DBAccess (DB IO) DBIORef where
    getTunes genre page size =
      pure $ TuneList (MockTune.getTuneList genre) (Pagination 0 0 0)
 
+   search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sort page size =
+     pure $ MockTune.search  genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sort page size
+
    insertTune userName genre submission =
      -- we're not mocking  inserts
      pure $ tuneId "not" "complete"

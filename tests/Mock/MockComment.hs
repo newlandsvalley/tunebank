@@ -1,4 +1,3 @@
-
 {-# LANGUAGE OverloadedStrings #-}
 
 module Mock.MockComment where
@@ -19,7 +18,6 @@ import qualified Data.Map as Map (lookup)
 import qualified Tunebank.Model.TuneRef as TuneRef
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.User (UserName(..))
-import Tunebank.TestData.User (hasDeletePermission)
 import Tunebank.Utils.Timestamps
 
 import Debug.Trace (trace)

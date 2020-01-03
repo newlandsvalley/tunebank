@@ -1,6 +1,9 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Mock.MockTune
   ( findTuneById
   , getTuneList
+  , search
   ) where
 
 
@@ -11,6 +14,8 @@ import Data.Text (Text, pack, unpack, toLower)
 import Data.Maybe (catMaybes, fromJust)
 import Data.Either (Either(..))
 import Data.Time.Calendar
+import Data.Time.Clock (UTCTime)
+import Tunebank.Utils.Timestamps (fromDay)
 import Data.Tuple (fst)
 import Control.Error.Util (hush)
 
@@ -59,9 +64,9 @@ buildTuneRef metadata =
     }
 
 
-buildMetadataEntry :: UserName -> Genre -> Text -> Either String MetadataEntry
-buildMetadataEntry userName genre abcText =
-  case (buildMetadata userName genre abcText) of
+buildMetadataEntry :: UserName -> UTCTime -> Genre -> Text -> Either String MetadataEntry
+buildMetadataEntry userName utcTime genre abcText =
+  case (buildMetadata userName utcTime genre abcText) of
     Left err ->
       Left err
     Right metadata ->
@@ -74,15 +79,56 @@ scandiMetadata :: Map TuneRef.TuneId AbcMetadata
 scandiMetadata =
   let
     submitter = UserName (pack "Administrator")
+    time = fromDay $ fromGregorian 2020 1 1
   in
-    fromList $ catMaybes $ map (hush . buildMetadataEntry submitter Scandi) scandiAbc
+    fromList $ catMaybes $ map (hush . buildMetadataEntry submitter time Scandi) scandiAbc
 
 scandiAbc :: [ Text ]
 scandiAbc =
   [(pack augustsson), (pack fastan), (pack cig)]
 
 
+search :: Genre
+       -> Maybe Title
+       -> Maybe Rhythm
+       -> Maybe TuneKey
+       -> Maybe Source
+       -> Maybe Origin
+       -> Maybe Composer
+       -> Maybe Transcriber
+       -> SortKey
+       -> Int
+       -> Int
+       -> TuneRef.TuneList
+search genre mTitle mRhythm mKey mSource mOrigin
+           mComposer mTranscriber sortKey page size =
+    let
+      -- we'll get rid of this logging quite soon
+      !p1 = trace ("title param: " <> show mTitle) mTitle
+      !p2 = trace ("rhythm param: " <> show mRhythm) mRhythm
+      !p3 = trace ("key param: " <> show mKey) mKey
+      !p4 = trace ("source param: " <> show mSource) mSource
+      !p5 = trace ("origin param: " <> show mOrigin) mOrigin
+      !p6 = trace ("composer param: " <> show mComposer) mComposer
+      !p7 = trace ("transcriber param: " <> show mTranscriber) mTranscriber
+      !p8 = trace ("sort param: " <> show sortKey) sortKey
+      count = countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
+      maxPages = (count + size - 1) `quot` size
+      pagination = Pagination page size maxPages
+    in
+      TuneRef.TuneList (getTuneList genre) pagination
 
+countTunes :: Genre
+           -> Maybe Title
+           -> Maybe Rhythm
+           -> Maybe TuneKey
+           -> Maybe Source
+           -> Maybe Origin
+           -> Maybe Composer
+           -> Maybe Transcriber
+           -> Int
+countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber =
+  length $ getTuneList genre
 
 augustsson :: String
 augustsson =
