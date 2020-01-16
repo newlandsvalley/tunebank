@@ -1,0 +1,83 @@
+name:                tunebank
+version:             0.1.0.0
+synopsis:            RESTful server for tunes in ABC notation
+github:              "newlandsvalley/tunebank"
+license:             BSD3
+author:              "John Watson"
+maintainer:          "john.watson@gmx.co.uk"
+copyright:           "2020 John Watson"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/newlandsvalley/tunebank#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- base-compat
+- configurator >= 0.3.0 && < 0.4.0
+- bytestring
+- utf8-string
+- strict-io >= 0.2.2
+- containers
+- process
+- transformers
+- servant
+- servant-server
+- aeson
+- attoparsec
+- directory
+- http-api-data
+- http-client
+- http-media
+- http-types
+- mtl
+- string-conversions
+- time
+- text
+- errors
+- validation
+- wai
+- wai-cors
+- warp
+- network
+- exceptions
+- HaskellNet
+- HaskellNet-SSL
+- lucid
+- blaze-html
+- blaze-markup
+- abc-header-parser
+
+executables:
+  tunebank-exe:
+    main:                Main.hs
+    source-dirs:         src
+    ghc-options:
+    - -Wall
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+
+tests:
+  tunebank-test:
+    main:                TestsMain.hs
+    source-dirs:         tests, src
+    ghc-options:
+    - -Wall
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hspec
+    - hspec-wai
+    - servant-client

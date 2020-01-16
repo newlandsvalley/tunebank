@@ -1,148 +1,144 @@
-name:                tunebank
-version:             0.1.0.0
-synopsis:            RESTful server for tunes in ABC notation
-description:         this is intended to be a rewrite of the Scala MusicRest project
-homepage:            https://github.com/newlandsvalley/tunebank#readme
-license:             BSD3
-license-file:        LICENSE
-author:              John Watson
-maintainer:          john.watson@gmx.co.uk
-copyright:           2019 John Watson
-category:            Web
-build-type:          Simple
-cabal-version:       >=1.10
-extra-source-files:  README.md
+cabal-version: 1.12
 
-executable tunebank
-  hs-source-dirs:      src
-  main-is:             Main.hs
-  default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
-                     , base-compat
-                     , configurator >= 0.3.0 && < 0.4.0
-                     , bytestring
-                     , utf8-string
-                     , strict-io >= 0.2.2
-                     , containers
-                     , process
-                     , transformers
-                     , servant
-                     , aeson
-                     , attoparsec
-                     , directory
-                     , http-api-data
-                     , http-client
-                     , http-media
-                     , http-types
-                     , mtl
-                     , string-conversions
-                     , time
-                     , text
-                     , errors
-                     , validation
-                     , wai
-                     , wai-cors
-                     , warp
-                     , network
-                     , exceptions
-                     , HaskellNet
-                     , HaskellNet-SSL
-  other-modules:     Tunebank.ApiType
-                   , Tunebank.Types
-                   , Tunebank.Class
-                   , Tunebank.Config
-                   , Tunebank.Server
-                   , Tunebank.DBHelper.User
-                   , Tunebank.DBHelper.Comment
-                   , Tunebank.DBHelper.Tune
-                   , Tunebank.Model.Genre
-                   , Tunebank.Model.User
-                   , Tunebank.Model.UserRegistration
-                   , Tunebank.Model.AbcMetadata
-                   , Tunebank.Model.TuneRef
-                   , Tunebank.Model.TuneText
-                   , Tunebank.Model.Comment
-                   , Tunebank.Model.CommentSubmission
-                   , Tunebank.Model.Pagination
-                   , Tunebank.Authentication.BasicAuth
-                   , Tunebank.TestData.User
-                   , Tunebank.TypeConversion.Transcode
-                   , Tunebank.Utils.Timestamps
-                   , Tunebank.Utils.HTTPErrors
-                   , Tunebank.Email.Client
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 2d4f5323ef6e3e04ced9875f2160083653fc8936cbe3459fb92d12e7af51c1cc
 
+name:           tunebank
+version:        0.1.0.0
+synopsis:       RESTful server for tunes in ABC notation
+description:    Please see the README on GitHub at <https://github.com/newlandsvalley/tunebank#readme>
+homepage:       https://github.com/newlandsvalley/tunebank#readme
+bug-reports:    https://github.com/newlandsvalley/tunebank/issues
+author:         John Watson
+maintainer:     john.watson@gmx.co.uk
+copyright:      2020 John Watson
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/newlandsvalley/tunebank
+
+executable tunebank-exe
+  main-is: Main.hs
+  other-modules:
+      Tunebank.ApiType
+      Tunebank.Authentication.BasicAuth
+      Tunebank.Class
+      Tunebank.Config
+      Tunebank.DBHelper.Comment
+      Tunebank.DBHelper.Tune
+      Tunebank.DBHelper.User
+      Tunebank.Email.Client
+      Tunebank.Model.AbcMetadata
+      Tunebank.Model.Comment
+      Tunebank.Model.CommentSubmission
+      Tunebank.Model.Genre
+      Tunebank.Model.Pagination
+      Tunebank.Model.TuneRef
+      Tunebank.Model.TuneText
+      Tunebank.Model.User
+      Tunebank.Model.UserRegistration
+      Tunebank.Server
+      Tunebank.TestData.User
+      Tunebank.TypeConversion.Transcode
+      Tunebank.Types
+      Tunebank.Utils.HTTPErrors
+      Tunebank.Utils.Timestamps
+      Paths_tunebank
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-                     blaze-html   >= 0.9.0.1 && < 0.10
-                   , blaze-markup >= 0.8.0.0 && < 0.9
-                   , lucid        >= 2.9.11  && < 2.10
+      HaskellNet
+    , HaskellNet-SSL
+    , abc-header-parser
+    , aeson
+    , attoparsec
+    , base >=4.7 && <5
+    , base-compat
+    , blaze-html
+    , blaze-markup
+    , bytestring
+    , configurator >=0.3.0 && <0.4.0
+    , containers
+    , directory
+    , errors
+    , exceptions
+    , http-api-data
+    , http-client
+    , http-media
+    , http-types
+    , lucid
+    , mtl
+    , network
+    , process
+    , servant
+    , servant-server
+    , strict-io >=0.2.2
+    , string-conversions
+    , text
+    , time
+    , transformers
+    , utf8-string
+    , validation
+    , wai
+    , wai-cors
+    , warp
+  default-language: Haskell2010
 
-  -- Servant dependencies
+test-suite tunebank-test
+  type: exitcode-stdio-1.0
+  main-is: TestsMain.hs
+  other-modules:
+      Paths_tunebank
+  hs-source-dirs:
+      tests, src
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-                      servant
-                    , servant-server
-                    , servant-client
-                    , servant-docs
-
--- my git libraries
-  build-depends:      abc-header-parser
-
-
-test-suite tests
-  ghc-options:         -Wall
-  type:                exitcode-stdio-1.0
-  main-is:             TestsMain.hs
-  hs-source-dirs:      tests
-                     , src
-  build-depends:       base >= 4.7 && < 5
-                     , base-compat
-                     , configurator >= 0.3.0 && < 0.4.0
-                     , containers
-                     , unordered-containers
-                     , bytestring
-                     , utf8-string
-                     , strict-io >= 0.2.2
-                     , containers
-                     , process
-                     , directory
-                     , string-conversions
-                     , transformers
-                     , mtl
-                     , servant
-                     , servant-server
-                     , servant-client
-                     , servant-quickcheck
-                     , aeson
-                     , lens-aeson
-                     , text
-                     , time
-                     , attoparsec
-                     , http-api-data
-                     , http-client
-                     , http-media
-                     , http-types
-                     , blaze-html
-                     , blaze-markup
-                     , lucid
-                     , lens
-                     , wai
-                     , wai-cors
-                     , warp
-                     , errors
-                     , validation
-                     , abc-header-parser
-                     , network
-                     , HaskellNet
-                     , HaskellNet-SSL
-                     , exceptions
-                     , hspec
-                     , hspec-wai
-  default-language:    Haskell2010
-  other-modules:     UserApiTests
-                   , TuneApiTests
-                   , CommentApiTests
-                   , TranscodingTests
-                   , TestData
-                   , Mock.MockUser
-                   , Mock.MockTune
-                   , Mock.MockComment
-                   , Mock.DBState
+      HaskellNet
+    , HaskellNet-SSL
+    , abc-header-parser
+    , aeson
+    , attoparsec
+    , base >=4.7 && <5
+    , base-compat
+    , blaze-html
+    , blaze-markup
+    , bytestring
+    , configurator >=0.3.0 && <0.4.0
+    , containers
+    , directory
+    , errors
+    , exceptions
+    , hspec
+    , hspec-wai
+    , http-api-data
+    , http-client
+    , http-media
+    , http-types
+    , lucid
+    , mtl
+    , network
+    , process
+    , servant
+    , servant-client
+    , servant-server
+    , strict-io >=0.2.2
+    , string-conversions
+    , text
+    , time
+    , transformers
+    , utf8-string
+    , validation
+    , wai
+    , wai-cors
+    , warp
+  default-language: Haskell2010
