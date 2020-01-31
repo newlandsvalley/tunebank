@@ -52,17 +52,17 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Except (ExceptT)
 import Data.Functor.Identity
-import Servant.Server (ServerError)
+import Servant.Server (ServerError, errBody)
 
 
 import Tunebank.Types
-import Tunebank.Class
 import Tunebank.TestData.User (validateUserTemporary)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
-import Tunebank.DBHelper.User (registerNewUser, hasAdminRole, getUsersIfPermitted)
-import Tunebank.DBHelper.Comment (deleteCommentIfPermitted, upsertCommentIfPermitted)
-import Tunebank.DBHelper.Tune (deleteTuneIfPermitted, upsertTuneIfPermitted)
+import Tunebank.DB.Class
+import Tunebank.DB.UserHelper (registerNewUser, hasAdminRole, getUsersIfPermitted)
+import Tunebank.DB.CommentHelper (deleteCommentIfPermitted, upsertCommentIfPermitted)
+import Tunebank.DB.TuneHelper (deleteTuneIfPermitted, upsertTuneIfPermitted)
 import Tunebank.Utils.HTTPErrors
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
@@ -77,89 +77,10 @@ import Tunebank.Model.Pagination
 import Tunebank.TypeConversion.Transcode (transcodeTo)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import qualified Tunebank.Email.Client as Email (sendConfirmation)
+import Tunebank.DB.Api
 
 import Data.Genre (Genre)
 import Debug.Trace (trace, traceM)
-
--- | these two types will eventually be replaced by real database types
-data SqlBackend = SqlBackend
-type SqlPersistT = ReaderT SqlBackend
-
-instance DBAccess (SqlPersistT IO) SqlBackend where
-
-  runQuery :: SqlBackend -> SqlPersistT IO a -> AppM a
-  runQuery conn query =
-     -- liftIO $ query
-    throwError $ badRequest "database layer not yet implemented"
-
-  findUserById uid =
-    pure Nothing
-
-  findUserByName name =
-    pure Nothing
-
-  countUsers =
-    pure 0
-
-  getUsers :: Int -> Int -> SqlPersistT IO UserList
-  getUsers page size =
-    pure $ UserList [] (Pagination 0 0 0)
-
-  insertUser :: User -> SqlPersistT IO Bool
-  insertUser user =
-    pure False
-
-  updateUser :: UserId -> User -> SqlPersistT IO ()
-  updateUser uid user =
-    pure ()
-
-  findTuneById :: Genre -> TuneId -> SqlPersistT IO (Maybe AbcMetadata)
-  findTuneById genre tuneId =
-    pure Nothing
-
-  getTunes ::  Genre -> Int -> Int -> SqlPersistT IO TuneRef.TuneList
-  getTunes genre page size =
-    pure $ TuneRef.TuneList [] (Pagination 0 0 0)
-
-  search :: Genre
-         -> Maybe Title
-         -> Maybe Rhythm
-         -> Maybe TuneKey
-         -> Maybe Source
-         -> Maybe AbcMetadata.Origin
-         -> Maybe Composer
-         -> Maybe Transcriber
-         -> SortKey
-         -> Int
-         -> Int
-         -> SqlPersistT IO TuneRef.TuneList
-  search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sort page size =
-    pure $ TuneRef.TuneList [] (Pagination 0 0 0)
-
-  insertTune :: UserName -> Genre -> NewTune.Submission -> SqlPersistT IO TuneId
-  insertTune userName genre submission =
-    pure $ tuneId "not" "implemented"
-
-  deleteTune :: Genre -> TuneId -> SqlPersistT IO ()
-  deleteTune genre tuneId  =
-    pure ()
-
-  findCommentById :: Genre -> TuneId -> CommentId -> SqlPersistT IO (Maybe Comment)
-  findCommentById genre tuneId commentId =
-    pure Nothing
-
-  getComments :: Genre -> TuneId -> SqlPersistT IO CommentList
-  getComments genre tuneId =
-    pure $ CommentList []
-
-  insertComment :: UserName -> Genre -> TuneId -> NewComment.Submission -> SqlPersistT IO CommentId
-  insertComment userName genre tuneId submission =
-    pure $ NewComment.cid submission
-
-  deleteComment :: Genre -> TuneId -> CommentId -> SqlPersistT IO ()
-  deleteComment genre tuneId commentId =
-    pure ()
-
 
 userServer :: DBAccess m d => d -> ServerT UserAPI AppM
 userServer conn =
@@ -175,12 +96,15 @@ userServer conn =
        let
          page = fromMaybe 1 mPage
        size <- Config.getPageSize mSize
-       eUserList <- runQuery conn $ getUsersIfPermitted userName page size
-       case eUserList of
+       eUsers <- runQuery conn $ getUsersIfPermitted userName page size
+       userCount <- runQuery conn countUsers
+       let
+         maxPages = div userCount size
+       case eUsers of
          Left serverError ->
            throwError serverError
-         Right userList ->
-           pure userList
+         Right users ->
+           pure $ UserList users (Pagination page size maxPages)
 
      newUserHandler :: UserReg.Submission -> AppM Text
      newUserHandler submission = do
@@ -400,13 +324,13 @@ fullApp ctx =
            { corsRequestHeaders = [ "content-type" ] }
 -}
 
-fullApp :: AppCtx -> Application
-fullApp ctx =
+fullApp :: AppCtx -> DBConfig -> Application
+fullApp ctx dbConfig =
   -- simpleCors $
   corsWithAuthAndDelete $
     serveWithContext overallAPI basicAuthServerContext $
         hoistServerWithContext overallAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
-          (flip runReaderT ctx) (overallServer (SqlBackend))
+          (flip runReaderT ctx) (overallServer dbConfig)
 
 -- | extend simple CORS with the following (which would otherwise be banned):
 -- | * Authorization request header

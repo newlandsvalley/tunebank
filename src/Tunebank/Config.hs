@@ -10,6 +10,10 @@ module Tunebank.Config
   , mailLogin
   , mailPassword
   , mailFromAddress
+  , getDbConnectInfo
+  , getPoolStripes
+  , getPoolConnectionsPerStripe
+  , getPoolKeepOpenTime
   ) where
 
 -- | Utilities for reading configuration values
@@ -19,12 +23,14 @@ import Prelude.Compat hiding (lookup)
 import Control.Monad.Reader
 import Network.Socket (PortNumber)
 import Data.Text (Text, pack)
+import Data.Time.Clock (NominalDiffTime)
 import Tunebank.Types
 import Data.Configurator.Types (Config)
 import Data.Configurator
 import Data.Genre (Genre)
 import Data.Char (toLower)
 import Unsafe.Coerce
+import Database.PostgreSQL.Simple (ConnectInfo(..), defaultConnectInfo)
 
 import Debug.Trace (traceM)
 
@@ -91,6 +97,37 @@ mailPassword :: AppM String
 mailPassword = do
   lookupString "tunebank.mail.password"
 
+getDbConnectInfo :: Config -> IO ConnectInfo
+getDbConnectInfo config = do
+  database <- getString config "tunebank.database.dbName"
+  user <- getString config "tunebank.database.user"
+  password <- getString config "tunebank.database.password"
+  let
+    connectInfo =
+      defaultConnectInfo { connectDatabase = database
+                         , connectUser = user
+                         , connectPassword = password
+                         }
+  pure connectInfo
+
+getPoolStripes :: Config -> IO Int
+getPoolStripes config =
+  getInt config "tunebank.database.stripes"
+
+getPoolConnectionsPerStripe :: Config -> IO Int
+getPoolConnectionsPerStripe config =
+  getInt config "tunebank.database.connectionsPerStripe"
+
+getPoolKeepOpenTime :: Config -> IO NominalDiffTime
+getPoolKeepOpenTime config = do
+  secs <- getInt config "tunebank.database.keepOpenTime"
+  pure ((fromIntegral secs) :: NominalDiffTime)
+
+getPort :: Config -> IO Int
+getPort config =
+  getInt config "tunebank.server.port"
+    -- (require config (pack "tunebank.server.port") :: IO Int)
+
 -- | lookup a String-valued configuration item
 lookupString :: String -> AppM String
 lookupString item = do
@@ -107,6 +144,11 @@ lookupInt item = do
   traceM ("looking up int: " <> item <> " - value: " <> show val)
   pure val
 
-getPort :: Config -> IO Int
-getPort config =
-  (require config (pack "tunebank.server.port") :: IO Int)
+
+getString :: Config -> String -> IO String
+getString config name =
+  (require config (pack name) :: IO String)
+
+getInt :: Config -> String -> IO Int
+getInt config name =
+  (require config (pack name) :: IO Int)

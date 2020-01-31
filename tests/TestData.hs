@@ -33,7 +33,7 @@ badUser =
 
 validateableUid :: UserId
 validateableUid =
-  UserId "FRED"
+  UserId 1
 
 sampleCommentId :: CommentId
 sampleCommentId =

@@ -3,15 +3,22 @@
 
 module Tunebank.Model.User where
 
+import Control.Monad (mzero)
 import Data.Time.Calendar
 import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Types
 import qualified Data.Aeson.Parser
 import Web.Internal.HttpApiData
-import Data.Text (Text, pack, toLower)
+import Data.Bifunctor (bimap)
+import Data.Text (Text, pack, toLower, unpack)
+import Text.Read (readEither)
 import Data.Maybe (Maybe)
 import Tunebank.Model.Pagination (Pagination(..))
+import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
+import Database.PostgreSQL.Simple.ToField
+import Database.PostgreSQL.Simple.FromRow
+import Database.PostgreSQL.Simple.ToRow
 
 data Role =
     Administrator
@@ -21,34 +28,20 @@ data Role =
 instance ToJSON Role
 instance FromJSON Role
 
--- | A user
-data User = User
-  { name :: Text
-  , email :: Text
-  , password :: Text
-  , role :: Role
-  , registration_date :: Day
-  , valid :: Bool
-  , uid :: UserId
-  } deriving (Eq, Show, Generic)
 
-instance ToJSON User
+instance ToField Role  where
+  toField r = toField (show r)
 
--- needed for tests
-instance FromJSON User
+instance FromField Role where
+  fromField field mdata = do
+    x <- fromField field mdata
+    case x :: Int of
+      1 -> return Administrator
+      2 -> return NormalUser
+      _ -> mzero
 
--- | A user we'll grab from the database when we authenticate someone
-newtype UserName = UserName Text
+newtype UserId = UserId { userId :: Int }
   deriving (Eq, Ord, Show, Generic)
-
-instance ToJSON UserName
-
-instance FromJSON UserName
-
--- | We'll eventually nominate a User ID when we have a database layer
-newtype UserId = UserId { userId :: Text }
-  deriving (Eq, Ord, Show, Generic)
-
 
 instance ToJSON UserId
 
@@ -59,13 +52,58 @@ instance FromJSON UserId
 -- | a new user request
 instance FromHttpApiData UserId
   where
-    parseUrlPiece u = Right $ UserId u
+    parseUrlPiece = readTextAsUserId
+    --  parseUrlPiece u = Right $ UserId (readTextAsInt u)
 
 -- required for client testing
 instance ToHttpApiData UserId
   where
-    toUrlPiece (UserId u) = u
+    toUrlPiece (UserId u) = pack $ show u
 
+instance FromField UserId where
+  fromField field bs = UserId <$> fromField field bs
+
+instance ToField UserId  where
+  toField (UserId u) = toField u
+
+readTextAsUserId :: Text -> (Either Text UserId)
+readTextAsUserId t =
+  bimap pack UserId $
+    readEither (unpack t)
+
+
+-- | A user
+data User = User
+  { uid :: UserId
+  , name :: Text
+  , email :: Text
+  , password :: Text
+  , role :: Role
+  , registration_date :: Day
+  , valid :: Bool
+  } deriving (Eq, Show, Generic)
+
+instance ToJSON User
+
+-- needed for tests
+instance FromJSON User
+
+instance FromRow User where
+    fromRow = User <$> field <*> field <*> field <*> field <*> field <*> field <*> field
+
+instance ToRow User where
+    toRow u = [ toField (uid u), toField (name u), toField (email u)
+              , toField (password u), toField (role u)
+              , toField (registration_date u), toField (valid u)
+              ]
+
+-- | A user we'll grab from the database when we authenticate someone
+newtype UserName = UserName Text
+  deriving (Eq, Ord, Show, Generic)
+
+instance ToJSON UserName
+
+instance FromJSON UserName
 data UserList = UserList
   { users :: [User]
   , pagination :: Pagination

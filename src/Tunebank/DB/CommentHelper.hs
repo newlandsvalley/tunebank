@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Tunebank.DBHelper.Comment where
+module Tunebank.DB.CommentHelper where
 
 import Servant.Server (ServerError)
 import Tunebank.Types
-import Tunebank.Class
+import Tunebank.DB.Class
 import Tunebank.Model.User
 import Tunebank.Model.Comment
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
@@ -12,7 +12,7 @@ import qualified Tunebank.Model.TuneRef as TuneRef
 import Tunebank.Utils.Timestamps (today)
 import Data.Genre
 import Tunebank.Utils.HTTPErrors
-import Tunebank.DBHelper.User
+import Tunebank.DB.UserHelper
 
 
 deleteCommentIfPermitted :: DBAccess m d => UserName -> Genre -> TuneRef.TuneId -> CommentId  -> m (Either ServerError ())

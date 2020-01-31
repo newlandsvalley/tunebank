@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2d4f5323ef6e3e04ced9875f2160083653fc8936cbe3459fb92d12e7af51c1cc
+-- hash: 26efb0bbef148194e4ceb578a223f7133ce022bfd02653e937a9e81ae91a17bb
 
 name:           tunebank
 version:        0.1.0.0
@@ -31,11 +31,12 @@ executable tunebank-exe
   other-modules:
       Tunebank.ApiType
       Tunebank.Authentication.BasicAuth
-      Tunebank.Class
       Tunebank.Config
-      Tunebank.DBHelper.Comment
-      Tunebank.DBHelper.Tune
-      Tunebank.DBHelper.User
+      Tunebank.DB.Api
+      Tunebank.DB.Class
+      Tunebank.DB.CommentHelper
+      Tunebank.DB.TuneHelper
+      Tunebank.DB.UserHelper
       Tunebank.Email.Client
       Tunebank.Model.AbcMetadata
       Tunebank.Model.Comment
@@ -79,7 +80,9 @@ executable tunebank-exe
     , lucid
     , mtl
     , network
+    , postgresql-simple
     , process
+    , resource-pool
     , servant
     , servant-server
     , strict-io >=0.2.2
@@ -127,7 +130,9 @@ test-suite tunebank-test
     , lucid
     , mtl
     , network
+    , postgresql-simple
     , process
+    , resource-pool
     , servant
     , servant-client
     , servant-server

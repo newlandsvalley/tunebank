@@ -21,3 +21,4 @@ cabal.sandbox.config
 .stack-work/
 copybinary.sh
 tunebank.cabal
+conf/tunebank.conf

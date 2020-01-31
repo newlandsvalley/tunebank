@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Tunebank.DBHelper.Tune where
+module Tunebank.DB.TuneHelper where
 
 
 import Control.Monad.IO.Class (liftIO)
 import Servant.Server (ServerError)
 import Tunebank.Types
-import Tunebank.Class
+import Tunebank.DB.Class
 import Tunebank.Model.User
 import Tunebank.Model.Comment
 import Tunebank.Model.AbcMetadata
@@ -16,7 +16,7 @@ import Tunebank.TypeConversion.Transcode (transcodeTo)
 import Tunebank.Utils.Timestamps (today)
 import Data.Genre
 import Tunebank.Utils.HTTPErrors
-import Tunebank.DBHelper.User
+import Tunebank.DB.UserHelper
 import Tunebank.Utils.Timestamps (timeNow)
 
 

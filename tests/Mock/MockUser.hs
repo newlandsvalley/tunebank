@@ -38,6 +38,7 @@ usersById :: [KeyedById]
 usersById =
   map (\u -> (uid u, u)) userList
 
+{-}
 getUsers :: Int -> Int -> Int -> UserList
 getUsers page size totalUsers =
   let
@@ -46,6 +47,11 @@ getUsers page size totalUsers =
     pagination = Pagination page size maxPages
   in
     UserList users pagination
+-}
+
+getUsers :: Int -> Int -> [User]
+getUsers page size =
+  userList
 
 findUserById :: UserId -> Maybe User
 findUserById userId =
@@ -71,8 +77,8 @@ validateUser name suppliedPassword =
 
 userList :: [User]
 userList =
-  [ User (pack "Isaac Newton") (pack "isaac@newton.co.uk") (pack "hide me") NormalUser (fromGregorian 1683  3 1) True (UserId $ pack "NEWTON")
-  , User (pack "Albert Einstein") (pack "ae@mc2.org") (pack "hide me") Administrator  (fromGregorian 1905 12 1) True (UserId $ pack "EINSTEIN")
-  , User (pack "administrator") (pack "john.watson@gmx.co.uk") (pack "password") Administrator  (fromGregorian 1905 12 1) True (UserId $ pack "ADMINISTRATOR")
-  , User (pack "Fred") (pack "fred@bloggs.co.uk") (pack "password") NormalUser (fromGregorian 1683  3 1) True (UserId $ pack "FRED")
+  [ User (UserId 1) (pack "Isaac Newton") (pack "isaac@newton.co.uk") (pack "hide me") NormalUser (fromGregorian 1683  3 1) True
+  , User (UserId 2) (pack "Albert Einstein") (pack "ae@mc2.org") (pack "hide me") Administrator  (fromGregorian 1905 12 1) True
+  , User (UserId 3) (pack "administrator") (pack "john.watson@gmx.co.uk") (pack "password") Administrator  (fromGregorian 1905 12 1) True
+  , User (UserId 4) (pack "Fred") (pack "fred@bloggs.co.uk") (pack "password") NormalUser (fromGregorian 1683  3 1) True
   ]

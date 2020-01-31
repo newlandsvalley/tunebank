@@ -39,7 +39,7 @@ usersById =
 validateUserTemporary :: Text -> Text -> Bool
 validateUserTemporary name suppliedPassword =
   let
-    foo = trace ("validating user: " <> (show name)) name
+    foo = trace ("validating user temporary: " <> (show name)) name
     userMap :: UserMap
     userMap = fromList usersByName
     mpwd = fmap password $ lookup name userMap
@@ -69,8 +69,8 @@ getUserRole (UserName userName) =
 
 userList :: [User]
 userList =
-  [ User (pack "Isaac Newton") (pack "isaac@newton.co.uk") (pack "hide me") NormalUser (fromGregorian 1683  3 1) True (UserId $ pack "NEWTON")
-  , User (pack "Albert Einstein") (pack "ae@mc2.org") (pack "hide me") Administrator  (fromGregorian 1905 12 1) True (UserId $ pack "EINSTEIN")
-  , User (pack "administrator") (pack "john.watson@gmx.co.uk") (pack "password") Administrator  (fromGregorian 1905 12 1) True (UserId $ pack "ADMINISTRATOR")
-  , User (pack "Fred") (pack "fred@bloggs.co.uk") (pack "password") NormalUser (fromGregorian 1683  3 1) True (UserId $ pack "FRED")
+  [ User (UserId 1) (pack "Isaac Newton") (pack "isaac@newton.co.uk") (pack "hide me") NormalUser (fromGregorian 1683  3 1) True
+  , User (UserId 2) (pack "Albert Einstein") (pack "ae@mc2.org") (pack "hide me") Administrator  (fromGregorian 1905 12 1) True
+  , User (UserId 3) (pack "administrator") (pack "john.watson@gmx.co.uk") (pack "password") Administrator  (fromGregorian 1905 12 1) True
+  , User (UserId 4) (pack "Fred") (pack "fred@bloggs.co.uk") (pack "password") NormalUser (fromGregorian 1683  3 1) True
   ]

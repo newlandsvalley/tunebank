@@ -30,7 +30,7 @@ sendConfirmation recipient uid = do
   let
     settings  = defaultSettingsWithPort portNumber
     subject   = "The traditional tunes database: user validation"
-    slug      = unpack $ userId uid
+    slug      = show $ userId uid
     link      = baseUrl <> "/tunebank/user/validate/" <> slug
     plainBody = ""
     htmlBody  = fromStrict $ pack $  "Thanks for signing up to the traditional tunes database! <br/><br/>"

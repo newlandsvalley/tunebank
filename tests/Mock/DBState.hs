@@ -20,7 +20,7 @@ import Tunebank.Model.User
 import Tunebank.Model.TuneRef (tuneId, TuneList(..))
 import Tunebank.Model.CommentSubmission
 import Tunebank.Model.Pagination
-import Tunebank.Class
+import Tunebank.DB.Class
 import qualified Mock.MockUser as MockUser
 import qualified Mock.MockTune as MockTune
 import qualified Mock.MockComment as MockComment
@@ -41,6 +41,7 @@ newtype DB m a = DB (ReaderT DBIORef m a)
 
 
 instance DBAccess (DB IO) DBIORef where
+
    runQuery dbIORef (DB readerT) =
         liftIO (runReaderT readerT dbIORef)
             `catch` \(err::ServerError) ->  throwError (err404 {errBody = "got an error trying to read DBIORef"})
@@ -55,8 +56,7 @@ instance DBAccess (DB IO) DBIORef where
      pure $ MockUser.countUsers
 
    getUsers page size = do
-     totalUsers <- countUsers
-     pure $ MockUser.getUsers page size totalUsers
+     pure $ MockUser.getUsers page size
 
    insertUser user =
      -- we're not mocking inserts

@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Tunebank.DBHelper.User where
+module Tunebank.DB.UserHelper where
 
 import Data.Text
 import Servant.Server (ServerError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Time.Calendar
 import Tunebank.Types
-import Tunebank.Class
+import Tunebank.DB.Class
 import Tunebank.Model.User
 import qualified Tunebank.Model.UserRegistration as Reg (Submission(..))
 import Tunebank.Utils.Timestamps (today)
@@ -39,6 +39,8 @@ getUserRole (UserName userName) = do
   pure $ fmap role mUser
 
 -- we need to provide user checks here
+-- we need an insert-only type for User without UserId (which is synthetic)
+-- JMW!!!
 registerNewUser :: DBAccess m d =>  Reg.Submission -> m (Either ServerError User)
 registerNewUser submission =
   let
@@ -54,9 +56,9 @@ registerNewUser submission =
           pure $ Left $ badRequest "user already exists"
         _ -> do
           date <- liftIO today
-          pure $ Right $ User name email password NormalUser date False (UserId $ toUpper name)
+          pure $ Right $ User (UserId 0) name email password NormalUser date False
 
-getUsersIfPermitted :: DBAccess m d => UserName -> Int -> Int -> m (Either ServerError UserList)
+getUsersIfPermitted :: DBAccess m d => UserName -> Int -> Int -> m (Either ServerError [User])
 getUsersIfPermitted userName page size = do
   canQuery <- hasAdminRole userName
   if canQuery

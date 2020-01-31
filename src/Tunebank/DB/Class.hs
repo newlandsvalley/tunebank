@@ -2,7 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Tunebank.Class where
+module Tunebank.DB.Class where
 
 import Control.Monad.Catch (MonadThrow, catch, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -30,11 +30,11 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   countUsers :: m Int
 
-  getUsers ::  Int -> Int -> m UserList
+  getUsers ::  Int -> Int -> m [User]
 
   insertUser :: User -> m Bool
 
-  updateUser :: UserId -> User -> m ()
+  updateUser :: UserId -> User  -> m ()
 
   findTuneById :: Genre -> TuneId -> m (Maybe AbcMetadata)
 

@@ -109,5 +109,5 @@ userApiSpec config =
         result <- runClientM  (validateUser validateableUid) clientEnv
         result `shouldBe` (Right "Y")
       it "should reject an invalid user id slub" $ do
-        result <- runClientM  (validateUser (UserId "WIBBLE")) clientEnv
+        result <- runClientM  (validateUser (UserId 9999)) clientEnv
         (isLeft result) `shouldBe` True

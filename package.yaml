@@ -40,6 +40,8 @@ dependencies:
 - http-media
 - http-types
 - mtl
+- postgresql-simple
+- resource-pool
 - string-conversions
 - time
 - text
