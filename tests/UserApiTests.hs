@@ -45,6 +45,7 @@ import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import TestData
 import qualified Mock.DBState as MockDB
+import qualified Mock.MockBasicAuth as MockAuth (basicAuthServerContext)
 
 userList :: BasicAuthData -> Maybe Int -> Maybe Int -> ClientM UserList
 newUser :: UReg.Submission -> ClientM Text
@@ -55,7 +56,7 @@ userList :<|> newUser :<|> checkUser :<|> validateUser = client (Proxy :: Proxy 
 
 userApp :: IORef MockDB.DBState -> AppCtx -> Application
 userApp dbRef ctx = do
-  serveWithContext userAPI basicAuthServerContext $
+  serveWithContext userAPI MockAuth.basicAuthServerContext $
     hoistServerWithContext userAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
       (flip runReaderT ctx) (userServer $ MockDB.DBIORef dbRef)
 

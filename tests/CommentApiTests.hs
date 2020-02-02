@@ -30,11 +30,11 @@ import Tunebank.Model.User
 import Tunebank.Model.Comment
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
-import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import Data.Genre
 import TestData
 import Mock.DBState as MockDB
+import qualified Mock.MockBasicAuth as MockAuth (basicAuthServerContext)
 
 singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
 commentList ::  Genre -> TuneRef.TuneId -> ClientM CommentList
@@ -45,7 +45,7 @@ singleComment :<|> commentList :<|> postComment :<|> deleteComment = client (Pro
 
 commentApp :: IORef MockDB.DBState ->  AppCtx -> Application
 commentApp dbRef ctx =
-  serveWithContext commentAPI basicAuthServerContext $
+  serveWithContext commentAPI MockAuth.basicAuthServerContext $
     hoistServerWithContext commentAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
       (flip runReaderT ctx) (commentServer $ MockDB.DBIORef dbRef)
 

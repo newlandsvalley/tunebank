@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 26efb0bbef148194e4ceb578a223f7133ce022bfd02653e937a9e81ae91a17bb
+-- hash: 50eaf19e41d095ede5d9174554f7efb206b16f4f68270a8ce76c8d6075f168ab
 
 name:           tunebank
 version:        0.1.0.0
@@ -48,7 +48,6 @@ executable tunebank-exe
       Tunebank.Model.User
       Tunebank.Model.UserRegistration
       Tunebank.Server
-      Tunebank.TestData.User
       Tunebank.TypeConversion.Transcode
       Tunebank.Types
       Tunebank.Utils.HTTPErrors

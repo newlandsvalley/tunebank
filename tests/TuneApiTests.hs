@@ -33,10 +33,10 @@ import Tunebank.Model.User
 import Tunebank.Model.TuneText
 import Tunebank.Model.TuneRef
 import qualified Tunebank.Model.AbcMetadata as Meta
-import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import TestData
 import qualified Mock.DBState as MockDB
+import qualified Mock.MockBasicAuth as MockAuth (basicAuthServerContext)
 
 welcome :: ClientM Text
 tune ::  Genre -> TuneId -> ClientM Meta.AbcMetadata
@@ -67,7 +67,7 @@ welcome :<|> tune :<|> tunePdf :<|> tunePs :<|> tunePng
 
 tuneApp :: IORef MockDB.DBState ->  AppCtx -> Application
 tuneApp dbRef ctx =
-  serveWithContext tuneAPI basicAuthServerContext $
+  serveWithContext tuneAPI MockAuth.basicAuthServerContext $
     hoistServerWithContext tuneAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
       (flip runReaderT ctx) (tuneServer $ MockDB.DBIORef dbRef)
 

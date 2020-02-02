@@ -8,7 +8,6 @@
 
 module Tunebank.Model.AbcMetadata where
 
-
 import Prelude ()
 import Prelude.Compat hiding (lookup)
 

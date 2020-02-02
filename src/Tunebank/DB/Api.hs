@@ -53,12 +53,27 @@ instance DBAccess (PostgresT IO) DBConfig where
 
     findUserById :: UserId -> PostgresT IO (Maybe User)
     findUserById uid = do
+      let
+        queryTemplate =
+          "SELECT id, name, email, password, role, registration_date, valid FROM users WHERE id = ? "
+        param =
+          Only (uid :: UserId)
       pool <- asks _getPool
-      pure Nothing
+      us <- liftIO $ withResource pool
+         (\conn -> query conn queryTemplate param)
+      pure $ safeHead us
 
     findUserByName :: Text -> PostgresT IO  (Maybe User)
-    findUserByName name =
-      pure Nothing
+    findUserByName name = do
+      let
+        queryTemplate =
+          "SELECT id, name, email, password, role, registration_date, valid FROM users WHERE name = ? "
+        param =
+          Only (name :: Text)
+      pool <- asks _getPool
+      us <- liftIO $ withResource pool
+         (\conn -> query conn queryTemplate param)
+      pure $ safeHead us
 
     countUsers :: PostgresT IO Int
     countUsers = do
@@ -140,3 +155,10 @@ instance DBAccess (PostgresT IO) DBConfig where
     deleteComment :: Genre -> TuneId -> CommentId -> PostgresT IO ()
     deleteComment genre tuneId commentId =
       pure ()
+
+
+safeHead :: [a] -> Maybe a
+safeHead as =
+  if null as
+    then Nothing
+    else Just $ head as

@@ -56,7 +56,6 @@ import Servant.Server (ServerError, errBody)
 
 
 import Tunebank.Types
-import Tunebank.TestData.User (validateUserTemporary)
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
 import Tunebank.DB.Class
@@ -328,7 +327,7 @@ fullApp :: AppCtx -> DBConfig -> Application
 fullApp ctx dbConfig =
   -- simpleCors $
   corsWithAuthAndDelete $
-    serveWithContext overallAPI basicAuthServerContext $
+    serveWithContext overallAPI (basicAuthServerContext dbConfig) $
         hoistServerWithContext overallAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
           (flip runReaderT ctx) (overallServer dbConfig)
 
