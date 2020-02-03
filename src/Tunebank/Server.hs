@@ -92,18 +92,21 @@ userServer conn =
                   -> AppM UserList
      usersHandler userName mPage mSize = do
        _ <- traceM ("get users: " <> (show userName))
+       limit <- Config.getPageSize mSize
        let
          page = fromMaybe 1 mPage
-       size <- Config.getPageSize mSize
-       eUsers <- runQuery conn $ getUsersIfPermitted userName page size
+         offset = (page - 1) * limit
+       eUsers <- runQuery conn $ getUsersIfPermitted userName limit offset
        userCount <- runQuery conn countUsers
        let
-         maxPages = div userCount size
+         maxPages = (div userCount limit) + 1
        case eUsers of
-         Left serverError ->
+         Left serverError -> do
+           _ <- traceM ("get users - server error ")
            throwError serverError
-         Right users ->
-           pure $ UserList users (Pagination page size maxPages)
+         Right users -> do
+           _ <- traceM ("get users returned rows: " <> (show $ length users))
+           pure $ UserList users (Pagination page limit maxPages)
 
      newUserHandler :: UserReg.Submission -> AppM Text
      newUserHandler submission = do

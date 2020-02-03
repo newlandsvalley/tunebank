@@ -86,14 +86,13 @@ instance DBAccess (PostgresT IO) DBConfig where
      pure i
 
     getUsers :: Int -> Int -> PostgresT IO [User]
-    getUsers page size = do
+    getUsers limit offset = do
       let
-        offset = size * page
         queryTemplate =
           "SELECT id, name, email, password, role, registration_date, valid FROM users"
            <> " LIMIT ? OFFSET ? "
         params =
-          (size :: Int, offset :: Int)
+          (limit :: Int, offset :: Int)
       pool <- asks _getPool
       liftIO $ withResource pool
          (\conn -> query conn queryTemplate params)

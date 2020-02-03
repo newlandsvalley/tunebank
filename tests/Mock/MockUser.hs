@@ -50,7 +50,7 @@ getUsers page size totalUsers =
 -}
 
 getUsers :: Int -> Int -> [User]
-getUsers page size =
+getUsers limit offset =
   userList
 
 findUserById :: UserId -> Maybe User

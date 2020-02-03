@@ -1,5 +1,6 @@
 
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Tunebank.Model.User where
 
@@ -35,10 +36,10 @@ instance ToField Role  where
 instance FromField Role where
   fromField field mdata = do
     x <- fromField field mdata
-    case x :: Int of
-      1 -> return Administrator
-      2 -> return NormalUser
-      _ -> mzero
+    case x :: Text of
+      "Admin" -> return Administrator
+      _ -> return NormalUser
+
 
 newtype UserId = UserId { userId :: Int }
   deriving (Eq, Ord, Show, Generic)

@@ -59,11 +59,11 @@ registerNewUser submission =
           pure $ Right $ User (UserId 0) name email password NormalUser date False
 
 getUsersIfPermitted :: DBAccess m d => UserName -> Int -> Int -> m (Either ServerError [User])
-getUsersIfPermitted userName page size = do
+getUsersIfPermitted userName limit offset = do
   canQuery <- hasAdminRole userName
   if canQuery
     then do
-      userList <- getUsers page size
+      userList <- getUsers limit offset
       pure $ Right userList
     else
       pure $ Left $ notAuthorized ("querying users not allowed for user: " <> (show userName))
