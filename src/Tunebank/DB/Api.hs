@@ -16,15 +16,16 @@ import Control.Monad.Catch (MonadThrow, catch, throwM)
 import Control.Monad.Fail (MonadFail)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.IO.Class (liftIO)
+import Data.String
 import Servant.Server (ServerError, errBody, err404)
 import Data.Pool
 import Database.PostgreSQL.Simple
-import Data.Text (Text)
+import Data.Text (Text, pack, unpack)
 import Tunebank.Types
 import Tunebank.DB.Class
 import Data.Genre (Genre)
 import Tunebank.Model.User (User, UserId, UserName, UserList(..))
-import Tunebank.Model.TuneRef (TuneId, TuneList(..), tuneId)
+import Tunebank.Model.TuneRef (TuneId, TuneList(..), TuneRef, tuneId)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.Comment (CommentId, CommentList(..), Comment)
@@ -32,6 +33,8 @@ import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.Pagination
+
+import Debug.Trace (traceM)
 
 
 -- | This is just a simple newtype wrapper for our 'IORef'.
@@ -112,9 +115,32 @@ instance DBAccess (PostgresT IO) DBConfig where
     findTuneById genre tuneId =
       pure Nothing
 
-    getTunes ::  Genre -> Int -> Int -> PostgresT IO TuneList
+    getTunes ::  Genre -> Int -> Int -> PostgresT IO [TuneRef]
     getTunes genre page size =
-      pure $ TuneList [] (Pagination 0 0 0)
+      pure []
+
+    countTunes  :: Genre
+              -> Maybe Title
+              -> Maybe Rhythm
+              -> Maybe TuneKey
+              -> Maybe Source
+              -> Maybe Origin
+              -> Maybe Composer
+              -> Maybe Transcriber
+              -> PostgresT IO Int
+    countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber = do
+      let
+        genreStr = pack $ show genre
+        queryBase = "SELECT count(*) from tunes WHERE genre = ? "
+        params =
+          (Only (genreStr :: Text))
+        queryTemplate = queryBase
+                      <> optionalParams mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
+      -- _ <- traceM ("count tunes query: " <> (show queryTemplate))
+      pool <- asks _getPool
+      [Only i] <- liftIO $ withResource pool
+         (\conn -> query conn queryTemplate params)
+      pure i
 
     search :: Genre
            -> Maybe Title
@@ -127,9 +153,26 @@ instance DBAccess (PostgresT IO) DBConfig where
            -> SortKey
            -> Int
            -> Int
-           -> PostgresT IO TuneList
-    search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sort page size =
-      pure $ TuneList [] (Pagination 0 0 0)
+           -> PostgresT IO [TuneRef]
+    search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sortKey limit offset = do
+      let
+        genreStr = pack $ show genre
+        orderBy = case sortKey of
+          Alpha -> " ORDER BY title ASC "
+          Date -> " ORDER BY creation_ts DESC "
+        queryBase = "SELECT tune_id, title, rhythm, abc, "
+               <> " to_char(creation_ts, 'DD Mon yyyy')  from tunes WHERE genre = ? "
+        pagination = " LIMIT ? OFFSET ? "
+        params =
+          (genreStr :: Text, limit :: Int, offset :: Int)
+        queryTemplate = queryBase
+                    <> optionalParams mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
+                    <> orderBy
+                    <> pagination
+      _ <- traceM ("search query: " <> (show queryTemplate))
+      pool <- asks _getPool
+      liftIO $ withResource pool
+         (\conn -> query conn queryTemplate params)
 
     insertTune :: UserName -> Genre -> NewTune.Submission -> PostgresT IO TuneId
     insertTune userName genre submission =
@@ -161,3 +204,33 @@ safeHead as =
   if null as
     then Nothing
     else Just $ head as
+
+-- | optional parameters in a search where clause
+optionalParams :: Maybe Title
+               -> Maybe Rhythm
+               -> Maybe TuneKey
+               -> Maybe Source
+               -> Maybe Origin
+               -> Maybe Composer
+               -> Maybe Transcriber
+               -> Query
+optionalParams mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber =
+  let
+    generateLikeClause :: String -> Text -> Query
+    generateLikeClause name value =
+      "and " <> fromString name <> " like '%" <> fromString (unpack value) <> "%' "
+
+    generateEqClause :: String -> Text -> Query
+    generateEqClause name value =
+      "and " <> fromString name <> " = '" <> fromString (unpack value) <> "' "
+
+    queryTitle = maybe "" (\(Title x) -> generateLikeClause "title" x) mTitle
+    queryRhythm = maybe "" (\(Rhythm x) -> generateEqClause "rhythm" x) mRhythm
+    queryTuneKey = maybe "" (\(TuneKey x) -> generateEqClause "keysignature" x) mKey
+    querySource = maybe "" (\(Source x) -> generateLikeClause "source" x) mSource
+    queryOrigin = maybe "" (\(Origin x) -> generateLikeClause "origin" x)  mOrigin
+    queryComposer = maybe "" (\(Composer x) -> generateLikeClause "composer" x) mComposer
+    queryTranscriber = maybe "" (\(Transcriber x) ->  generateLikeClause "transcriber" x) mTranscriber
+  in
+    queryTitle <> queryRhythm <> queryTuneKey <> querySource
+               <> queryOrigin <> queryComposer <> queryTranscriber

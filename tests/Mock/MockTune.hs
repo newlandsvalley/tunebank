@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Mock.MockTune
   ( findTuneById
@@ -58,9 +59,9 @@ buildTuneRef metadata =
     { TuneRef.uri = TuneRef.tuneId (title metadata) (rhythm metadata)
     , TuneRef.title = title metadata
     , TuneRef.rhythm = rhythm metadata
-    , TuneRef.abcHeaders = abcHeaders metadata
+    --, TuneRef.abcHeaders = abcHeaders metadata
     , TuneRef.abc = abcBody metadata
-    , TuneRef.ts = (fromGregorian 1683  3 1)
+    , TuneRef.date = "04 Feb 2020"
     }
 
 
@@ -99,9 +100,9 @@ search :: Genre
        -> SortKey
        -> Int
        -> Int
-       -> TuneRef.TuneList
+       -> [TuneRef.TuneRef]
 search genre mTitle mRhythm mKey mSource mOrigin
-           mComposer mTranscriber sortKey page size =
+           mComposer mTranscriber sortKey limit offset =
     let
       -- we'll get rid of this logging quite soon
       !p1 = trace ("title param: " <> show mTitle) mTitle
@@ -112,11 +113,13 @@ search genre mTitle mRhythm mKey mSource mOrigin
       !p6 = trace ("composer param: " <> show mComposer) mComposer
       !p7 = trace ("transcriber param: " <> show mTranscriber) mTranscriber
       !p8 = trace ("sort param: " <> show sortKey) sortKey
+      {-}
       count = countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
-      maxPages = (count + size - 1) `quot` size
-      pagination = Pagination page size maxPages
+      maxPages = (count + limit - 1) `quot` limit
+      pagination = Pagination page limit maxPages
+      -}
     in
-      TuneRef.TuneList (getTuneList genre) pagination
+      getTuneList genre
 
 countTunes :: Genre
            -> Maybe Title

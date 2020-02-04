@@ -4,6 +4,8 @@
 module Tunebank.Model.TuneRef where
 
 import Data.Time.Calendar
+import Data.Time.LocalTime (LocalTime)
+import Data.Time.Clock (UTCTime)
 import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Types
@@ -13,6 +15,10 @@ import Data.Text (Text, pack, unpack, toLower)
 import Data.Either (Either(..))
 import Data.Char (isAlphaNum)
 import Tunebank.Model.Pagination (Pagination(..))
+import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
+import Database.PostgreSQL.Simple.ToField
+import Database.PostgreSQL.Simple.FromRow
+import Database.PostgreSQL.Simple.ToRow
 
 -- | the unique ID of a tune (within a genre)
 newtype TuneId = TuneId Text
@@ -20,6 +26,13 @@ newtype TuneId = TuneId Text
 
 instance ToJSON TuneId
 instance FromJSON TuneId
+
+instance FromField TuneId where
+  fromField field bs = TuneId <$> fromField field bs
+
+instance ToField TuneId  where
+  toField (TuneId t) = toField t
+
 
 
 -- | this instance supports Capture text of type TuneId which are
@@ -42,6 +55,7 @@ safeFileName :: TuneId -> String
 safeFileName (TuneId t) =
   filter isAlphaNum (unpack t)
 
+{-}
 -- | this is data returned within tune lists
 data TuneRef = TuneRef
    { uri   :: TuneId
@@ -51,10 +65,21 @@ data TuneRef = TuneRef
    , abc :: Text    -- the body
    , ts  :: Day
    } deriving (Eq, Show, Generic)
+-}
+data TuneRef = TuneRef
+   { uri :: TuneId
+   , title :: Text
+   , rhythm :: Text
+   , abc :: Text    -- the body
+   , date  :: Text
+   } deriving (Eq, Show, Generic)
 
 instance ToJSON TuneRef
 
 instance FromJSON TuneRef
+
+instance FromRow TuneRef where
+fromRow = TuneRef <$> field <*> field <*> field <*> field <*> field
 
 data TuneList = TuneList
   { tunes :: [TuneRef]

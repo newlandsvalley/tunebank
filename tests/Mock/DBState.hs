@@ -70,7 +70,7 @@ instance DBAccess (DB IO) DBIORef where
      pure $ MockTune.findTuneById genre tuneId
 
    getTunes genre page size =
-     pure $ TuneList (MockTune.getTuneList genre) (Pagination 0 0 0)
+     pure $ MockTune.getTuneList genre
 
    search genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sort page size =
      pure $ MockTune.search  genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber sort page size

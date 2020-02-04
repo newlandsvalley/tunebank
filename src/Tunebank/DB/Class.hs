@@ -10,7 +10,7 @@ import Data.Text (Text)
 import Tunebank.Types
 import Tunebank.Model.User (UserId, UserName, User, UserList)
 import Tunebank.Model.AbcMetadata
-import Tunebank.Model.TuneRef (TuneId, TuneList)
+import Tunebank.Model.TuneRef (TuneId, TuneList, TuneRef)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import Tunebank.Model.Comment (CommentId, Comment, CommentList)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission)
@@ -38,7 +38,17 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   findTuneById :: Genre -> TuneId -> m (Maybe AbcMetadata)
 
-  getTunes ::  Genre -> Int -> Int -> m TuneList
+  getTunes ::  Genre -> Int -> Int -> m [TuneRef]
+
+  countTunes  :: Genre
+            -> Maybe Title
+            -> Maybe Rhythm
+            -> Maybe TuneKey
+            -> Maybe Source
+            -> Maybe Origin
+            -> Maybe Composer
+            -> Maybe Transcriber
+            -> m Int
 
   search :: Genre
          -> Maybe Title
@@ -51,7 +61,7 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
          -> SortKey
          -> Int
          -> Int
-         -> m TuneList
+         -> m [TuneRef]
 
   insertTune :: UserName -> Genre -> NewTune.Submission -> m TuneId
 

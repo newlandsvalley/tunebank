@@ -202,14 +202,18 @@ tuneServer conn =
                     -> AppM  TuneRef.TuneList
     tuneListHandler genre mTitle mRhythm mKey mSource mOrigin
                      mComposer mTranscriber mSortKey mPage mSize = do
-      size <- Config.getPageSize mSize
+      limit <- Config.getPageSize mSize
+      tuneCount <- runQuery conn $ countTunes genre mTitle mRhythm mKey 
+                        mSource mOrigin  mComposer mTranscriber
       let
         page = fromMaybe 1 mPage
+        offset = (page - 1) * limit
         sortKey = fromMaybe Alpha mSortKey
-      tuneList <- runQuery conn $
+        maxPages = (div tuneCount limit) + 1
+      tunes <- runQuery conn $
           search genre mTitle mRhythm mKey mSource mOrigin
-             mComposer mTranscriber sortKey page size
-      pure $ tuneList
+             mComposer mTranscriber sortKey limit offset
+      pure $ TuneRef.TuneList tunes (Pagination page limit maxPages)
 
     newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
     newTuneHandler userName genre submission = do
