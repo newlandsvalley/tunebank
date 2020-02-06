@@ -33,6 +33,7 @@ import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.Pagination
+import Data.Abc.Validator (normaliseKeySignature, normaliseRhythm)
 
 import Debug.Trace (traceM)
 
@@ -135,7 +136,7 @@ instance DBAccess (PostgresT IO) DBConfig where
         params =
           (Only (genreStr :: Text))
         queryTemplate = queryBase
-                      <> optionalParams mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
+                      <> optionalParams genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
       -- _ <- traceM ("count tunes query: " <> (show queryTemplate))
       pool <- asks _getPool
       [Only i] <- liftIO $ withResource pool
@@ -166,7 +167,7 @@ instance DBAccess (PostgresT IO) DBConfig where
         params =
           (genreStr :: Text, limit :: Int, offset :: Int)
         queryTemplate = queryBase
-                    <> optionalParams mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
+                    <> optionalParams genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
                     <> orderBy
                     <> pagination
       _ <- traceM ("search query: " <> (show queryTemplate))
@@ -206,7 +207,10 @@ safeHead as =
     else Just $ head as
 
 -- | optional parameters in a search where clause
-optionalParams :: Maybe Title
+-- | key signature and rhythm query parameters are normalised as far as
+-- | possible to attempt to match what's held on the database 
+optionalParams :: Genre
+               -> Maybe Title
                -> Maybe Rhythm
                -> Maybe TuneKey
                -> Maybe Source
@@ -214,19 +218,19 @@ optionalParams :: Maybe Title
                -> Maybe Composer
                -> Maybe Transcriber
                -> Query
-optionalParams mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber =
+optionalParams genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber =
   let
     generateLikeClause :: String -> Text -> Query
     generateLikeClause name value =
-      "and " <> fromString name <> " like '%" <> fromString (unpack value) <> "%' "
+      "and " <> fromString name <> " ILIKE '%" <> fromString (unpack value) <> "%' "
 
     generateEqClause :: String -> Text -> Query
     generateEqClause name value =
       "and " <> fromString name <> " = '" <> fromString (unpack value) <> "' "
 
     queryTitle = maybe "" (\(Title x) -> generateLikeClause "title" x) mTitle
-    queryRhythm = maybe "" (\(Rhythm x) -> generateEqClause "rhythm" x) mRhythm
-    queryTuneKey = maybe "" (\(TuneKey x) -> generateEqClause "keysignature" x) mKey
+    queryRhythm = maybe "" (\(Rhythm x) -> generateEqClause "rhythm" (normaliseRhythm genre x)) mRhythm
+    queryTuneKey = maybe "" (\(TuneKey x) -> generateEqClause "keysignature" (normaliseKeySignature x)) mKey
     querySource = maybe "" (\(Source x) -> generateLikeClause "source" x) mSource
     queryOrigin = maybe "" (\(Origin x) -> generateLikeClause "origin" x)  mOrigin
     queryComposer = maybe "" (\(Composer x) -> generateLikeClause "composer" x) mComposer

@@ -6,18 +6,18 @@
 packages:
 - completed:
     cabal-file:
-      size: 1499
-      sha256: 6f011946ca95569a534d5acd236c40e538df7f384e572003bf3a1b12b185f694
+      size: 1629
+      sha256: d6955bdc3ec3938f2adeb13a5191dd34b60106fd261d5120b97adbb90d3c7a6d
     name: abc-header-parser
     version: 0.1.0.0
     git: https://github.com/newlandsvalley/abc-header-parser.git
     pantry-tree:
-      size: 792
-      sha256: 879c392eda3e737d058282902260adca7f5ac80971a43709a954be12a9271f48
-    commit: 8e4ed0130bf152530818c35b11a3e3db120c67f0
+      size: 896
+      sha256: f99389e3380cd348c1c9fce21ad7d98b7deb26131f83cd96aef659401ecc0ace
+    commit: aa2617f567a67580ba489578740bc270c9563155
   original:
     git: https://github.com/newlandsvalley/abc-header-parser.git
-    commit: 8e4ed0130bf152530818c35b11a3e3db120c67f0
+    commit: aa2617f567a67580ba489578740bc270c9563155
 - completed:
     hackage: servant-quickcheck-0.0.7.4@sha256:a981a06792e9547d13fa2f9f0f55ba46d28113881a0661e49016c18d9e6358cc,3776
     pantry-tree:
