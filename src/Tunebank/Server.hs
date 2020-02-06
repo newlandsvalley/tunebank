@@ -186,7 +186,8 @@ tuneServer conn =
         Nothing ->
           throwError $ notFound ("not found tune: " <> show tuneId)
         Just metadata ->
-          pure $ (abcHeaders metadata) <> (abcBody metadata)
+          -- pure $ (abcHeaders metadata) <> (abcBody metadata)
+          pure (abc metadata)
 
     tuneListHandler :: Genre
                     -> Maybe Title
@@ -203,7 +204,7 @@ tuneServer conn =
     tuneListHandler genre mTitle mRhythm mKey mSource mOrigin
                      mComposer mTranscriber mSortKey mPage mSize = do
       limit <- Config.getPageSize mSize
-      tuneCount <- runQuery conn $ countTunes genre mTitle mRhythm mKey 
+      tuneCount <- runQuery conn $ countTunes genre mTitle mRhythm mKey
                         mSource mOrigin  mComposer mTranscriber
       let
         page = fromMaybe 1 mPage

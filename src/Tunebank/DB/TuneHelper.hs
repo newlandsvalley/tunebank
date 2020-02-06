@@ -9,7 +9,8 @@ import Tunebank.Types
 import Tunebank.DB.Class
 import Tunebank.Model.User
 import Tunebank.Model.Comment
-import Tunebank.Model.AbcMetadata
+import qualified Tunebank.Model.AbcMetadata as AbcMetadata (AbcMetadata(..))
+import Tunebank.Model.AbcMetadataSubmission (AbcMetadataSubmission(..), buildMetadata)
 import qualified Tunebank.Model.TuneRef as TuneRef
 import qualified Tunebank.Model.TuneText as NewTune (Submission(..))
 import Tunebank.TypeConversion.Transcode (transcodeTo)
@@ -27,7 +28,7 @@ deleteTuneIfPermitted  userName genre tuneId  = do
     Nothing ->
       pure $ Left $ notFound ("tune: " <> (show tuneId))
     Just tune -> do
-      canDelete <- hasDeletePermission userName (submitter tune)
+      canDelete <- hasDeletePermission userName (AbcMetadata.submitter tune)
       if canDelete
         then do
           _ <- deleteTune genre tuneId
@@ -38,24 +39,25 @@ upsertTuneIfPermitted ::  DBAccess m d => UserName -> Genre -> NewTune.Submissio
 upsertTuneIfPermitted userName genre submission = do
   time <- liftIO $ timeNow
   let
-    eMetadata = buildMetadata userName time genre (NewTune.abc submission)
+    userId = UserId (1)  --- JMW !!!
+    eMetadata = buildMetadata userId genre (NewTune.abc submission)
   case eMetadata of
     Left errorText -> do
       pure $ Left $ badRequest errorText
-    Right metadata -> do
+    Right newMetadata -> do
       let
-        tuneId = TuneRef.tuneId (title metadata) (rhythm metadata)
+        tuneId = TuneRef.tuneId (title newMetadata) (rhythm newMetadata)
       mTune <- findTuneById genre tuneId
       case mTune of
         Nothing -> do
-          insertTune userName genre submission
+          insertTune newMetadata
           pure $ Right tuneId
-        Just tune -> do
-          canUpdate <- hasDeletePermission userName (submitter metadata)
+        Just oldMetadata -> do
+          canUpdate <- hasDeletePermission userName (AbcMetadata.submitter oldMetadata)
           if canUpdate
             then do
               _ <- deleteTune genre tuneId
-              _<-  insertTune userName genre submission
+              _<-  insertTune newMetadata
               pure $ Right tuneId
             else pure $ Left $ notAuthorized ("tune update not allowed for user: " <> (show userName))
 

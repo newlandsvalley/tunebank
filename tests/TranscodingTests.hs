@@ -31,7 +31,7 @@ transcodingSpec =
     it "should be round-trippable to itself through JSON" $ do
       let
         time = fromDay $ fromGregorian 2020 1 1
-        eMetadata = buildMetadata (UserName "fred") time Scandi augustsson
+        eMetadata = buildClientMetadata (UserName "fred") time Scandi augustsson
       case eMetadata of
         Left err ->
           expectationFailure "unexpected build metadata error"

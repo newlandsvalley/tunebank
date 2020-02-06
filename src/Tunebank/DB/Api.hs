@@ -25,9 +25,11 @@ import Tunebank.Types
 import Tunebank.DB.Class
 import Data.Genre (Genre)
 import Tunebank.Model.User (User, UserId, UserName, UserList(..))
-import Tunebank.Model.TuneRef (TuneId, TuneList(..), TuneRef, tuneId)
+import Tunebank.Model.TuneRef (TuneId(..), TuneList(..), TuneRef)
+import qualified Tunebank.Model.TuneRef as TuneRef (tuneId)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
+import Tunebank.Model.AbcMetadataSubmission (AbcMetadataSubmission(..))
 import Tunebank.Model.Comment (CommentId, CommentList(..), Comment)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
@@ -113,8 +115,22 @@ instance DBAccess (PostgresT IO) DBConfig where
       pure ()
 
     findTuneById :: Genre -> TuneId -> PostgresT IO (Maybe AbcMetadata)
-    findTuneById genre tuneId =
-      pure Nothing
+    findTuneById genre (TuneId tid) = do
+      let
+        genreStr = pack $ show genre
+        queryTemplate = "SELECT t.title, t.rhythm, t.keysignature, u.name, "
+                <> " creation_ts, t.abc, "
+                <> " t.source, t.origin, t.composer, t.transcriber "
+                <> " from tunes t, users u "
+                <> " WHERE t.user_id = u.id "
+                <> " AND genre = ? and tune_id = ? "
+        params =
+          (genreStr :: Text, tid :: Text)
+      _ <- traceM ("find tune by id query: " <> (show queryTemplate))
+      pool <- asks _getPool
+      ts <- liftIO $ withResource pool
+         (\conn -> query conn queryTemplate params)
+      pure $ safeHead ts
 
     getTunes ::  Genre -> Int -> Int -> PostgresT IO [TuneRef]
     getTunes genre page size =
@@ -175,9 +191,9 @@ instance DBAccess (PostgresT IO) DBConfig where
       liftIO $ withResource pool
          (\conn -> query conn queryTemplate params)
 
-    insertTune :: UserName -> Genre -> NewTune.Submission -> PostgresT IO TuneId
-    insertTune userName genre submission =
-      pure $ tuneId "not" "implemented"
+    insertTune :: AbcMetadataSubmission -> PostgresT IO TuneId
+    insertTune submission =
+      pure $ TuneRef.tuneId "not" "implemented"
 
     deleteTune :: Genre -> TuneId -> PostgresT IO ()
     deleteTune genre tuneId =
@@ -208,7 +224,7 @@ safeHead as =
 
 -- | optional parameters in a search where clause
 -- | key signature and rhythm query parameters are normalised as far as
--- | possible to attempt to match what's held on the database 
+-- | possible to attempt to match what's held on the database
 optionalParams :: Genre
                -> Maybe Title
                -> Maybe Rhythm

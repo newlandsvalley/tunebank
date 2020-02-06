@@ -59,14 +59,14 @@ transcodeTo target genre abcMetadata = do
       sourceFilePath <- buildSourceFilePath genre fileBase
       let
         script = scriptDir <> "/" <> scriptName
-        abcText = (abcHeaders abcMetadata) <> (abcBody abcMetadata)
+        -- abcText = (abcHeaders abcMetadata) <> (abcBody abcMetadata)
+        abcText = (abc abcMetadata)
       _ <- liftIO $ writeTextFile sourceFilePath abcText
       transcodeError <- liftIO $ runTranscodeScript script sourceDir targetDir fileBase
       case transcodeError of
         Just error -> pure $ Left (fromStrict error)
         Nothing -> do
           readTargetFile targetFilePath
-
 
 runTranscodeScript :: String -> String -> String -> String -> IO (Maybe Strict.ByteString)
 runTranscodeScript script sourcePath targetPath name = do

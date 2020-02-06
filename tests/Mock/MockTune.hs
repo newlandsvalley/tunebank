@@ -59,15 +59,14 @@ buildTuneRef metadata =
     { TuneRef.uri = TuneRef.tuneId (title metadata) (rhythm metadata)
     , TuneRef.title = title metadata
     , TuneRef.rhythm = rhythm metadata
-    --, TuneRef.abcHeaders = abcHeaders metadata
-    , TuneRef.abc = abcBody metadata
+    , TuneRef.abc = abc metadata
     , TuneRef.date = "04 Feb 2020"
     }
 
 
 buildMetadataEntry :: UserName -> UTCTime -> Genre -> Text -> Either String MetadataEntry
 buildMetadataEntry userName utcTime genre abcText =
-  case (buildMetadata userName utcTime genre abcText) of
+  case (buildClientMetadata userName utcTime genre abcText) of
     Left err ->
       Left err
     Right metadata ->

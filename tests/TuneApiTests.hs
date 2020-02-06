@@ -109,8 +109,8 @@ tuneApiSpec config =
                     (tuneList Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
                     clientEnv
         case eResult of
-          Left _ ->
-            expectationFailure "unexpected tuneList error"
+          Left err ->
+            expectationFailure ("unexpected tuneList error: " <> show err)
           Right tList -> do
             (length $ tunes tList) `shouldBe` 3
 

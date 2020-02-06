@@ -26,6 +26,11 @@ import Data.Bifunctor (second, bimap)
 import Servant.API.ContentTypes
 import Network.HTTP.Media ((//), (/:))
 import qualified Data.Text.Encoding as TextS (encodeUtf8, decodeUtf8')
+import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
+import Database.PostgreSQL.Simple.ToField
+import Database.PostgreSQL.Simple.FromRow
+import Database.PostgreSQL.Simple.ToRow
 import Data.ByteString.Lazy (fromStrict, toStrict)
 import Data.Abc.Serializer (serializeHeaders)
 import Data.Abc.Parser (abcParse, headersParse)
@@ -41,12 +46,10 @@ import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
 -- | made more easily searchable
 data AbcMetadata = AbcMetadata
     { title :: Text
-    , key :: Text
     , rhythm :: Text
+    , key :: Text
     , submitter :: Text
     , utcTime :: UTCTime
-    , abcHeaders :: Text
-    , abcBody :: Text
     , abc :: Text
     , source :: Maybe Text
     , origin :: Maybe Text
@@ -61,6 +64,12 @@ instance ToJSON AbcMetadata where
     toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON AbcMetadata
+
+instance FromRow AbcMetadata where
+  fromRow = AbcMetadata <$> field <*> field <*> field <*> field <*>
+                            field <*> field <*> field <*> field <*>
+                            field <*> field
+
 
 -- | a title query parameter
 newtype Title = Title Text
@@ -189,6 +198,7 @@ instance MimeRender ABC AbcMetadata where
   mimeRender _ metadata  =
     (fromStrict . TextS.encodeUtf8) $ abc metadata
 
+
 -- not really needed accept by servant-client
 instance MimeUnrender ABC AbcMetadata where
   mimeUnrender _ abcBytes =
@@ -197,12 +207,14 @@ instance MimeUnrender ABC AbcMetadata where
         Left "illegal ABC chars"
       Right abcText ->
         let
+          dateString = "06 Feb 2020"
           time = fromDay $ fromGregorian 2020 1 1
         in
-          buildMetadata (UserName "fred") time Scandi abcText
+          buildClientMetadata (UserName "fred") time Scandi abcText
 
-buildMetadata :: UserName -> UTCTime -> Genre -> Text ->  Either String AbcMetadata
-buildMetadata (UserName submitter) utcTime genre abcText  =
+-- again just to satisfy testing client
+buildClientMetadata :: UserName -> UTCTime -> Genre -> Text ->  Either String AbcMetadata
+buildClientMetadata (UserName submitter) utcTime genre abcText  =
   case (abcParse abcText) of
     Left err ->
       Left err
@@ -217,9 +229,8 @@ buildMetadata (UserName submitter) utcTime genre abcText  =
         transcriber = lookup ABC.Transcription headerMap
         fromValid :: V.ValidatedHeaders -> AbcMetadata
         fromValid  (V.ValidatedHeaders title _ key rhythm ) =
-          AbcMetadata title key rhythm submitter utcTime
-                      headerText (ABC.body abc)
-                      (headerText <> (ABC.body abc))
+          AbcMetadata title rhythm key submitter utcTime
+                      abcText
                       source origin composer transcriber
       in
         bimap concat fromValid validated
