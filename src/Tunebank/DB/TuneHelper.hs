@@ -39,8 +39,7 @@ upsertTuneIfPermitted ::  DBAccess m d => UserName -> Genre -> NewTune.Submissio
 upsertTuneIfPermitted userName genre submission = do
   time <- liftIO $ timeNow
   let
-    userId = UserId (1)  --- JMW !!!
-    eMetadata = buildMetadata userId genre (NewTune.abc submission)
+    eMetadata = buildMetadata userName genre (NewTune.abc submission)
   case eMetadata of
     Left errorText -> do
       pure $ Left $ badRequest errorText

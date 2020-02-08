@@ -118,12 +118,11 @@ instance DBAccess (PostgresT IO) DBConfig where
     findTuneById genre (TuneId tid) = do
       let
         genreStr = pack $ show genre
-        queryTemplate = "SELECT t.title, t.rhythm, t.keysignature, u.name, "
-                <> " creation_ts, t.abc, "
-                <> " t.source, t.origin, t.composer, t.transcriber "
-                <> " from tunes t, users u "
-                <> " WHERE t.user_id = u.id "
-                <> " AND genre = ? and tune_id = ? "
+        queryTemplate = "SELECT title, rhythm, keysignature, submitter, "
+                <> " creation_ts, abc, "
+                <> " source, origin, composer, transcriber "
+                <> " from tunes"
+                <> " WHERE genre = ? and tune_id = ? "
         params =
           (genreStr :: Text, tid :: Text)
       _ <- traceM ("find tune by id query: " <> (show queryTemplate))

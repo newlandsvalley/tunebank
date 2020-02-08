@@ -22,7 +22,7 @@ import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.ToRow
 import Data.Bifunctor (second, bimap)
-import qualified Tunebank.Model.User as U (UserId(..))
+import qualified Tunebank.Model.User as U (UserName(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import qualified Data.Abc as ABC
 import Data.Abc.Serializer (serializeHeaders)
@@ -37,7 +37,7 @@ import Data.Validation (Validation(..), toEither)
 data AbcMetadataSubmission = AbcMetadataSubmission
     { genreString :: Text
     , tuneId :: TuneRef.TuneId
-    , userId :: U.UserId
+    , submitter :: U.UserName
     , title :: Text
     , rhythm :: Text
     , key :: Text
@@ -50,14 +50,14 @@ data AbcMetadataSubmission = AbcMetadataSubmission
 
 
 instance ToRow AbcMetadataSubmission where
-  toRow t = [ toField (genreString t), toField (tuneId t), toField (userId t)
+  toRow t = [ toField (genreString t), toField (tuneId t), toField (submitter t)
             , toField (title t), toField (rhythm t), toField (key t)
             , toField (abc t), toField (origin t), toField (source t)
             , toField (composer t), toField (transcriber t)
             ]
 
-buildMetadata :: U.UserId -> Genre -> Text ->  Either String AbcMetadataSubmission
-buildMetadata userId genre abcText  =
+buildMetadata :: U.UserName -> Genre -> Text ->  Either String AbcMetadataSubmission
+buildMetadata userName genre abcText  =
   case (abcParse abcText) of
     Left err ->
       Left err
@@ -76,7 +76,7 @@ buildMetadata userId genre abcText  =
           let
             tid = TuneRef.tuneId title rhythm
           in
-            AbcMetadataSubmission genreStr tid userId title rhythm key
+            AbcMetadataSubmission genreStr tid userName title rhythm key
                         abcText
                         origin source composer transcriber
       in

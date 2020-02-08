@@ -105,6 +105,13 @@ newtype UserName = UserName Text
 instance ToJSON UserName
 
 instance FromJSON UserName
+
+instance FromField UserName where
+  fromField field bs = UserName <$> fromField field bs
+
+instance ToField UserName where
+  toField (UserName u) = toField u
+
 data UserList = UserList
   { users :: [User]
   , pagination :: Pagination
