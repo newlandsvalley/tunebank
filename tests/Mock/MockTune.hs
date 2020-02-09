@@ -64,9 +64,9 @@ buildTuneRef metadata =
     }
 
 
-buildMetadataEntry :: UserName -> UTCTime -> Genre -> Text -> Either String MetadataEntry
-buildMetadataEntry userName utcTime genre abcText =
-  case (buildClientMetadata userName utcTime genre abcText) of
+buildMetadataEntry :: UserName -> Text -> Genre -> Text -> Either String MetadataEntry
+buildMetadataEntry userName dateString genre abcText =
+  case (buildClientMetadata userName dateString genre abcText) of
     Left err ->
       Left err
     Right metadata ->
@@ -79,9 +79,8 @@ scandiMetadata :: Map TuneRef.TuneId AbcMetadata
 scandiMetadata =
   let
     submitter = UserName (pack "Administrator")
-    time = fromDay $ fromGregorian 2020 1 1
   in
-    fromList $ catMaybes $ map (hush . buildMetadataEntry submitter time Scandi) scandiAbc
+    fromList $ catMaybes $ map (hush . buildMetadataEntry submitter "09 Feb 2020" Scandi) scandiAbc
 
 scandiAbc :: [ Text ]
 scandiAbc =

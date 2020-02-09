@@ -119,7 +119,7 @@ instance DBAccess (PostgresT IO) DBConfig where
       let
         genreStr = pack $ show genre
         queryTemplate = "SELECT title, rhythm, keysignature, submitter, "
-                <> " creation_ts, abc, "
+                <> " to_char(creation_ts, 'DD Mon yyyy'), abc, "
                 <> " source, origin, composer, transcriber "
                 <> " from tunes"
                 <> " WHERE genre = ? and tune_id = ? "

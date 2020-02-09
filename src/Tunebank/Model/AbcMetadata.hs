@@ -49,7 +49,7 @@ data AbcMetadata = AbcMetadata
     , rhythm :: Text
     , key :: Text
     , submitter :: Text
-    , utcTime :: UTCTime
+    , date :: Text
     , abc :: Text
     , source :: Maybe Text
     , origin :: Maybe Text
@@ -208,13 +208,12 @@ instance MimeUnrender ABC AbcMetadata where
       Right abcText ->
         let
           dateString = "06 Feb 2020"
-          time = fromDay $ fromGregorian 2020 1 1
         in
-          buildClientMetadata (UserName "fred") time Scandi abcText
+          buildClientMetadata (UserName "fred") dateString Scandi abcText
 
 -- again just to satisfy testing client
-buildClientMetadata :: UserName -> UTCTime -> Genre -> Text ->  Either String AbcMetadata
-buildClientMetadata (UserName submitter) utcTime genre abcText  =
+buildClientMetadata :: UserName -> Text -> Genre -> Text ->  Either String AbcMetadata
+buildClientMetadata (UserName submitter) dateString genre abcText  =
   case (abcParse abcText) of
     Left err ->
       Left err
@@ -229,7 +228,7 @@ buildClientMetadata (UserName submitter) utcTime genre abcText  =
         transcriber = lookup ABC.Transcription headerMap
         fromValid :: V.ValidatedHeaders -> AbcMetadata
         fromValid  (V.ValidatedHeaders title _ key rhythm ) =
-          AbcMetadata title rhythm key submitter utcTime
+          AbcMetadata title rhythm key submitter dateString
                       abcText
                       source origin composer transcriber
       in
