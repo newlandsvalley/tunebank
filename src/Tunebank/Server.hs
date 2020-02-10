@@ -68,7 +68,7 @@ import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
-import Tunebank.Model.TuneRef (TuneId, TuneRef, tuneId)
+import Tunebank.Model.TuneRef (TuneId(..), TuneRef, tuneId)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment, CommentList(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
@@ -216,15 +216,15 @@ tuneServer conn =
              mComposer mTranscriber sortKey limit offset
       pure $ TuneRef.TuneList tunes (Pagination page limit maxPages)
 
-    newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM TuneId
+    newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM Text
     newTuneHandler userName genre submission = do
       _ <- traceM ("new tune: " <> (show submission))
       eTuneId <- runQuery conn $ upsertTuneIfPermitted userName genre submission
       case eTuneId of
         Left serverError ->
           throwError serverError
-        Right tuneId ->
-          pure tuneId
+        Right (TuneId tid) ->
+          pure tid
 
     deleteTuneHandler :: UserName -> Genre -> TuneId -> AppM ()
     deleteTuneHandler userName genre tuneId = do

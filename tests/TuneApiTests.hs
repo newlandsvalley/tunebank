@@ -40,8 +40,8 @@ import qualified Mock.MockBasicAuth as MockAuth (basicAuthServerContext)
 
 fixtureDelay :: Int
 fixtureDelay =
-  -- 200 ms
-  200000
+  -- 100 ms
+  100000
 
 
 welcome :: ClientM Text
@@ -63,7 +63,7 @@ tuneList ::  Genre
        -> Maybe Int
        -> Maybe Int
        -> ClientM TuneList
-newTune :: BasicAuthData -> Genre -> Submission -> ClientM TuneId
+newTune :: BasicAuthData -> Genre -> Submission -> ClientM Text
 deleteTune :: BasicAuthData -> Genre ->  TuneId -> ClientM ()
 welcome :<|> tune :<|> tunePdf :<|> tunePs :<|> tunePng
       :<|> tuneMidi :<|> tuneAbc
@@ -83,8 +83,11 @@ withTuneApp config action = do
   -- we can spin up a server in another thread and kill that thread when done
   -- in an exception-safe way
   bracket (do
+            -- let's try a sandwich
             _ <- liftIO $ C.threadDelay fixtureDelay
-            liftIO $ C.forkIO $ Warp.run 8888 (tuneApp dbRef $ AppCtx config)
+            thread <- liftIO $ C.forkIO $ Warp.run 8888 (tuneApp dbRef $ AppCtx config)
+            _ <- liftIO $ C.threadDelay fixtureDelay
+            pure thread
            )
     C.killThread
     (const action)
@@ -126,7 +129,7 @@ tuneApiSpec config =
     describe "POST tune" $ do
       it "should accept a completely new tune " $ do
         result <- runClientM (newTune normalUser Scandi (Submission ewa)) clientEnv
-        result `shouldBe` (Right ewaId)
+        result `shouldBe` (Right "ewa-polska")
 
       it "should reject a submission of a new tune if was already submitted by previous user " $ do
         result <- runClientM (newTune normalUser Scandi (Submission augustsson)) clientEnv

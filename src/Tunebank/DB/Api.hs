@@ -9,7 +9,6 @@
 
 module Tunebank.DB.Api where
 
-
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.Catch (MonadThrow, catch, throwM)
@@ -17,6 +16,7 @@ import Control.Monad.Fail (MonadFail)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Data.String
+import Data.Int (Int64)
 import Servant.Server (ServerError, errBody, err404)
 import Data.Pool
 import Database.PostgreSQL.Simple
@@ -201,11 +201,19 @@ instance DBAccess (PostgresT IO) DBConfig where
          (\conn -> execute conn queryTemplate metadata)
       _ <- traceM ("production insert tune returned id: " <> (show (NewTune.tuneId metadata)))
       pure (NewTune.tuneId metadata)
-      -- pure $ TuneRef.tuneId "not" "implemented"
 
-    deleteTune :: Genre -> TuneId -> PostgresT IO ()
-    deleteTune genre tuneId =
-      pure ()
+    deleteTune :: Genre -> TuneId -> PostgresT IO Int64
+    deleteTune genre (TuneId tid) = do
+      let
+        genreStr = pack $ show genre
+        queryTemplate = "DELETE FROM tunes "
+                    <> " WHERE genre = ? AND tune_id = ? "
+        params =
+          (genreStr :: Text, tid :: Text)
+      pool <- asks _getPool
+      liftIO $ withResource pool
+         (\conn -> execute conn queryTemplate params)
+      --pure ()
 
     findCommentById :: Genre -> TuneId -> CommentId -> PostgresT IO (Maybe Comment)
     findCommentById genre tuneId commentId =

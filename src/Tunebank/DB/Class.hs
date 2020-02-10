@@ -7,6 +7,7 @@ module Tunebank.DB.Class where
 import Control.Monad.Catch (MonadThrow, catch, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Text (Text)
+import Data.Int (Int64)
 import Tunebank.Types
 import Tunebank.Model.User (UserId, UserName, User, UserList)
 import Tunebank.Model.AbcMetadata
@@ -66,7 +67,7 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   insertTune :: AbcMetadataSubmission -> m TuneId
 
-  deleteTune :: Genre -> TuneId -> m ()
+  deleteTune :: Genre -> TuneId -> m Int64
 
   findCommentById :: Genre -> TuneId -> CommentId -> m (Maybe Comment)
 

@@ -113,7 +113,7 @@ type AbcTuneAPI = "tunebank"
                      :> Capture "genre" Genre
                      :> "tune"
                      :> ReqBody '[FormUrlEncoded] TuneText.Submission
-                     :> Post '[JSON] TuneId
+                     :> Post '[PlainText] Text
 
      :<|> "tunebank" :> BasicAuth "tunebank-realm" UserName
                      :> "genre"

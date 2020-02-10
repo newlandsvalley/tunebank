@@ -79,13 +79,12 @@ instance DBAccess (DB IO) DBIORef where
      pure $ MockTune.countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
 
    insertTune submission =
-     -- we're not actually doing inserts - just pretending so and retruning the tune id
-     -- pure $ tuneId "not" "complete"
+     -- we're not actually doing inserts - just pretending so and returning the tune id
      pure $ MockTune.insertTune submission
 
    deleteTune genre tuneId =
      -- we're not mocking deletes
-     pure ()
+     pure 0
 
    findCommentById  genre tuneId commentId =
       pure $ MockComment.findCommentById genre tuneId commentId
