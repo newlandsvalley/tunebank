@@ -126,6 +126,7 @@ instance DBAccess (PostgresT IO) DBConfig where
         params =
           (genreStr :: Text, tid :: Text)
       _ <- traceM ("find tune by id query: " <> (show queryTemplate))
+      _ <- traceM ("find tune by id target: " <> (unpack tid))
       pool <- asks _getPool
       ts <- liftIO $ withResource pool
          (\conn -> query conn queryTemplate params)

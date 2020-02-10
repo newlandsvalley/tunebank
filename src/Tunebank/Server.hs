@@ -242,11 +242,12 @@ binaryHandler conn binaryFormat genre tuneId = do
   mMetadata <- runQuery conn $ findTuneById genre tuneId
   case mMetadata of
     Nothing ->
-      throwError $ notFound ("not found tune: " <> show tuneId)
+      throwError $ notFound ("binary handler not found tune: " <> show tuneId)
     Just metadata -> do
       eTranscoded <- transcodeTo binaryFormat genre metadata
       case eTranscoded of
-        Left errorBytes ->
+        Left errorBytes -> do
+          _ <- traceM ("binary handler for " <> (show binaryFormat) <> " error: " <> (show errorBytes))
           throwError $ badRequestLazy errorBytes
         Right binary ->
           pure binary

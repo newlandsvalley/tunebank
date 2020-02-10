@@ -1,9 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-
 module Tunebank.Model.AbcMetadataSubmission where
-
 
 import Prelude ()
 import Prelude.Compat hiding (lookup)
@@ -30,7 +28,6 @@ import Data.Abc.Parser (abcParse, headersParse)
 import Data.Abc.Validator (buildHeaderMap, validateHeaders)
 import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
 import Data.Validation (Validation(..), toEither)
-
 
 -- | Newly submitted ABC metadata
 
