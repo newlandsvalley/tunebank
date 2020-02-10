@@ -5,6 +5,8 @@ module Mock.MockTune
   ( findTuneById
   , getTuneList
   , search
+  , countTunes
+  , insertTune
   ) where
 
 
@@ -22,6 +24,7 @@ import Control.Error.Util (hush)
 
 import Data.Genre (Genre(..))
 import Tunebank.Model.AbcMetadata
+import qualified Tunebank.Model.AbcMetadataSubmission as NewTune (AbcMetadataSubmission(..))
 import qualified Tunebank.Model.TuneText as S (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Tunebank.Model.Pagination
@@ -131,3 +134,12 @@ countTunes :: Genre
            -> Int
 countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber =
   length $ getTuneList genre
+
+insertTune :: NewTune.AbcMetadataSubmission -> TuneRef.TuneId
+insertTune metadata =
+  -- assume the insert works, but we need to check the return
+  let
+    tid = NewTune.tuneId metadata
+    foo = trace ("Mock insert tune for " <> show tid)
+  in
+    tid

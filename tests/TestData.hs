@@ -9,6 +9,7 @@ import Data.Time.Calendar
 import Servant
 import Tunebank.Model.User
 import Tunebank.Model.TuneRef
+import Tunebank.Model.AbcMetadataSubmission
 import Tunebank.Model.Comment
 import Tunebank.Utils.Timestamps
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
@@ -105,6 +106,15 @@ fastanId :: TuneId
 fastanId =
   TuneId "fastan-polska"
 
+
+{-}
+fastanMetadata :: AbcMetadataSubmission
+fastanMetadata =
+  AbcMetadataSubmission "Scandi" (TuneId "fastan-polska")
+              (UserName "administrator") "Fastan"
+              "Polska" "F" fastan Nothing Nothing Nothing Nothing
+-}
+
 cig :: Text
 cig =
   "X: 1\r\n"
@@ -124,6 +134,26 @@ cig =
 cigId :: TuneId
 cigId =
   TuneId "c i g, grind hans jässpôdspolskan-polska"
+
+-- | use this as a new tune.  Don't put it in the mocked tune list
+ewa :: Text
+ewa =
+  "X: 1\r\n"
+  <> "T: Ewa\r\n"
+  <> "R: polska\r\n"
+  <> "C: Josefina Paulson\r\n"
+  <> "M: 9/8\r\n"
+  <> "L: 1/8\r\n"
+  <> "Q: 3/8=120\r\n"
+  <> "K: G\r\n"
+  <> "|: D2E D3 B3- | B2A B2c BAB | cB2 (2:3AG FEF | GD2 C3 B,3 | \r\n"
+  <> "| D2E D3 B3- | B2A B2c BAB | cB2 (2:3AG FEF | G3 G6 :| \r\n"
+  <> "|: dBd g2f (2:3ed | cB2 (2:3AG F2G | (2:3AB cAc BGB | AF2  D6 |\r\n"
+  <> "| dBd g2f (2:3ed |  cB2 (2:3AG F2G | (2:3AB cAc BGB | AF2  G6 :|\r\n"
+
+ewaId :: TuneId
+ewaId =
+  TuneId "ewa-polska"
 
 norefno :: Text
 norefno =

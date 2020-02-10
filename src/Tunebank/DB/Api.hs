@@ -29,7 +29,7 @@ import Tunebank.Model.TuneRef (TuneId(..), TuneList(..), TuneRef)
 import qualified Tunebank.Model.TuneRef as TuneRef (tuneId)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
-import Tunebank.Model.AbcMetadataSubmission (AbcMetadataSubmission(..))
+import qualified Tunebank.Model.AbcMetadataSubmission as NewTune (AbcMetadataSubmission(..))
 import Tunebank.Model.Comment (CommentId, CommentList(..), Comment)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
@@ -38,7 +38,6 @@ import Tunebank.Model.Pagination
 import Data.Abc.Validator (normaliseKeySignature, normaliseRhythm)
 
 import Debug.Trace (traceM)
-
 
 -- | This is just a simple newtype wrapper for our 'IORef'.
 newtype DBConfig = DBConfig {
@@ -102,7 +101,6 @@ instance DBAccess (PostgresT IO) DBConfig where
       pool <- asks _getPool
       liftIO $ withResource pool
          (\conn -> query conn queryTemplate params)
-
 
       -- pure $ UserList [] (Pagination 0 0 0)
 
@@ -191,9 +189,19 @@ instance DBAccess (PostgresT IO) DBConfig where
       liftIO $ withResource pool
          (\conn -> query conn queryTemplate params)
 
-    insertTune :: AbcMetadataSubmission -> PostgresT IO TuneId
-    insertTune submission =
-      pure $ TuneRef.tuneId "not" "implemented"
+    insertTune :: NewTune.AbcMetadataSubmission -> PostgresT IO TuneId
+    insertTune metadata = do
+      let
+        queryTemplate =
+          "INSERT INTO Tunes (genre, tune_id, submitter, title, rhythm, keysignature, "
+          <> " abc, origin, source, composer, transcriber ) "
+          <>  " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+      pool <- asks _getPool
+      rowcount <-  liftIO $ withResource pool
+         (\conn -> execute conn queryTemplate metadata)
+      _ <- traceM ("production insert tune returned id: " <> (show (NewTune.tuneId metadata)))
+      pure (NewTune.tuneId metadata)
+      -- pure $ TuneRef.tuneId "not" "implemented"
 
     deleteTune :: Genre -> TuneId -> PostgresT IO ()
     deleteTune genre tuneId =

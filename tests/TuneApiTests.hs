@@ -38,6 +38,12 @@ import TestData
 import qualified Mock.DBState as MockDB
 import qualified Mock.MockBasicAuth as MockAuth (basicAuthServerContext)
 
+fixtureDelay :: Int
+fixtureDelay =
+  -- 200 ms
+  200000
+
+
 welcome :: ClientM Text
 tune ::  Genre -> TuneId -> ClientM Meta.AbcMetadata
 tunePdf  ::  Genre -> TuneId -> ClientM ByteString
@@ -71,19 +77,22 @@ tuneApp dbRef ctx =
     hoistServerWithContext tuneAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
       (flip runReaderT ctx) (tuneServer $ MockDB.DBIORef dbRef)
 
-withUserApp :: Config -> IO () -> IO ()
-withUserApp config action = do
+withTuneApp :: Config -> IO () -> IO ()
+withTuneApp config action = do
   dbRef <- newIORef MockDB.mockedDBState
   -- we can spin up a server in another thread and kill that thread when done
   -- in an exception-safe way
-  bracket (liftIO $ C.forkIO $ Warp.run 8888 (tuneApp dbRef $ AppCtx config))
+  bracket (do
+            _ <- liftIO $ C.threadDelay fixtureDelay
+            liftIO $ C.forkIO $ Warp.run 8888 (tuneApp dbRef $ AppCtx config)
+           )
     C.killThread
     (const action)
 
 tuneApiSpec :: Config -> Spec
 tuneApiSpec config =
   -- `around` will start our Server before the tests and turn it off after
-  around_ (withUserApp config) $ do
+  around_ (withTuneApp config) $ do
     base <- runIO $ parseBaseUrl "http://localhost:8888"
     mgr <- runIO $ newManager defaultManagerSettings
     let clientEnv = mkClientEnv mgr base
@@ -91,7 +100,7 @@ tuneApiSpec config =
     describe "Welcome" $ do
       it "should provide a wecome message" $ do
         result <- runClientM welcome clientEnv
-        result `shouldBe` (Right  "Welcome to tunebank versionn 0.1.0.0.")
+        result `shouldBe` (Right  "Welcome to tunebank version 0.1.0.0.")
 
     describe "Get tune" $ do
       it "should get a tune (without need for authorization)" $ do
@@ -103,21 +112,25 @@ tuneApiSpec config =
         result <- runClientM (tuneAbc Scandi augustssonId) clientEnv
         (second (take 3 . unpack) result) `shouldBe` (Right  "X:1")
 
-    describe "Get tunes" $ do
+    describe "get tune list (search)" $ do
       it "should get all tunes from the genre" $ do
         eResult <- runClientM
-                    (tuneList Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing)
+                    (tuneList Scandi Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing (Just 1) (Just 15))
                     clientEnv
         case eResult of
           Left err ->
             expectationFailure ("unexpected tuneList error: " <> show err)
           Right tList -> do
-            (length $ tunes tList) `shouldBe` 3
+            (length $ tunes tList) `shouldBe` 4
 
     describe "POST tune" $ do
-      it "should accept a new tune " $ do
+      it "should accept a completely new tune " $ do
+        result <- runClientM (newTune normalUser Scandi (Submission ewa)) clientEnv
+        result `shouldBe` (Right ewaId)
+
+      it "should reject a submission of a new tune if was already submitted by previous user " $ do
         result <- runClientM (newTune normalUser Scandi (Submission augustsson)) clientEnv
-        result `shouldBe` (Right augustssonId)
+        (isLeft result) `shouldBe` True
 
     describe "DELETE tune" $ do
       it "is allowed by an administrator" $ do

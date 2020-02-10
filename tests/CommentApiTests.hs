@@ -36,6 +36,12 @@ import TestData
 import Mock.DBState as MockDB
 import qualified Mock.MockBasicAuth as MockAuth (basicAuthServerContext)
 
+
+fixtureDelay :: Int
+fixtureDelay =
+  -- 200 ms
+  200000
+
 singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
 commentList ::  Genre -> TuneRef.TuneId -> ClientM CommentList
 postComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> NewComment.Submission -> ClientM CommentId
@@ -49,19 +55,22 @@ commentApp dbRef ctx =
     hoistServerWithContext commentAPI (Proxy :: Proxy (BasicAuthCheck UserName ': '[]))
       (flip runReaderT ctx) (commentServer $ MockDB.DBIORef dbRef)
 
-withUserApp :: Config -> IO () -> IO ()
-withUserApp config action = do
+withCommentApp :: Config -> IO () -> IO ()
+withCommentApp config action = do
   dbRef <- newIORef MockDB.mockedDBState
   -- we can spin up a server in another thread and kill that thread when done
   -- in an exception-safe way
-  bracket (liftIO $ C.forkIO $ Warp.run 8888 (commentApp dbRef $ AppCtx config))
+  bracket (do
+            _ <- liftIO $ C.threadDelay fixtureDelay
+            liftIO $ C.forkIO $ Warp.run 8888 (commentApp dbRef $ AppCtx config)
+          )
     C.killThread
     (const action)
 
 commentApiSpec :: Config -> Spec
 commentApiSpec config =
   -- `around` will start our Server before the tests and turn it off after
-  around_ (withUserApp config) $ do
+  around_ (withCommentApp config) $ do
     base <- runIO $ parseBaseUrl "http://localhost:8888"
     mgr <- runIO $ newManager defaultManagerSettings
     let clientEnv = mkClientEnv mgr base

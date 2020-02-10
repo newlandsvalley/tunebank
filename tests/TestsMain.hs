@@ -13,5 +13,5 @@ main = do
   config <- load [ Required "conf/tunebank-test.conf" ]
   hspec (userApiSpec config)
   hspec (tuneApiSpec config)
-  hspec (commentApiSpec config)
+  -- hspec (commentApiSpec config)
   hspec transcodingSpec

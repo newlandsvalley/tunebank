@@ -94,7 +94,7 @@ userServer conn =
        _ <- traceM ("get users: " <> (show userName))
        limit <- Config.getPageSize mSize
        let
-         page = fromMaybe 1 mPage
+         page = maybe 1 (max 1) mPage
          offset = (page - 1) * limit
        eUsers <- runQuery conn $ getUsersIfPermitted userName limit offset
        userCount <- runQuery conn countUsers
@@ -152,7 +152,7 @@ tuneServer conn =
   where
     welcomeHandler :: AppM Text
     welcomeHandler =
-      pure "Welcome to tunebank versionn 0.1.0.0."
+      pure "Welcome to tunebank version 0.1.0.0."
 
     tuneHandler :: Genre -> TuneId -> AppM AbcMetadata
     tuneHandler genre tuneId = do
@@ -207,7 +207,7 @@ tuneServer conn =
       tuneCount <- runQuery conn $ countTunes genre mTitle mRhythm mKey
                         mSource mOrigin  mComposer mTranscriber
       let
-        page = fromMaybe 1 mPage
+        page = maybe 1 (max 1) mPage
         offset = (page - 1) * limit
         sortKey = fromMaybe Alpha mSortKey
         maxPages = (div tuneCount limit) + 1
