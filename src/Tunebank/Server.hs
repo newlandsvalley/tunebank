@@ -16,59 +16,30 @@ module Tunebank.Server where
 import Prelude ()
 import Prelude.Compat hiding (lookup)
 
-import Control.Monad.Except
 import Control.Monad.Reader
-import Data.Aeson
-import Data.Aeson.Types
-import Data.Attoparsec.ByteString
+
 import qualified Data.ByteString.Lazy as Lazy (ByteString)
-import qualified Data.ByteString.Lazy.UTF8 as UTF8 (fromString)
-import Data.ByteString.Internal (packChars)
-import Data.List hiding (lookup)
 import Data.Maybe
-import Data.Text (Text, pack)
-import Data.String.Conversions
-import Data.Time.Calendar
-import GHC.Generics
-import Lucid
-import Network.HTTP.Media ((//), (/:))
+import Data.Text (Text)
 import Network.Wai
-import Network.Wai.Handler.Warp
 import Network.Wai.Middleware.Cors
-import Network.HTTP.Types.Method (Method)
 import Servant
-import System.Directory
-import Text.Blaze
-import Text.Blaze.Html.Renderer.Utf8
-import Servant.Types.SourceT (source)
-import qualified Data.Aeson.Parser
-import qualified Text.Blaze.Html
-import Data.Configurator.Types (Config)
-import Data.Configurator
-
-
-import Control.Monad.Catch (MonadThrow, catch, throwM)
-import Control.Monad.Error.Class (throwError)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Trans.Except (ExceptT)
-import Data.Functor.Identity
-import Servant.Server (ServerError, errBody)
-
 
 import Tunebank.Types
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
+import qualified Tunebank.Model.NewUser as NewUser (NewUser(..))
+import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import Tunebank.DB.Class
-import Tunebank.DB.UserHelper (registerNewUser, hasAdminRole, getUsersIfPermitted)
+import Tunebank.DB.UserHelper (registerNewUser, getUsersIfPermitted)
 import Tunebank.DB.CommentHelper (deleteCommentIfPermitted, upsertCommentIfPermitted)
 import Tunebank.DB.TuneHelper (deleteTuneIfPermitted, upsertTuneIfPermitted)
-import Tunebank.Utils.HTTPErrors
-import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
+import Tunebank.Utils.HTTPErrors (badRequest, badRequestLazy, notFound, notAuthorized)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
-import Tunebank.Model.TuneRef (TuneId(..), TuneRef, tuneId)
+import Tunebank.Model.TuneRef (TuneId(..))
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
 import Tunebank.Model.Comment (CommentId, Comment, CommentList(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
@@ -77,6 +48,7 @@ import Tunebank.TypeConversion.Transcode (transcodeTo)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import qualified Tunebank.Email.Client as Email (sendConfirmation)
 import Tunebank.DB.Api
+
 
 import Data.Genre (Genre)
 import Debug.Trace (trace, traceM)
@@ -116,8 +88,8 @@ userServer conn =
          Left serverError ->
            throwError serverError
            -- (err404 {errBody = ("registration failed: " <> err)})
-         Right user -> do
-           _ <- Email.sendConfirmation (email user) (uid user)
+         Right confirmation -> do
+           _ <- Email.sendConfirmation confirmation
            pure "we've sent you an email to complete the registration process"
 
      -- check user is pre-checked with basic authentication

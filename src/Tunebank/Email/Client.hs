@@ -15,12 +15,13 @@ import Network.HaskellNet.SMTP.SSL as SMTP
 import Network.HaskellNet.Auth (AuthType(LOGIN))
 import Tunebank.Types
 import Tunebank.Config
+import Tunebank.Model.NewUser (EmailConfirmation(..))
 import Tunebank.Model.User (UserId(..))
 
 import Debug.Trace (trace, traceM)
 
-sendConfirmation :: Text -> UserId -> AppM ()
-sendConfirmation recipient uid = do
+sendConfirmation :: EmailConfirmation -> AppM ()
+sendConfirmation confirmation = do
   hostName <- mailHost
   portNumber <- mailPort
   userName <- mailLogin
@@ -30,8 +31,8 @@ sendConfirmation recipient uid = do
   let
     settings  = defaultSettingsWithPort portNumber
     subject   = "The traditional tunes database: user validation"
-    slug      = show $ userId uid
-    link      = baseUrl <> "/tunebank/user/validate/" <> slug
+    theSlug   = unpack $ slug confirmation
+    link      = baseUrl <> "/tunebank/user/validate/" <> theSlug
     plainBody = ""
     htmlBody  = fromStrict $ pack $  "Thanks for signing up to the traditional tunes database! <br/><br/>"
                <> "Your account has been created. <br/><br/>"
@@ -44,15 +45,15 @@ sendConfirmation recipient uid = do
     if authSucceed
       then do
         _ <- traceM "authentication succeeded - sending the mail"
-        sendMimeMail (unpack recipient) userName subject plainBody htmlBody [] c
+        sendMimeMail (unpack $ address confirmation) userName subject plainBody htmlBody [] c
       else do
         _ <- traceM "authentication failed"
         print "Authentication error."
 
 
 {- version if we want to xdebug
-sendConfirmation :: Text -> UserId -> AppM ()
-sendConfirmation recipient uid = do
+sendConfirmation :: EmailConfirmation -> AppM ()
+sendConfirmation confirmation = do
   hostName <- mailHost
   portNumber <- mailPort
   userName <- mailLogin
@@ -62,8 +63,8 @@ sendConfirmation recipient uid = do
   let
     settings  = defaultSettingsWithPort portNumber
     subject   = "The traditional tunes database: user validation"
-    slug      = unpack $ userId uid
-    link      = baseUrl <> "/tunebank/user/validate/" <> slug
+    theSlug   = unpack $ slug confirmation
+    link      = baseUrl <> "/tunebank/user/validate/" <> theSlug
     plainBody = ""
     htmlBody  = fromStrict $ pack $  "Thanks for signing up to the traditional tunes database! <br/><br/>"
                <> "Your account has been created. <br/><br/>"
@@ -77,7 +78,7 @@ sendConfirmation recipient uid = do
   if authSucceed
     then do
       _ <- traceM "authentication succeeded - sending the mail"
-      liftIO $ sendMimeMail (unpack recipient) userName subject plainBody htmlBody [] c
+      liftIO $ sendMimeMail (unpack $ address confirmation) userName subject plainBody htmlBody [] c
     else do
       _ <- traceM "authentication failed"
       liftIO $ print "Authentication error."

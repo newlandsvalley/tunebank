@@ -58,9 +58,9 @@ instance DBAccess (DB IO) DBIORef where
    getUsers page size = do
      pure $ MockUser.getUsers page size
 
-   insertUser user =
+   insertUser newUser =
      -- we're not mocking inserts
-     pure True
+     pure $ MockUser.insertUser newUser
 
    updateUser uid user =
      -- we're not mocking updates

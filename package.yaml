@@ -73,7 +73,9 @@ executables:
 tests:
   tunebank-test:
     main:                TestsMain.hs
-    source-dirs:         tests, src
+    source-dirs:
+    - src
+    - tests
     ghc-options:
     - -Wall
     - -threaded

@@ -13,18 +13,17 @@
 
 module UserApiTests (userApiSpec) where
 
+import Prelude ()
+import Prelude.Compat
 
-import           Prelude ()
-import           Prelude.Compat
+import qualified Control.Concurrent as C
+import Control.Exception (bracket)
+import Data.Text (Text)
+import Network.HTTP.Client hiding (Proxy)
+import qualified Network.Wai.Handler.Warp as Warp
 
-import qualified Control.Concurrent               as C
-import           Control.Exception                (bracket)
-import           Data.Text                        (Text, unpack)
-import           Network.HTTP.Client       hiding (Proxy)
-import qualified Network.Wai.Handler.Warp         as Warp
-
-import           Data.Either (isLeft)
-import           Data.Bifunctor (second)
+import Data.Either (isLeft)
+-- import           Data.Bifunctor (second)
 
 import           Servant
 import           Servant.Client
@@ -33,7 +32,7 @@ import           Test.Hspec
 import           Test.Hspec.Wai
 
 
-import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import Data.IORef (IORef, newIORef)
 import Control.Monad.Reader
 import Control.Concurrent (threadDelay)
 
@@ -42,7 +41,6 @@ import Tunebank.Types (AppCtx(..))
 import Tunebank.Server (userAPI, userServer)
 import Tunebank.Model.User
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
-import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import Data.Configurator.Types (Config)
 import TestData
 import qualified Mock.DBState as MockDB
@@ -121,6 +119,11 @@ userApiSpec config =
         result <- runClientM  (checkUser badUser) clientEnv
         -- maybe we aught to analyse the error but this shoule be enough
         (isLeft result) `shouldBe` True
+
+    describe "new user" $ do
+      it "should send a confirmation for a newly inserted user" $ do
+        result <- runClientM (newUser sampleNewUser) clientEnv
+        result `shouldBe` (Right "we've sent you an email to complete the registration process")
 
     describe "validate user registration" $ do
       it "should accept a valid user id slub" $ do

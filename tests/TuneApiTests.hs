@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, TypeFamilies, DataKinds,
   DeriveGeneric, TypeOperators #-}
 
+
 module TuneApiTests (tuneApiSpec) where
 
 import Prelude ()
@@ -8,21 +9,20 @@ import Prelude.Compat
 
 import qualified Control.Concurrent as C
 import Control.Monad.Reader
-import Data.IORef (IORef, newIORef, readIORef, writeIORef)
+import Data.IORef (IORef, newIORef)
 import Control.Exception (bracket)
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text, unpack)
 import Network.HTTP.Client hiding (Proxy)
 import qualified Network.Wai.Handler.Warp as Warp
 
 import Data.Either (isLeft)
-import Data.Bifunctor (first, second)
+import Data.Bifunctor (second)
 import Data.Genre (Genre(..))
 
 import Servant
 import Servant.Client
 
 import Test.Hspec
-import Test.Hspec.Wai
 
 import Data.ByteString.Lazy (ByteString)
 

@@ -1,3 +1,6 @@
+
+{-# LANGUAGE OverloadedStrings #-}
+
 module Mock.MockUser
   (
     getUsers
@@ -5,6 +8,7 @@ module Mock.MockUser
   , findUserById
   , findUserByName
   , userList
+  , insertUser
   , validateUser
   ) where
 
@@ -12,6 +16,7 @@ import Prelude ()
 import Prelude.Compat hiding (lookup)
 
 import Tunebank.Model.User (User(..), Role(..), UserName(..), UserId(..), UserList(..))
+import Tunebank.Model.NewUser (NewUser, EmailConfirmation(..))
 import qualified Tunebank.Model.UserRegistration as Reg (Submission(..))
 import Tunebank.Model.Pagination (Pagination(..))
 import Data.Text (Text, pack, unpack, toUpper)
@@ -64,6 +69,10 @@ findUserByName name =
 countUsers :: Int
 countUsers =
   length userList
+
+insertUser :: NewUser -> Maybe EmailConfirmation
+insertUser newUser =
+  Just $ EmailConfirmation "john.watson@gmx.uk" "44"
 
 validateUser :: Text -> Text -> Bool
 validateUser name suppliedPassword =

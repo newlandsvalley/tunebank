@@ -19,4 +19,8 @@ notAuthorized cause =
 
 badRequestLazy :: ByteString -> ServerError
 badRequestLazy cause =
-    err400 {errBody = cause }  
+  err400 {errBody = cause }
+
+serverError :: String -> ServerError
+serverError cause =
+  err500 {errBody = UTF8.fromString cause }    

@@ -9,6 +9,7 @@ import Data.Time.Calendar
 import Tunebank.Types
 import Tunebank.DB.Class
 import Tunebank.Model.User
+import qualified Tunebank.Model.NewUser as NewUser (NewUser(..), EmailConfirmation)
 import qualified Tunebank.Model.UserRegistration as Reg (Submission(..))
 import Tunebank.Utils.Timestamps (today)
 import Tunebank.Utils.HTTPErrors
@@ -41,12 +42,13 @@ getUserRole (UserName userName) = do
 -- we need to provide user checks here
 -- we need an insert-only type for User without UserId (which is synthetic)
 -- JMW!!!
-registerNewUser :: DBAccess m d =>  Reg.Submission -> m (Either ServerError User)
+registerNewUser :: DBAccess m d =>  Reg.Submission -> m (Either ServerError NewUser.EmailConfirmation)
 registerNewUser submission =
   let
-    name = Reg.name submission
-    email = Reg.email submission
-    password = Reg.password submission
+    name =
+      Reg.name submission
+    newUser =
+      NewUser.NewUser name (Reg.email submission) (Reg.password submission)
     --  foo = trace ("Registering new user: " <> (unpack name)) name
   in
     do
@@ -55,8 +57,13 @@ registerNewUser submission =
         Just _ ->
           pure $ Left $ badRequest "user already exists"
         _ -> do
-          date <- liftIO today
-          pure $ Right $ User (UserId 0) name email password NormalUser date False
+          mConfirmation <- insertUser newUser
+          case mConfirmation of
+            Just confirmation ->
+              pure $ Right confirmation
+            _ ->
+              pure $ Left $ serverError "user insert failed unexpectedly"
+
 
 getUsersIfPermitted :: DBAccess m d => UserName -> Int -> Int -> m (Either ServerError [User])
 getUsersIfPermitted userName limit offset = do

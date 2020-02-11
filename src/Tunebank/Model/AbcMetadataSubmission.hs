@@ -7,27 +7,20 @@ import Prelude ()
 import Prelude.Compat hiding (lookup)
 
 import GHC.Generics
-import Data.Text (Text, pack, unpack, toLower)
-import Data.Map (Map, fromList, elems, lookup)
-import Data.Time.Calendar
-import Data.Time.Clock (UTCTime)
+import Data.Text (Text, pack)
+import Data.Map (lookup)
 import Data.Genre
-import Control.Applicative
-import Control.Monad.IO.Class (liftIO)
-import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
 import Database.PostgreSQL.Simple.ToField
-import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.ToRow
-import Data.Bifunctor (second, bimap)
+import Data.Bifunctor (bimap)
 import qualified Tunebank.Model.User as U (UserName(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import qualified Data.Abc as ABC
 import Data.Abc.Serializer (serializeHeaders)
-import Data.Abc.Parser (abcParse, headersParse)
+import Data.Abc.Parser (abcParse)
 import Data.Abc.Validator (buildHeaderMap, validateHeaders)
 import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
-import Data.Validation (Validation(..), toEither)
+import Data.Validation (toEither)
 
 -- | Newly submitted ABC metadata
 

@@ -4,16 +4,16 @@
 
 module Tunebank.DB.Class where
 
-import Control.Monad.Catch (MonadThrow, catch, throwM)
-import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Catch (MonadThrow)
+import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import Data.Int (Int64)
 import Tunebank.Types
-import Tunebank.Model.User (UserId, UserName, User, UserList)
+import Tunebank.Model.User (UserId, UserName, User)
+import Tunebank.Model.NewUser (NewUser, EmailConfirmation)
 import Tunebank.Model.AbcMetadata
 import Tunebank.Model.AbcMetadataSubmission
-import Tunebank.Model.TuneRef (TuneId, TuneList, TuneRef)
-import qualified Tunebank.Model.TuneText as NewTune (Submission)
+import Tunebank.Model.TuneRef (TuneId, TuneRef)
 import Tunebank.Model.Comment (CommentId, Comment, CommentList)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission)
 import Data.Genre (Genre)
@@ -34,7 +34,7 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   getUsers ::  Int -> Int -> m [User]
 
-  insertUser :: User -> m Bool
+  insertUser :: NewUser -> m (Maybe EmailConfirmation)
 
   updateUser :: UserId -> User  -> m ()
 

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b14aa1fd5f522655bb012fdc2fc27ba95a31052da0823e316b09072409967d0e
+-- hash: daae460a5fef352230c35b5f6a487b7fa466e6a8e097387a9b995cdedd6acbf1
 
 name:           tunebank
 version:        0.1.0.0
@@ -43,6 +43,7 @@ executable tunebank-exe
       Tunebank.Model.Comment
       Tunebank.Model.CommentSubmission
       Tunebank.Model.Genre
+      Tunebank.Model.NewUser
       Tunebank.Model.Pagination
       Tunebank.Model.TuneRef
       Tunebank.Model.TuneText
@@ -101,9 +102,46 @@ test-suite tunebank-test
   type: exitcode-stdio-1.0
   main-is: TestsMain.hs
   other-modules:
+      Main
+      Tunebank.ApiType
+      Tunebank.Authentication.BasicAuth
+      Tunebank.Config
+      Tunebank.DB.Api
+      Tunebank.DB.Class
+      Tunebank.DB.CommentHelper
+      Tunebank.DB.TuneHelper
+      Tunebank.DB.UserHelper
+      Tunebank.Email.Client
+      Tunebank.Model.AbcMetadata
+      Tunebank.Model.AbcMetadataSubmission
+      Tunebank.Model.Comment
+      Tunebank.Model.CommentSubmission
+      Tunebank.Model.Genre
+      Tunebank.Model.NewUser
+      Tunebank.Model.Pagination
+      Tunebank.Model.TuneRef
+      Tunebank.Model.TuneText
+      Tunebank.Model.User
+      Tunebank.Model.UserRegistration
+      Tunebank.Server
+      Tunebank.TypeConversion.Transcode
+      Tunebank.Types
+      Tunebank.Utils.HTTPErrors
+      Tunebank.Utils.Timestamps
+      CommentApiTests
+      Mock.DBState
+      Mock.MockBasicAuth
+      Mock.MockComment
+      Mock.MockTune
+      Mock.MockUser
+      TestData
+      TranscodingTests
+      TuneApiTests
+      UserApiTests
       Paths_tunebank
   hs-source-dirs:
-      tests, src
+      src
+      tests
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HaskellNet

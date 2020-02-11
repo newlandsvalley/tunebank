@@ -25,6 +25,7 @@ import Tunebank.Types
 import Tunebank.DB.Class
 import Data.Genre (Genre)
 import Tunebank.Model.User (User, UserId, UserName, UserList(..))
+import Tunebank.Model.NewUser (NewUser(..), EmailConfirmation(..))
 import Tunebank.Model.TuneRef (TuneId(..), TuneList(..), TuneRef)
 import qualified Tunebank.Model.TuneRef as TuneRef (tuneId)
 import Tunebank.Model.AbcMetadata
@@ -36,8 +37,8 @@ import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.Pagination
 import Data.Abc.Validator (normaliseKeySignature, normaliseRhythm)
-
 import Debug.Trace (traceM)
+
 
 -- | This is just a simple newtype wrapper for our 'IORef'.
 newtype DBConfig = DBConfig {
@@ -102,11 +103,17 @@ instance DBAccess (PostgresT IO) DBConfig where
       liftIO $ withResource pool
          (\conn -> query conn queryTemplate params)
 
-      -- pure $ UserList [] (Pagination 0 0 0)
-
-    insertUser :: User -> PostgresT IO Bool
-    insertUser user =
-      pure False
+    insertUser :: NewUser -> PostgresT IO (Maybe EmailConfirmation)
+    insertUser newUser = do
+      let
+        queryTemplate =
+          "INSERT INTO Users (name, email, password) "
+          <>  " VALUES (?, ?, ? ) returning email, id::text "
+      pool <- asks _getPool
+      confirmation :: [EmailConfirmation] <-  liftIO $ withResource pool
+         (\conn -> query conn queryTemplate newUser)
+      _ <- traceM ("production insert user returned true: ")
+      pure $ safeHead confirmation
 
     updateUser :: UserId -> User -> PostgresT IO ()
     updateUser uid user =

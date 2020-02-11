@@ -9,19 +9,16 @@ import Prelude.Compat
 import qualified Control.Concurrent as C
 import Control.Exception (bracket)
 import Control.Monad.Reader
-import Data.IORef (IORef, newIORef, readIORef, writeIORef)
-import Data.Text (Text, unpack)
+import Data.IORef (IORef, newIORef)
 import Network.HTTP.Client hiding (Proxy)
 import qualified Network.Wai.Handler.Warp as Warp
 
 import Data.Either (isLeft)
-import Data.Bifunctor (second)
 
 import Servant
 import Servant.Client
 
 import Test.Hspec
-import Test.Hspec.Wai
 
 import Tunebank.ApiType (CommentAPI)
 import Tunebank.Types (AppCtx(..))
@@ -35,7 +32,6 @@ import Data.Genre
 import TestData
 import Mock.DBState as MockDB
 import qualified Mock.MockBasicAuth as MockAuth (basicAuthServerContext)
-
 
 fixtureDelay :: Int
 fixtureDelay =
