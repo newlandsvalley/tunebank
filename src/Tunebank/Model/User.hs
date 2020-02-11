@@ -4,17 +4,13 @@
 
 module Tunebank.Model.User where
 
-import Control.Monad (mzero)
 import Data.Time.Calendar
 import GHC.Generics
 import Data.Aeson
-import Data.Aeson.Types
-import qualified Data.Aeson.Parser
 import Web.Internal.HttpApiData
 import Data.Bifunctor (bimap)
-import Data.Text (Text, pack, toLower, unpack)
+import Data.Text (Text, pack, unpack)
 import Text.Read (readEither)
-import Data.Maybe (Maybe)
 import Tunebank.Model.Pagination (Pagination(..))
 import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
 import Database.PostgreSQL.Simple.ToField
@@ -34,8 +30,8 @@ instance ToField Role  where
   toField r = toField (show r)
 
 instance FromField Role where
-  fromField field mdata = do
-    x <- fromField field mdata
+  fromField fld mdata = do
+    x <- fromField fld mdata
     case x :: Text of
       "Admin" -> return Administrator
       _ -> return NormalUser
@@ -62,7 +58,7 @@ instance ToHttpApiData UserId
     toUrlPiece (UserId u) = pack $ show u
 
 instance FromField UserId where
-  fromField field bs = UserId <$> fromField field bs
+  fromField fld bs = UserId <$> fromField fld bs
 
 instance ToField UserId  where
   toField (UserId u) = toField u

@@ -133,7 +133,7 @@ lookupString :: String -> AppM String
 lookupString item = do
   config <- asks _getConfig
   val <- liftIO $ (require config (pack item) :: IO String)
-  traceM ("looking up string: " <> item <> " - value: " <> show val)
+  -- traceM ("looking up string: " <> item <> " - value: " <> show val)
   pure val
 
 -- | lookup am Int-valued configuration item
@@ -141,7 +141,7 @@ lookupInt :: String -> AppM Int
 lookupInt item = do
   config <- asks _getConfig
   val <- liftIO $ (require config (pack item) :: IO Int)
-  traceM ("looking up int: " <> item <> " - value: " <> show val)
+  -- traceM ("looking up int: " <> item <> " - value: " <> show val)
   pure val
 
 

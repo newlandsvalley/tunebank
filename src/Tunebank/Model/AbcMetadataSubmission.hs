@@ -38,7 +38,6 @@ data AbcMetadataSubmission = AbcMetadataSubmission
     , transcriber :: Maybe Text
     } deriving (Eq, Show, Generic)
 
-
 instance ToRow AbcMetadataSubmission where
   toRow t = [ toField (genreString t), toField (tuneId t), toField (submitter t)
             , toField (title t), toField (rhythm t), toField (key t)

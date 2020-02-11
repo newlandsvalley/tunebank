@@ -6,17 +6,12 @@
 
 module Tunebank.Model.TuneText where
 
-import Data.Time.Calendar
 import GHC.Generics
-import Data.Aeson
-import Data.Aeson.Types
-import qualified Data.Aeson.Parser
 import Data.Text (Text)
 import qualified Data.ByteString.Lazy.Char8 as BC
 import Web.FormUrlEncoded
-import Network.HTTP.Media ((//), (/:))
+import Network.HTTP.Media ((//))
 import Servant.API.ContentTypes
-import Web.Internal.HttpApiData
 import Data.Typeable
 
 -- | a 'raw' ABC tune submitted from a form

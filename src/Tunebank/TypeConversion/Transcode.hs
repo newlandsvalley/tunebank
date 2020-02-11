@@ -25,13 +25,12 @@ import Tunebank.Types
 import Tunebank.Model.AbcMetadata
 import Control.Monad.Reader
 import qualified Tunebank.Model.TuneRef as TuneRef
-import Data.Map (Map, fromList, elems, lookup)
-import qualified Data.ByteString as Strict (ByteString, readFile, hGetContents)
-import Data.ByteString.Lazy (ByteString, empty, fromStrict)
+import qualified Data.ByteString as Strict (ByteString, hGetContents)
+import Data.ByteString.Lazy (ByteString, fromStrict)
 import Data.ByteString.Lazy.Internal (packChars)
 import Data.Genre (Genre(..))
 import Data.Text (Text, unpack)
-import Data.Maybe (Maybe, maybe)
+import Data.Maybe (Maybe)
 import Data.Bifunctor (first)
 import Tunebank.Config
 
@@ -64,13 +63,13 @@ transcodeTo target genre abcMetadata = do
       _ <- liftIO $ writeTextFile sourceFilePath abcText
       transcodeError <- liftIO $ runTranscodeScript script sourceDir targetDir fileBase
       case transcodeError of
-        Just error -> pure $ Left (fromStrict error)
+        Just err -> pure $ Left (fromStrict err)
         Nothing -> do
           readTargetFile targetFilePath
 
 runTranscodeScript :: String -> String -> String -> String -> IO (Maybe Strict.ByteString)
 runTranscodeScript script sourcePath targetPath name = do
-  (_, hout, herr, hp) <-
+  (_, _, herr, hp) <-
       createProcess (proc script [sourcePath, targetPath, name]){ std_err = CreatePipe }
   exitCode <- waitForProcess hp
   traceM ("transcode exit code: " <> (show exitCode))
@@ -104,19 +103,19 @@ buildTargetFilePath genre fileBase fileExtension = do
 readBinaryFile :: FilePath -> IO (Either IOException ByteString)
 readBinaryFile filePath = do
   result <- try $ do
-    handle <- openBinaryFile filePath ReadMode
-    contents <- Strict.hGetContents handle
-    --  _ <- hClose handle
+    hndl <- openBinaryFile filePath ReadMode
+    contents <- Strict.hGetContents hndl
+    --  _ <- hClose hndl
     pure $ fromStrict contents
   pure result
 
 -- | write the ABC as a text file as a source for the transcoding
 writeTextFile :: FilePath -> Text -> IO (Either IOException ())
-writeTextFile filePath abc = do
+writeTextFile filePath abcText = do
   let
-    contents = unpack abc
+    contents = unpack abcText
   result <- try $ do
-    handle <- openFile filePath WriteMode
-    _ <- hPutStr handle contents
-    hClose handle
+    hndl <- openFile filePath WriteMode
+    _ <- hPutStr hndl contents
+    hClose hndl
   pure result

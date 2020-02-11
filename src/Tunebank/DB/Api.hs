@@ -11,7 +11,7 @@ module Tunebank.DB.Api where
 
 import Control.Monad.Except
 import Control.Monad.Reader
-import Control.Monad.Catch (MonadThrow, catch, throwM)
+import Control.Monad.Catch (MonadThrow, catch)
 import Control.Monad.Fail (MonadFail)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.IO.Class (liftIO)
@@ -24,18 +24,14 @@ import Data.Text (Text, pack, unpack)
 import Tunebank.Types
 import Tunebank.DB.Class
 import Data.Genre (Genre)
-import Tunebank.Model.User (User, UserId, UserName, UserList(..))
+import Tunebank.Model.User (User, UserId, UserName)
 import Tunebank.Model.NewUser (NewUser(..), EmailConfirmation(..))
-import Tunebank.Model.TuneRef (TuneId(..), TuneList(..), TuneRef)
-import qualified Tunebank.Model.TuneRef as TuneRef (tuneId)
+import Tunebank.Model.TuneRef (TuneId(..), TuneRef)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import qualified Tunebank.Model.AbcMetadataSubmission as NewTune (AbcMetadataSubmission(..))
 import Tunebank.Model.Comment (CommentId, CommentList(..), Comment)
-import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
-import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
-import Tunebank.Model.Pagination
 import Data.Abc.Validator (normaliseKeySignature, normaliseRhythm)
 import Debug.Trace (traceM)
 
@@ -112,7 +108,7 @@ instance DBAccess (PostgresT IO) DBConfig where
       pool <- asks _getPool
       confirmation :: [EmailConfirmation] <-  liftIO $ withResource pool
          (\conn -> query conn queryTemplate newUser)
-      _ <- traceM ("production insert user returned true: ")
+      _ <- traceM ("production insert user returned confirmation ")
       pure $ safeHead confirmation
 
     updateUser :: UserId -> User -> PostgresT IO ()

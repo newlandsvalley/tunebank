@@ -20,6 +20,7 @@ import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.ToRow
 
+
 -- | the unique ID of a tune (within a genre)
 newtype TuneId = TuneId Text
   deriving (Eq, Ord, Show, Generic)
@@ -79,7 +80,7 @@ instance ToJSON TuneRef
 instance FromJSON TuneRef
 
 instance FromRow TuneRef where
-fromRow = TuneRef <$> field <*> field <*> field <*> field <*> field
+  fromRow = TuneRef <$> field <*> field <*> field <*> field <*> field
 
 data TuneList = TuneList
   { tunes :: [TuneRef]

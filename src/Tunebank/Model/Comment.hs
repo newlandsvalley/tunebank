@@ -2,14 +2,12 @@
 
 module Tunebank.Model.Comment where
 
-import Data.Time.Calendar
 import GHC.Generics
 import Data.Aeson
-import Data.Aeson.Types
-import qualified Data.Aeson.Parser
 import Web.Internal.HttpApiData
 import Data.Text (Text)
 import Tunebank.Model.TuneRef (TuneId)
+
 
 -- | the unique ID of a tune (within a genre)
 newtype CommentId = CommentId Text

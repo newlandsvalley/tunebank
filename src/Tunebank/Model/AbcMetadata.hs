@@ -70,7 +70,6 @@ instance FromRow AbcMetadata where
                             field <*> field <*> field <*> field <*>
                             field <*> field
 
-
 -- | a title query parameter
 newtype Title = Title Text
   deriving (Eq, Ord, Show, Generic)

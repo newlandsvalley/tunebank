@@ -28,13 +28,12 @@ import Servant
 import Tunebank.Types
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
 import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
-import qualified Tunebank.Model.NewUser as NewUser (NewUser(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import Tunebank.DB.Class
 import Tunebank.DB.UserHelper (registerNewUser, getUsersIfPermitted)
 import Tunebank.DB.CommentHelper (deleteCommentIfPermitted, upsertCommentIfPermitted)
 import Tunebank.DB.TuneHelper (deleteTuneIfPermitted, upsertTuneIfPermitted)
-import Tunebank.Utils.HTTPErrors (badRequest, badRequestLazy, notFound, notAuthorized)
+import Tunebank.Utils.HTTPErrors (badRequest, badRequestLazy, notFound)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
 import qualified Tunebank.Config as Config
 import Tunebank.Model.AbcMetadata hiding (Origin(..))
@@ -66,19 +65,19 @@ userServer conn =
        _ <- traceM ("get users: " <> (show userName))
        limit <- Config.getPageSize mSize
        let
-         page = maybe 1 (max 1) mPage
-         offset = (page - 1) * limit
+         thisPage = maybe 1 (max 1) mPage
+         offset = (thisPage - 1) * limit
        eUsers <- runQuery conn $ getUsersIfPermitted userName limit offset
        userCount <- runQuery conn countUsers
        let
-         maxPages = (div userCount limit) + 1
+         pageCount = (div userCount limit) + 1
        case eUsers of
          Left serverError -> do
            _ <- traceM ("get users - server error ")
            throwError serverError
-         Right users -> do
-           _ <- traceM ("get users returned rows: " <> (show $ length users))
-           pure $ UserList users (Pagination page limit maxPages)
+         Right usrs -> do
+           _ <- traceM ("get users returned rows: " <> (show $ length usrs))
+           pure $ UserList usrs (Pagination thisPage limit pageCount)
 
      newUserHandler :: UserReg.Submission -> AppM Text
      newUserHandler submission = do
@@ -179,14 +178,14 @@ tuneServer conn =
       tuneCount <- runQuery conn $ countTunes genre mTitle mRhythm mKey
                         mSource mOrigin  mComposer mTranscriber
       let
-        page = maybe 1 (max 1) mPage
-        offset = (page - 1) * limit
+        thisPage = maybe 1 (max 1) mPage
+        offset = (thisPage - 1) * limit
         sortKey = fromMaybe Alpha mSortKey
-        maxPages = (div tuneCount limit) + 1
+        pageCount = (div tuneCount limit) + 1
       tunes <- runQuery conn $
           search genre mTitle mRhythm mKey mSource mOrigin
              mComposer mTranscriber sortKey limit offset
-      pure $ TuneRef.TuneList tunes (Pagination page limit maxPages)
+      pure $ TuneRef.TuneList tunes (Pagination thisPage limit pageCount)
 
     newTuneHandler :: UserName -> Genre -> NewTune.Submission -> AppM Text
     newTuneHandler userName genre submission = do
@@ -205,7 +204,7 @@ tuneServer conn =
       case ePermitted of
         Left serverError ->
           throwError serverError
-        Right tuneId ->
+        Right _ ->
           pure ()
 
 -- | find the requested tune and transcode to the requested binary format

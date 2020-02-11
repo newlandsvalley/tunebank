@@ -4,15 +4,14 @@
 module Tunebank.ApiType where
 
 import Data.Text
-import Data.Time (UTCTime)
 import Data.ByteString.Lazy (ByteString)
 import Servant.API
-import Tunebank.Model.User (User, UserName, UserId, UserList)
+import Tunebank.Model.User (UserName, UserId, UserList)
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import qualified Tunebank.Model.TuneText as TuneText (Submission)
-import Tunebank.Types (PDF, PNG, PostScript, MIDI, AcceptMime)
+import Tunebank.Types (PDF, PNG, PostScript, MIDI)
 import Tunebank.Model.AbcMetadata
-import Tunebank.Model.TuneRef (TuneId, TuneRef, TuneList)
+import Tunebank.Model.TuneRef (TuneId, TuneList)
 import Tunebank.Model.Comment (Comment, CommentId, CommentList)
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission)
 import Tunebank.Model.Genre ()

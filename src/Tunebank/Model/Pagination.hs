@@ -2,13 +2,10 @@
 
 module Tunebank.Model.Pagination
   ( Pagination(..)
-  ) where
+  ) where    
 
 import GHC.Generics
 import Data.Aeson
-import Data.Aeson.Types
-import Data.Text (Text, pack)
-import qualified Data.Aeson.Parser
 
 data Pagination = Pagination
   { page :: Int

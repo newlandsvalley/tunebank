@@ -3,10 +3,8 @@
 module Tunebank.Model.CommentSubmission where
 
 import GHC.Generics
-import Web.Internal.HttpApiData
 import Web.FormUrlEncoded
 import Data.Text (Text)
-import Tunebank.Model.TuneRef (TuneId)
 import Tunebank.Model.Comment (CommentId)
 
 -- | A mew comment submitted on a tune

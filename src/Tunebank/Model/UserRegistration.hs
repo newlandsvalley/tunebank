@@ -3,13 +3,8 @@
 
 module Tunebank.Model.UserRegistration where
 
-import Data.Time.Calendar
 import GHC.Generics
-import Data.Aeson
-import Data.Aeson.Types
-import qualified Data.Aeson.Parser
-import Data.Maybe (Maybe)
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Web.FormUrlEncoded
 
 data Submission = Submission
