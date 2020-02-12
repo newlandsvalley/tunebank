@@ -5,7 +5,7 @@ import Test.Hspec
 import UserApiTests (userApiSpec)
 import TuneApiTests (tuneApiSpec)
 import CommentApiTests (commentApiSpec)
-import TranscodingTests (transcodingSpec)
+import MetadataTests (metadataSpec)
 import Data.Configurator
 
 main :: IO ()
@@ -14,4 +14,4 @@ main = do
   hspec (userApiSpec config)
   hspec (tuneApiSpec config)
   -- hspec (commentApiSpec config)
-  hspec transcodingSpec
+  hspec metadataSpec

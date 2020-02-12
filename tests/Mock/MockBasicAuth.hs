@@ -13,23 +13,12 @@ module Mock.MockBasicAuth
    ( basicAuthServerContext
    ) where
 
-import Servant.API                      ((:<|>) ((:<|>)), (:>), BasicAuth,
-                                            Get, JSON)
-import Servant.API.BasicAuth            (BasicAuthData (BasicAuthData))
-import Servant.API.Experimental.Auth    (AuthProtect)
-import Servant                          (throwError)
-import Servant.Server                   (BasicAuthCheck (BasicAuthCheck),
-                                         BasicAuthResult( Authorized
-                                                        , Unauthorized
-                                                        ),
-                                         Context ((:.), EmptyContext),
-                                         err401, err403, errBody, Server,
-                                         serveWithContext, Handler)
-import Servant.Server.Experimental.Auth (AuthHandler, AuthServerData,
-                                           mkAuthHandler)
+import Servant.API.BasicAuth  (BasicAuthData (BasicAuthData))
+import Servant.Server (BasicAuthCheck (BasicAuthCheck),
+                       BasicAuthResult( Authorized, Unauthorized ),
+                       Context ((:.), EmptyContext))
 import Servant.Server.Experimental.Auth()
 import Mock.MockUser (validateUser)
-import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
 import Tunebank.Model.User (UserName(..))
 

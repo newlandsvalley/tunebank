@@ -1,7 +1,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module TranscodingTests (transcodingSpec) where
+module MetadataTests (metadataSpec) where
 
 import Prelude ()
 import Prelude.Compat
@@ -10,15 +10,12 @@ import Data.Aeson
 import Data.Genre (Genre(..))
 import Test.Hspec
 
--- import Tunebank.Types
 import Tunebank.Model.User
--- import Tunebank.Model.TuneText
--- import Tunebank.Model.TuneRef
 import Tunebank.Model.AbcMetadata
 import TestData
 
-transcodingSpec :: Spec
-transcodingSpec =
+metadataSpec :: Spec
+metadataSpec =
 
   describe "ABCMetadata" $ do
     it "should be round-trippable to itself through JSON" $ do

@@ -8,18 +8,14 @@
 
 module Mock.DBState where
 
-
-import Control.Monad (when)
 import Control.Monad.Catch (MonadThrow, catch)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (MonadReader, ReaderT, ask, runReaderT)
+import Control.Monad.Reader (MonadReader, ReaderT, runReaderT)
 import Servant.Server (ServerError, errBody, err404)
-import Data.IORef (IORef, newIORef, readIORef, writeIORef)
-import Tunebank.Model.User
-import Tunebank.Model.TuneRef (tuneId, TuneList(..))
+import Data.IORef (IORef)
+import Tunebank.Model.User (User)
 import Tunebank.Model.CommentSubmission
-import Tunebank.Model.Pagination
 import Tunebank.DB.Class
 import qualified Mock.MockUser as MockUser
 import qualified Mock.MockTune as MockTune
@@ -29,22 +25,21 @@ data DBState = DBState {
   users :: [User]
 }
 
+mockedDBState :: DBState
 mockedDBState = DBState (MockUser.userList)
 
 -- | This is just a simple newtype wrapper for our 'IORef'.
 newtype DBIORef = DBIORef { unDBIORef :: IORef DBState }
 
--- | This is also a simple newtype wrapper for our DB Monad.  This is very
--- similar to Persistent's 'SqlPersistT' type.
+-- | This is also a simple newtype wrapper for our DB Monad.
 newtype DB m a = DB (ReaderT DBIORef m a)
     deriving (Functor, Applicative, Monad, MonadIO, MonadReader DBIORef, MonadThrow)
-
 
 instance DBAccess (DB IO) DBIORef where
 
    runQuery dbIORef (DB readerT) =
-        liftIO (runReaderT readerT dbIORef)
-            `catch` \(err::ServerError) ->  throwError (err404 {errBody = "got an error trying to read DBIORef"})
+      liftIO (runReaderT readerT dbIORef)
+          `catch` \(err::ServerError) ->  throwError (err404 {errBody = "got an error trying to read DBIORef"})
 
    findUserById uid =
      pure $ MockUser.findUserById uid

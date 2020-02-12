@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: daae460a5fef352230c35b5f6a487b7fa466e6a8e097387a9b995cdedd6acbf1
+-- hash: 382accf682639b848561ef591775acb8fccce4ec9846ff3b5aef1be0aaa7d0b3
 
 name:           tunebank
 version:        0.1.0.0
@@ -129,13 +129,13 @@ test-suite tunebank-test
       Tunebank.Utils.HTTPErrors
       Tunebank.Utils.Timestamps
       CommentApiTests
+      MetadataTests
       Mock.DBState
       Mock.MockBasicAuth
       Mock.MockComment
       Mock.MockTune
       Mock.MockUser
       TestData
-      TranscodingTests
       TuneApiTests
       UserApiTests
       Paths_tunebank

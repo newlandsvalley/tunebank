@@ -15,10 +15,9 @@ import Data.Text (Text, unpack)
 import Network.HTTP.Client hiding (Proxy)
 import qualified Network.Wai.Handler.Warp as Warp
 
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import Data.Bifunctor (second)
 import Data.Genre (Genre(..))
-
 import Servant
 import Servant.Client
 
@@ -114,6 +113,26 @@ tuneApiSpec config =
       it "should get the tune ABC text" $ do
         result <- runClientM (tuneAbc Scandi augustssonId) clientEnv
         (second (take 3 . unpack) result) `shouldBe` (Right  "X:1")
+
+    describe "Get tune PDF" $ do
+      it "should get the tune in PDF format" $ do
+        result <- runClientM (tunePdf Scandi augustssonId) clientEnv
+        (isRight result) `shouldBe` True
+
+    describe "Get tune MIDI" $ do
+      it "should get the tune in MIDI format" $ do
+        result <- runClientM (tuneMidi Scandi augustssonId) clientEnv
+        (isRight result) `shouldBe` True
+
+    describe "Get tune PNG" $ do
+      it "should get the tune in PNG format" $ do
+        result <- runClientM (tunePng Scandi andetBrudstykkeId) clientEnv
+        (isRight result) `shouldBe` True
+
+    describe "Get tune PostScript" $ do
+      it "should get the tune in PostScript format" $ do
+        result <- runClientM (tunePs Scandi andetBrudstykkeId) clientEnv
+        (isRight result) `shouldBe` True
 
     describe "get tune list (search)" $ do
       it "should get all tunes from the genre" $ do
