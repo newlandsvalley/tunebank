@@ -35,6 +35,7 @@ dependencies:
 - aeson
 - attoparsec
 - directory
+- filepath
 - http-api-data
 - http-client
 - http-media

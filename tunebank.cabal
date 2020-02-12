@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 382accf682639b848561ef591775acb8fccce4ec9846ff3b5aef1be0aaa7d0b3
+-- hash: ab0e7f01c3d05eb5c72569d861b42b827f408ebfb230b2f0e8fb97409e2669bb
 
 name:           tunebank
 version:        0.1.0.0
@@ -50,6 +50,7 @@ executable tunebank-exe
       Tunebank.Model.User
       Tunebank.Model.UserRegistration
       Tunebank.Server
+      Tunebank.TypeConversion.Cache
       Tunebank.TypeConversion.Transcode
       Tunebank.Types
       Tunebank.Utils.HTTPErrors
@@ -74,6 +75,7 @@ executable tunebank-exe
     , directory
     , errors
     , exceptions
+    , filepath
     , http-api-data
     , http-client
     , http-media
@@ -124,6 +126,7 @@ test-suite tunebank-test
       Tunebank.Model.User
       Tunebank.Model.UserRegistration
       Tunebank.Server
+      Tunebank.TypeConversion.Cache
       Tunebank.TypeConversion.Transcode
       Tunebank.Types
       Tunebank.Utils.HTTPErrors
@@ -159,6 +162,7 @@ test-suite tunebank-test
     , directory
     , errors
     , exceptions
+    , filepath
     , hspec
     , hspec-wai
     , http-api-data

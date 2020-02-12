@@ -44,6 +44,7 @@ import Tunebank.Model.Comment (CommentId, Comment, CommentList(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.Pagination
 import Tunebank.TypeConversion.Transcode (transcodeTo)
+import qualified Tunebank.TypeConversion.Cache as Cache (removeOldFiles)
 import Tunebank.Authentication.BasicAuth (basicAuthServerContext)
 import qualified Tunebank.Email.Client as Email (sendConfirmation)
 import Tunebank.DB.Api
@@ -109,22 +110,6 @@ userServer conn =
           Just _ -> do
             _ <- runQuery conn $ setUserValidity userId True
             pure "Y"
-
-{-
-     validateUserRegistrationHandler :: UserId -> AppM Text
-     validateUserRegistrationHandler userId = do
-       _ <- traceM ("validate user: " <> (show userId))
-       mUser <- runQuery conn $ findUserById userId
-       case mUser of
-         Nothing ->
-           throwError $ badRequest "user registration not recognized"
-         Just user -> do
-           let
-             updatedUser = user { valid = True }
-           _ <- runQuery conn $ updateUser userId updatedUser
-           pure "Y"
-  -}
-
 
 
 tuneServer :: DBAccess m d => d -> ServerT AbcTuneAPI AppM
@@ -207,7 +192,8 @@ tuneServer conn =
       case eTuneId of
         Left serverError ->
           throwError serverError
-        Right (TuneId tid) ->
+        Right (TuneId tid) -> do
+          Cache.removeOldFiles genre (TuneId tid)
           pure tid
 
     deleteTuneHandler :: UserName -> Genre -> TuneId -> AppM ()
@@ -217,7 +203,8 @@ tuneServer conn =
       case ePermitted of
         Left serverError ->
           throwError serverError
-        Right _ ->
+        Right _ -> do
+          Cache.removeOldFiles genre tuneId
           pure ()
 
 -- | find the requested tune and transcode to the requested binary format
