@@ -36,7 +36,7 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   insertUser :: NewUser -> m (Maybe EmailConfirmation)
 
-  updateUser :: UserId -> User  -> m ()
+  setUserValidity :: UserId -> Bool -> m ()
 
   findTuneById :: Genre -> TuneId -> m (Maybe AbcMetadata)
 

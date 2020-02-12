@@ -24,7 +24,7 @@ import Data.Text (Text, pack, unpack)
 import Tunebank.Types
 import Tunebank.DB.Class
 import Data.Genre (Genre)
-import Tunebank.Model.User (User, UserId, UserName)
+import Tunebank.Model.User (User, UserId(..), UserName)
 import Tunebank.Model.NewUser (NewUser(..), EmailConfirmation(..))
 import Tunebank.Model.TuneRef (TuneId(..), TuneRef)
 import Tunebank.Model.AbcMetadata
@@ -111,8 +111,17 @@ instance DBAccess (PostgresT IO) DBConfig where
       _ <- traceM ("production insert user returned confirmation ")
       pure $ safeHead confirmation
 
-    updateUser :: UserId -> User -> PostgresT IO ()
-    updateUser uid user =
+    setUserValidity :: UserId -> Bool -> PostgresT IO ()
+    setUserValidity (UserId uid) validity = do
+      let
+        queryTemplate =
+          "UPDATE users set validity = ? where id = ? "
+        params =
+          (validity :: Bool, uid :: Int)
+      pool <- asks _getPool
+      rowcount <-  liftIO $ withResource pool
+           (\conn -> execute conn queryTemplate params)
+      _ <- traceM ("production set user validity for user: " <> (show uid))
       pure ()
 
     findTuneById :: Genre -> TuneId -> PostgresT IO (Maybe AbcMetadata)

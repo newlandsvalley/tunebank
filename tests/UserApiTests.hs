@@ -71,7 +71,9 @@ withUserApp config action = do
   -- in an exception-safe way
   bracket (do
              _ <- liftIO $ threadDelay fixtureDelay
-             liftIO $ C.forkIO $ Warp.run 8888 (userApp dbRef (AppCtx config))
+             thread <- liftIO $ C.forkIO $ Warp.run 8888 (userApp dbRef (AppCtx config))
+             _ <- liftIO $ threadDelay fixtureDelay
+             pure thread
           )
     C.killThread
     (const action)

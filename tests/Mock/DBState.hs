@@ -62,7 +62,7 @@ instance DBAccess (DB IO) DBIORef where
      -- we're not mocking inserts
      pure $ MockUser.insertUser newUser
 
-   updateUser uid user =
+   setUserValidity uid validity =
      -- we're not mocking updates
      pure ()
 

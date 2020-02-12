@@ -10,7 +10,7 @@ import Data.Configurator
 
 main :: IO ()
 main = do
-  config <- load [ Required "conf/tunebank-test.conf" ]
+  config <- load [ Required "conf/tunebank-tests.conf" ]
   hspec (userApiSpec config)
   hspec (tuneApiSpec config)
   -- hspec (commentApiSpec config)

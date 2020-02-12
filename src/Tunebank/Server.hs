@@ -101,6 +101,18 @@ userServer conn =
 
      validateUserRegistrationHandler :: UserId -> AppM Text
      validateUserRegistrationHandler userId = do
+        _ <- traceM ("validate user: " <> (show userId))
+        mUser <- runQuery conn $ findUserById userId
+        case mUser of
+          Nothing ->
+            throwError $ badRequest "user registration not recognized"
+          Just _ -> do
+            _ <- runQuery conn $ setUserValidity userId True
+            pure "Y"
+
+{-
+     validateUserRegistrationHandler :: UserId -> AppM Text
+     validateUserRegistrationHandler userId = do
        _ <- traceM ("validate user: " <> (show userId))
        mUser <- runQuery conn $ findUserById userId
        case mUser of
@@ -111,6 +123,7 @@ userServer conn =
              updatedUser = user { valid = True }
            _ <- runQuery conn $ updateUser userId updatedUser
            pure "Y"
+  -}
 
 
 
