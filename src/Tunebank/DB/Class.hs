@@ -40,6 +40,8 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   findTuneById :: Genre -> TuneId -> m (Maybe AbcMetadata)
 
+  findTunePrimaryKey :: Genre -> TuneId -> m (Maybe Int)
+
   getTunes ::  Genre -> Int -> Int -> m [TuneRef]
 
   countTunes  :: Genre
@@ -73,6 +75,6 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   getComments :: Genre -> TuneId -> m CommentList
 
-  insertComment :: UserName -> Genre -> TuneId -> NewComment.Submission -> m CommentId
+  insertComment :: Comment -> m CommentId
 
   deleteComment :: Genre -> TuneId -> CommentId -> m ()

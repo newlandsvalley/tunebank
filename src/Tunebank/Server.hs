@@ -27,7 +27,7 @@ import Servant
 
 import Tunebank.Types
 import Tunebank.ApiType (UserAPI, AbcTuneAPI, CommentAPI, OverallAPI)
-import Tunebank.Model.User (User(..), UserName(..), UserId(..), UserList(..))
+import Tunebank.Model.User (UserName(..), UserId(..), UserList(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import Tunebank.DB.Class
 import Tunebank.DB.UserHelper (registerNewUser, getUsersIfPermitted)
@@ -40,7 +40,7 @@ import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.TuneRef (TuneId(..))
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
-import Tunebank.Model.Comment (CommentId, Comment, CommentList(..))
+import Tunebank.Model.Comment (CommentId(..), Comment, CommentList(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.Pagination
 import Tunebank.TypeConversion.Transcode (transcodeTo)
@@ -244,14 +244,14 @@ commentServer conn =
       _ <- traceM ("get comments for: " <> (show tuneId))
       runQuery conn $ getComments genre tuneId
 
-    newCommentHandler :: UserName -> Genre -> TuneId -> NewComment.Submission -> AppM CommentId
+    newCommentHandler :: UserName -> Genre -> TuneId -> NewComment.Submission -> AppM Text
     newCommentHandler userName genre tuneId submission = do
       _ <- traceM ("new comment: " <> (show submission))
       eUpserted <- runQuery conn $ upsertCommentIfPermitted userName genre tuneId submission
       case eUpserted of
         Left serverError ->
           throwError serverError
-        Right commentId ->
+        Right (CommentId commentId) ->
           pure commentId
 
     deleteCommentHandler :: UserName -> Genre -> TuneId -> CommentId -> AppM ()

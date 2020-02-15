@@ -19,6 +19,7 @@ import qualified Tunebank.Model.TuneRef as TuneRef
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Tunebank.Model.User (UserName(..))
 import Tunebank.Utils.Timestamps
+import TestData
 
 import Debug.Trace (trace)
 
@@ -29,7 +30,7 @@ findCommentById genre tuneId commentId =
   case genre of
     Scandi ->
       let
-        tracedCommentId = trace ("scandi commentId: " <> (show commentId)) commentId
+        tracedCommentId = trace ("client looking for scandi commentId: " <> (show commentId)) commentId
       in
         Map.lookup tracedCommentId $ fromList commentsList
     _ ->
@@ -45,12 +46,14 @@ getComments genre tuneId =
 commentsList :: [CommentEntry]
 commentsList =
   let
-    c1 = CommentId $ day2timestamp $ (fromGregorian 2019  12 10)
-    c2 = CommentId $ day2timestamp $ (fromGregorian 2019  12 14)
-    c3 = CommentId $ day2timestamp $ (fromGregorian 2019  12 17)
-    tuneId = TuneRef.tuneId "fastan" "polska"
+    c1 = sampleExistingCommentId -- 1573030493600
+    c2 = CommentId "1573030493700"
+    c3 = CommentId "1573030493800"
+    -- tuneId = TuneRef.tuneId "fastan" "polska"
+    -- let's attach all comments to the tune with a 'primary key' of 0
+    tunePK = 0
   in
-    [ ( c1, Comment c1 tuneId "administrator" "as played by Fred" "Fred link" )
-    , ( c2, Comment c2 tuneId "administrator" "as played by Bert" "Bert link" )
-    , ( c3, Comment c3 tuneId "john" "as played by Joe" "Joe link" )
+    [ ( c1, Comment c1 tunePK "administrator" "as played by Fred" "Fred link" )
+    , ( c2, Comment c2 tunePK "administrator" "as played by Bert" "Bert link" )
+    , ( c3, Comment c3 tunePK "john" "as played by Joe" "Joe link" )
     ]

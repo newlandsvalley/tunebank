@@ -5,8 +5,14 @@ module Tunebank.Model.Comment where
 import GHC.Generics
 import Data.Aeson
 import Web.Internal.HttpApiData
-import Data.Text (Text)
+import Data.Bifunctor (bimap)
+import Data.Text (Text, pack, unpack)
+import Text.Read (readEither)
 import Tunebank.Model.TuneRef (TuneId)
+import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
+import Database.PostgreSQL.Simple.ToField
+import Database.PostgreSQL.Simple.FromRow
+import Database.PostgreSQL.Simple.ToRow
 
 
 -- | the unique ID of a tune (within a genre)
@@ -28,17 +34,27 @@ instance ToHttpApiData CommentId
   where
     toUrlPiece (CommentId v) = v
 
+instance FromField CommentId where
+  fromField fld bs = CommentId <$> fromField fld bs
+
+instance ToField CommentId  where
+  toField (CommentId t) = toField t
+
 -- | A comment on a tune
 data Comment = Comment
   { cid :: CommentId
-  , tuneId :: TuneId
-  , user :: Text
-  , subject :: Text
+  , tidkey :: Int
+  , submitter :: Text
+  , title :: Text
   , text :: Text
   } deriving (Eq, Show, Generic)
 
 instance ToJSON Comment
 instance FromJSON Comment
+
+instance ToRow Comment where
+  toRow c = [ toField (cid c), toField (tidkey c), toField (submitter c), toField (title c), toField (text c) ]
+
 
 data CommentList = CommentList
   { comment :: [Comment]

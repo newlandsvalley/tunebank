@@ -30,7 +30,7 @@ import Tunebank.Model.TuneRef (TuneId(..), TuneRef)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import qualified Tunebank.Model.AbcMetadataSubmission as NewTune (AbcMetadataSubmission(..))
-import Tunebank.Model.Comment (CommentId, CommentList(..), Comment)
+import Tunebank.Model.Comment (CommentId, CommentList(..), Comment(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import Data.Abc.Validator (normaliseKeySignature, normaliseRhythm)
 import Debug.Trace (traceM)
@@ -142,6 +142,19 @@ instance DBAccess (PostgresT IO) DBConfig where
          (\conn -> query conn queryTemplate params)
       pure $ safeHead ts
 
+    findTunePrimaryKey :: Genre -> TuneId -> PostgresT IO (Maybe Int)
+    findTunePrimaryKey genre (TuneId tid) = do
+      let
+        genreStr = pack $ show genre
+        queryTemplate = "SELECT id from tunes  "
+                     <> " WHERE genre = ? and tune_id = ? "
+        params =
+          (genreStr :: Text, tid :: Text)
+      pool <- asks _getPool
+      [Only id]  <- liftIO $ withResource pool
+          (\conn -> query conn queryTemplate params)
+      pure id
+
     getTunes ::  Genre -> Int -> Int -> PostgresT IO [TuneRef]
     getTunes genre page size =
       pure []
@@ -235,9 +248,16 @@ instance DBAccess (PostgresT IO) DBConfig where
     getComments genre tuneId =
       pure $ CommentList []
 
-    insertComment :: UserName -> Genre -> TuneId -> NewComment.Submission -> PostgresT IO CommentId
-    insertComment userName genre tuneId submission =
-      pure $ NewComment.cid submission
+    insertComment :: Comment-> PostgresT IO CommentId
+    insertComment comment = do
+      let
+        queryTemplate =
+          "INSERT INTO comments (id, tune_id, submitter, title, text) "
+          <>  " VALUES (?, ?, ?, ?, ?) "
+      pool <- asks _getPool
+      rowcount <-  liftIO $ withResource pool
+         (\conn -> execute conn queryTemplate comment)
+      pure $ (cid comment)
 
     deleteComment :: Genre -> TuneId -> CommentId -> PostgresT IO ()
     deleteComment genre tuneId commentId =

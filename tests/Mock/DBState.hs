@@ -15,7 +15,7 @@ import Control.Monad.Reader (MonadReader, ReaderT, runReaderT)
 import Servant.Server (ServerError, errBody, err404)
 import Data.IORef (IORef)
 import Tunebank.Model.User (User)
-import Tunebank.Model.CommentSubmission
+import Tunebank.Model.Comment (Comment(..))
 import Tunebank.DB.Class
 import qualified Mock.MockUser as MockUser
 import qualified Mock.MockTune as MockTune
@@ -64,6 +64,9 @@ instance DBAccess (DB IO) DBIORef where
    findTuneById genre tuneId =
      pure $ MockTune.findTuneById genre tuneId
 
+   findTunePrimaryKey genre tuneId =
+     pure $ MockTune.findTunePrimaryKey genre tuneId
+
    getTunes genre page size =
      pure $ MockTune.getTuneList genre
 
@@ -87,8 +90,8 @@ instance DBAccess (DB IO) DBIORef where
    getComments genre tuneId =
       pure $ MockComment.getComments genre tuneId
 
-   insertComment userName genre tuneId submission =
-     pure (cid submission)
+   insertComment comment =
+     pure (cid comment)
 
    deleteComment genre tuneId commentId =
      -- we're not mocking deletes

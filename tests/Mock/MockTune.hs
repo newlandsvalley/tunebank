@@ -3,6 +3,7 @@
 
 module Mock.MockTune
   ( findTuneById
+  , findTunePrimaryKey
   , getTuneList
   , search
   , countTunes
@@ -15,6 +16,7 @@ import Prelude.Compat hiding (lookup)
 import Data.Map (Map, fromList, elems, lookup)
 import Data.Text (Text, pack, unpack, toLower)
 import Data.Maybe (catMaybes, fromJust)
+import Data.List (elemIndex)
 import Data.Either (Either(..))
 import Data.Time.Calendar
 import Data.Time.Clock (UTCTime)
@@ -30,7 +32,7 @@ import qualified Tunebank.Model.TuneRef as TuneRef
 import Tunebank.Model.Pagination
 import Tunebank.Types
 import Tunebank.Model.User (UserName(..))
-import TestData (augustsson, fastan, cig, andetBrudstykke)
+import TestData
 
 import Debug.Trace (trace)
 
@@ -67,6 +69,13 @@ buildTuneRef metadata =
     , TuneRef.date = "04 Feb 2020"
     }
 
+findTunePrimaryKey :: Genre -> TuneRef.TuneId -> Maybe Int
+findTunePrimaryKey genre tuneId  =
+  case genre of
+    Scandi ->
+      elemIndex tuneId scandiTuneIds
+    _ ->
+      Nothing
 
 buildMetadataEntry :: UserName -> Text -> Genre -> Text -> Either String MetadataEntry
 buildMetadataEntry userName dateString genre abcText =
@@ -89,6 +98,11 @@ scandiMetadata =
 scandiAbc :: [ Text ]
 scandiAbc =
   [augustsson, fastan, cig, andetBrudstykke]
+
+-- | Keep these in stem with scandiABC !!!
+scandiTuneIds :: [ TuneRef.TuneId ]
+scandiTuneIds =
+  [augustssonId, fastanId, cigId, andetBrudstykkeId]
 
 
 search :: Genre

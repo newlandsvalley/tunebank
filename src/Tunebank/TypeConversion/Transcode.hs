@@ -50,7 +50,6 @@ transcodeTo target genre abcMetadata = do
   exists <- liftIO $ doesFileExist targetFilePath
   if exists
     then readTargetFile targetFilePath
-    -- else pure $ Left "well, we'll need to transcode"
     else do
       sourceDir <- transcodeSourcePath genre
       targetDir <- transcodeTargetPath genre

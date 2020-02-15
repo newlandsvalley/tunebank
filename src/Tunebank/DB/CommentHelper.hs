@@ -3,13 +3,11 @@
 module Tunebank.DB.CommentHelper where
 
 import Servant.Server (ServerError)
-import Tunebank.Types
 import Tunebank.DB.Class
 import Tunebank.Model.User
 import Tunebank.Model.Comment
 import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
-import Tunebank.Utils.Timestamps (today)
 import Data.Genre
 import Tunebank.Utils.HTTPErrors
 import Tunebank.DB.UserHelper
@@ -22,7 +20,7 @@ deleteCommentIfPermitted  userName genre tuneId commentId = do
     Nothing ->
       pure $ Left $ notFound ("comment: " <> (show commentId))
     Just comment -> do
-      canDelete <- hasDeletePermission userName (user comment)
+      canDelete <- hasDeletePermission userName (submitter comment)
       if canDelete
         then do
           _ <- deleteComment genre tuneId commentId
@@ -34,15 +32,34 @@ upsertCommentIfPermitted  userName genre tuneId submission = do
   let
     commentId = NewComment.cid submission
   mComment <- findCommentById genre tuneId commentId
-  case mComment of
-    Nothing -> do
-      _ <- insertComment userName genre tuneId submission
-      pure $ Right commentId
-    Just comment -> do
-      canUpdate <- hasDeletePermission userName (user comment)
-      if canUpdate
-        then do
-          _ <- deleteComment genre tuneId commentId
-          _ <- insertComment userName genre tuneId submission
+  mPK <- findTunePrimaryKey genre tuneId
+  case mPK of
+    Just pk ->
+      case mComment of
+        Nothing -> do
+          let
+            comment = buildComment pk submission
+          _ <- insertComment comment
           pure $ Right commentId
-        else pure $ Left $ notAuthorized ("new comment not allowed for user: " <> (show userName))
+        Just oldComment -> do
+          canUpdate <- hasDeletePermission userName (submitter oldComment)
+          if canUpdate
+            then do
+              let
+                comment = updateComment oldComment submission
+              _ <- deleteComment genre tuneId commentId
+              _ <- insertComment comment
+              pure $ Right commentId
+            else pure $ Left $ notAuthorized ("new comment not allowed for user: " <> (show userName))
+    _ ->
+      pure $ Left $ serverError ("could not find tune primary key for " <> (show tuneId))
+
+buildComment :: Int -> NewComment.Submission -> Comment
+buildComment tunePK submission =
+  Comment (NewComment.cid submission) tunePK  (NewComment.user submission)
+             (NewComment.title submission) (NewComment.text submission)
+
+updateComment :: Comment -> NewComment.Submission -> Comment
+updateComment oldComment submission =
+  Comment (cid oldComment) (tidkey oldComment) (submitter oldComment)
+           (NewComment.title submission) (NewComment.text submission)

@@ -6,12 +6,11 @@ import GHC.Generics
 import Web.FormUrlEncoded
 import Data.Text (Text)
 import Tunebank.Model.Comment (CommentId)
-
 -- | A mew comment submitted on a tune
 data Submission = Submission
-  { cid :: CommentId
-  , user :: Text
-  , subject :: Text
+  { user :: Text
+  , cid :: CommentId
+  , title :: Text
   , text :: Text
   } deriving (Eq, Show, Generic)
 

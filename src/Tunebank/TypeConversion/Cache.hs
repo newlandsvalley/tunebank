@@ -19,6 +19,16 @@ import Tunebank.Types
 import Tunebank.Model.TuneRef (TuneId, safeFileName)
 import Debug.Trace (traceM)
 
+-- | remove any source or target file from the cache which matches the tuneId
+removeOldFiles :: Genre -> TuneId -> AppM ()
+removeOldFiles genre tid =
+  let
+    fileBase = safeFileName tid
+  in do
+    _ <- removeMatchingSources genre fileBase
+    _ <- removeMatchingBinaries genre fileBase
+    pure ()
+
 matchesName :: String-> FilePath -> Bool
 matchesName target path  =
   (takeBaseName path) == target
@@ -57,13 +67,3 @@ removeMatchingSources genre target = do
   basePath <- transcodeSourcePath genre
   filePaths <- liftIO $ findMatchingFiles basePath target
   liftIO $ removeFiles basePath filePaths
-
--- | remove any source or target file from the cache which matches the tuneId
-removeOldFiles :: Genre -> TuneId -> AppM ()
-removeOldFiles genre tid =
-  let
-    fileBase = safeFileName tid
-  in do
-    _ <- removeMatchingSources genre fileBase
-    _ <- removeMatchingBinaries genre fileBase
-    pure ()

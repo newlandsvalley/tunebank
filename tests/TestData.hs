@@ -36,12 +36,27 @@ validateableUid :: UserId
 validateableUid =
   UserId 1
 
-sampleCommentId :: CommentId
-sampleCommentId =
-  CommentId $ day2timestamp $ (fromGregorian 2019  12 14)
+sampleExistingCommentSlug :: Text
+sampleExistingCommentSlug =
+  "1573030493600"
+
+sampleExistingCommentId :: CommentId
+sampleExistingCommentId =
+  CommentId sampleExistingCommentSlug
+
+sampleExistingComment :: NewComment.Submission
+sampleExistingComment = NewComment.Submission  "user" sampleExistingCommentId "as played by Fred" "Fred link"  
+
+sampleNewCommentSlug :: Text
+sampleNewCommentSlug =
+  "0123456789012"
+
+sampleNewCommentId :: CommentId
+sampleNewCommentId =
+  CommentId sampleNewCommentSlug
 
 sampleNewComment :: NewComment.Submission
-sampleNewComment = NewComment.Submission (CommentId "cid") "user" "subject" "text"
+sampleNewComment = NewComment.Submission  "user" sampleNewCommentId "subject" "text"
 
 -- tunes
 badAbc :: Text

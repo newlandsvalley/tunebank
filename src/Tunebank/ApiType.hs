@@ -142,7 +142,7 @@ type CommentAPI =
                       :> Capture "tune" TuneId
                       :> "comment"
                       :> ReqBody '[FormUrlEncoded] NewComment.Submission
-                      :> Post '[JSON] CommentId
+                      :> Post '[PlainText] Text
 
      :<|>  "tunebank" :> BasicAuth "tunebank-realm" UserName
                       :> "genre"
