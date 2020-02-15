@@ -46,14 +46,14 @@ getComments genre tuneId =
 commentsList :: [CommentEntry]
 commentsList =
   let
-    c1 = sampleExistingCommentId -- 1573030493600
+    c1 = sampleExistingCommentId -- 1573030493600 -- submitted by Fred
     c2 = CommentId "1573030493700"
     c3 = CommentId "1573030493800"
     -- tuneId = TuneRef.tuneId "fastan" "polska"
     -- let's attach all comments to the tune with a 'primary key' of 0
     tunePK = 0
   in
-    [ ( c1, Comment c1 tunePK "administrator" "as played by Fred" "Fred link" )
+    [ ( c1, Comment c1 tunePK "Fred" "as played by Fred" "Fred link" )
     , ( c2, Comment c2 tunePK "administrator" "as played by Bert" "Bert link" )
     , ( c3, Comment c3 tunePK "john" "as played by Joe" "Joe link" )
     ]

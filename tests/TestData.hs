@@ -24,9 +24,14 @@ admin :: BasicAuthData
 admin =
   BasicAuthData "administrator" "password"
 
-normalUser :: BasicAuthData
-normalUser =
+-- neither Fred nor Isaac should be admins
+normalUserFred :: BasicAuthData
+normalUserFred =
   BasicAuthData "Fred" "password"
+
+normalUserIsaac :: BasicAuthData
+normalUserIsaac =
+  BasicAuthData "Isaac Newton" "hide me"
 
 badUser :: BasicAuthData
 badUser =
@@ -45,7 +50,10 @@ sampleExistingCommentId =
   CommentId sampleExistingCommentSlug
 
 sampleExistingComment :: NewComment.Submission
-sampleExistingComment = NewComment.Submission  "user" sampleExistingCommentId "as played by Fred" "Fred link"  
+sampleExistingComment = NewComment.Submission  "Fred" sampleExistingCommentId "as played by Fred" "Fred link"
+
+sampleUpdatedExistingComment :: NewComment.Submission
+sampleUpdatedExistingComment = NewComment.Submission  "Fred" sampleExistingCommentId "actually it was played by Isaac" "Isaac link"
 
 sampleNewCommentSlug :: Text
 sampleNewCommentSlug =

@@ -96,14 +96,35 @@ commentApiSpec config =
             (length $ comment cList) `shouldBe` 3
 
     describe "POST comment" $ do
-      it "should post a comment " $ do
+      it "should post a new comment " $ do
         _ <- traceM ("new client comment: " <> (show sampleNewComment))
-        eResult <- runClientM (postComment normalUser Scandi (TuneRef.tuneId "fastan" "polska") sampleNewComment) clientEnv
+        eResult <- runClientM (postComment normalUserFred Scandi (TuneRef.tuneId "fastan" "polska") sampleNewComment) clientEnv
         case eResult of
           Left _ ->
             expectationFailure "unexpected post comment error"
           Right commentId -> do
             commentId `shouldBe` sampleNewCommentSlug
+      it "should allow admin to update a comment " $ do
+        eResult <- runClientM (postComment admin Scandi (TuneRef.tuneId "fastan" "polska") sampleUpdatedExistingComment) clientEnv
+        case eResult of
+          Left _ ->
+            expectationFailure "unexpected upsert comment error"
+          Right commentId -> do
+            commentId `shouldBe` sampleExistingCommentSlug
+      it "should allow the original submitter to update a comment " $ do
+        eResult <- runClientM (postComment normalUserFred Scandi (TuneRef.tuneId "fastan" "polska") sampleUpdatedExistingComment) clientEnv
+        case eResult of
+          Left _ ->
+            expectationFailure "unexpected upsert comment error"
+          Right commentId -> do
+            commentId `shouldBe` sampleExistingCommentSlug
+      it "should bar any other user from updating a comment " $ do
+        eresult <- runClientM (postComment normalUserIsaac Scandi (TuneRef.tuneId "fastan" "polska") sampleUpdatedExistingComment) clientEnv
+        case eresult of
+          Left _ ->
+            (isLeft eresult) `shouldBe` True
+          Right _ -> do
+            expectationFailure "unexpected upsert by non-owner"
 
     describe "DELETE comment" $ do
       it "is allowed by an administrator" $ do
@@ -114,8 +135,15 @@ commentApiSpec config =
             result `shouldBe` ()
           Left err -> do
             expectationFailure ("unexpected failure to delete by admin: " <> (show err))
+      it "is allowed by the user who originally sumitted the comment" $ do
+        eresult <- runClientM (deleteComment normalUserFred Scandi augustssonId sampleExistingCommentId) clientEnv
+        case eresult of
+          Right result ->
+            result `shouldBe` ()
+          Left err -> do
+            expectationFailure ("unexpected failure to delete by original submitter: " <> (show err))
       it "is barred for a normal user who didn't submit the comment" $ do
-        eresult <- runClientM (deleteComment normalUser Scandi augustssonId sampleExistingCommentId) clientEnv
+        eresult <- runClientM (deleteComment normalUserIsaac Scandi augustssonId sampleExistingCommentId) clientEnv
         case eresult of
           Left _ ->
             (isLeft eresult) `shouldBe` True

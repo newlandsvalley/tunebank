@@ -147,11 +147,11 @@ tuneApiSpec config =
 
     describe "POST tune" $ do
       it "should accept a completely new tune " $ do
-        result <- runClientM (newTune normalUser Scandi (Submission ewa)) clientEnv
+        result <- runClientM (newTune normalUserFred Scandi (Submission ewa)) clientEnv
         result `shouldBe` (Right "ewa-polska")
 
       it "should reject a submission of a new tune if was already submitted by previous user " $ do
-        result <- runClientM (newTune normalUser Scandi (Submission augustsson)) clientEnv
+        result <- runClientM (newTune normalUserFred Scandi (Submission augustsson)) clientEnv
         (isLeft result) `shouldBe` True
 
     describe "DELETE tune" $ do
@@ -159,7 +159,7 @@ tuneApiSpec config =
         result <- runClientM (deleteTune admin Scandi augustssonId) clientEnv
         result `shouldBe` (Right ())
       it "is barred for a normal user who didn't submit the tune" $ do
-        eresult <- runClientM (deleteTune normalUser Scandi augustssonId) clientEnv
+        eresult <- runClientM (deleteTune normalUserFred Scandi augustssonId) clientEnv
         case eresult of
           Left _ ->
             (isLeft eresult) `shouldBe` True

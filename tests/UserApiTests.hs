@@ -23,13 +23,10 @@ import Network.HTTP.Client hiding (Proxy)
 import qualified Network.Wai.Handler.Warp as Warp
 
 import Data.Either (isLeft)
--- import           Data.Bifunctor (second)
-
-import           Servant
-import           Servant.Client
-
-import           Test.Hspec
-import           Test.Hspec.Wai
+import Servant
+import Servant.Client
+import Test.Hspec
+import Test.Hspec.Wai
 
 
 import Data.IORef (IORef, newIORef)
@@ -110,7 +107,7 @@ userApiSpec config =
           Right uList -> do
             (length $ users uList) `shouldBe` 4
       it "should reject a non-admin (normal) user auth" $ do
-        result <- runClientM  (userList normalUser Nothing Nothing) clientEnv
+        result <- runClientM  (userList normalUserFred Nothing Nothing) clientEnv
         (isLeft result) `shouldBe` True
 
     describe "check user" $ do
