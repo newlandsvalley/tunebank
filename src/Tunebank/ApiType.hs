@@ -12,8 +12,8 @@ import qualified Tunebank.Model.TuneText as TuneText (Submission)
 import Tunebank.Types (PDF, PNG, PostScript, MIDI)
 import Tunebank.Model.AbcMetadata
 import Tunebank.Model.TuneRef (TuneId, TuneList)
-import Tunebank.Model.Comment (Comment, CommentId, CommentList)
-import qualified Tunebank.Model.CommentSubmission as NewComment (Submission)
+import Tunebank.Model.Comment (Comment, CommentId)
+import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission)
 import Tunebank.Model.Genre ()
 import Data.Genre (Genre)
 
@@ -133,7 +133,7 @@ type CommentAPI =
                       :> "tune"
                       :> Capture "tune" TuneId
                       :> "comments"
-                      :> Get '[JSON] CommentList
+                      :> Get '[JSON] [CommentMsg.Submission]
 
      :<|>  "tunebank" :> BasicAuth "tunebank-realm" UserName
                       :> "genre"
@@ -141,7 +141,7 @@ type CommentAPI =
                       :> "tune"
                       :> Capture "tune" TuneId
                       :> "comment"
-                      :> ReqBody '[FormUrlEncoded] NewComment.Submission
+                      :> ReqBody '[FormUrlEncoded] CommentMsg.Submission
                       :> Post '[PlainText] Text
 
      :<|>  "tunebank" :> BasicAuth "tunebank-realm" UserName

@@ -30,8 +30,8 @@ import Tunebank.Model.TuneRef (TuneId(..), TuneRef)
 import Tunebank.Model.AbcMetadata
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import qualified Tunebank.Model.AbcMetadataSubmission as NewTune (AbcMetadataSubmission(..))
-import Tunebank.Model.Comment (CommentId, CommentList(..), Comment(..))
-import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
+import Tunebank.Model.Comment (CommentId(..), Comment(..))
+import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission(..))
 import Data.Abc.Validator (normaliseKeySignature, normaliseRhythm)
 import Debug.Trace (traceM)
 
@@ -157,7 +157,8 @@ instance DBAccess (PostgresT IO) DBConfig where
 
     getTunes ::  Genre -> Int -> Int -> PostgresT IO [TuneRef]
     getTunes genre page size =
-      pure []
+      search genre Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+             Alpha page size
 
     countTunes  :: Genre
               -> Maybe Title
@@ -241,12 +242,33 @@ instance DBAccess (PostgresT IO) DBConfig where
       --pure ()
 
     findCommentById :: Genre -> TuneId -> CommentId -> PostgresT IO (Maybe Comment)
-    findCommentById genre tuneId commentId =
-      pure Nothing
+    findCommentById genre (TuneId tid)  (CommentId commentId) = do
+      let
+        queryTemplate =
+          "SELECT c.id, c,tune_id, c.submitter, c.title, c.text "
+          <> " FROM comments c, tunes t "
+          <> " WHERE c.tune_id = t.id "
+          <>  " AND t.tune_id = ? and c.id = ? "
+        params =
+          (tid :: Text, commentId :: Text)
+      pool <- asks _getPool
+      ts <- liftIO $ withResource pool
+            (\conn -> query conn queryTemplate params)
+      pure $ safeHead ts
 
-    getComments :: Genre -> TuneId -> PostgresT IO CommentList
-    getComments genre tuneId =
-      pure $ CommentList []
+    getComments :: Genre -> TuneId -> PostgresT IO [CommentMsg.Submission]
+    getComments genre (TuneId tid) = do
+      let
+        queryTemplate =
+          "SELECT c.submitter, c.id, c.title, c.text "
+          <> " FROM comments c, tunes t "
+          <> " WHERE c.tune_id = t.id "
+          <>  " AND t.tune_id = ?  "
+        params =
+            (Only (tid :: Text))
+      pool <- asks _getPool
+      liftIO $ withResource pool
+        (\conn -> query conn queryTemplate params)
 
     insertComment :: Comment-> PostgresT IO CommentId
     insertComment comment = do
@@ -259,9 +281,17 @@ instance DBAccess (PostgresT IO) DBConfig where
          (\conn -> execute conn queryTemplate comment)
       pure $ (cid comment)
 
-    deleteComment :: Genre -> TuneId -> CommentId -> PostgresT IO ()
-    deleteComment genre tuneId commentId =
-      pure ()
+    deleteComment :: Genre -> Int -> CommentId -> PostgresT IO Int64
+    deleteComment genre tunePK (CommentId commentId) = do
+      let
+        queryTemplate = "DELETE FROM comments "
+                    <> " WHERE id = ? AND tune_id = ? "
+        params =
+          (commentId :: Text, tunePK :: Int)
+      pool <- asks _getPool
+      liftIO $ withResource pool
+         (\conn -> execute conn queryTemplate params)
+
 
 
 safeHead :: [a] -> Maybe a

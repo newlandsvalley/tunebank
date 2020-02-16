@@ -91,8 +91,9 @@ instance DBAccess (DB IO) DBIORef where
       pure $ MockComment.getComments genre tuneId
 
    insertComment comment =
+     -- we're not mocking inserts
      pure (cid comment)
 
-   deleteComment genre tuneId commentId =
+   deleteComment genre tunePK commentId =
      -- we're not mocking deletes
-     pure ()
+     pure 0

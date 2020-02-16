@@ -5,20 +5,14 @@ module Mock.MockComment where
 import Prelude ()
 import Prelude.Compat
 
-import Tunebank.Model.Comment (Comment(..), CommentId(..), CommentList(..))
+import Tunebank.Model.Comment (Comment(..), CommentId(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
-import Data.Time.Calendar
-import GHC.Generics
-import Data.Text (Text, pack)
 import Data.Tuple (snd)
 import Data.Genre
-import Data.Map (Map, fromList, elems)
-import Data.ByteString.Lazy.Internal (ByteString, packChars)
+import Data.Map (fromList)
 import qualified Data.Map as Map (lookup)
-import qualified Tunebank.Model.TuneRef as TuneRef
-import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
-import Tunebank.Model.User (UserName(..))
-import Tunebank.Utils.Timestamps
+import qualified Tunebank.Model.TuneRef as TuneRef (TuneId)
+import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission(..))
 import TestData
 
 import Debug.Trace (trace)
@@ -36,12 +30,20 @@ findCommentById genre tuneId commentId =
     _ ->
       Nothing
 
-getComments :: Genre -> TuneRef.TuneId -> CommentList
+getComments :: Genre -> TuneRef.TuneId -> [CommentMsg.Submission]
 getComments genre tuneId =
   if (genre == Scandi && tuneId == TuneRef.tuneId "fastan" "polska") then
-    CommentList $ map snd commentsList
+    let
+      commentRows = map snd commentsList
+    in
+      map toSubmission commentRows
   else
-    CommentList []
+    []
+
+-- | convert a comment (as on DB) to a submission (as a message)
+toSubmission :: Comment -> CommentMsg.Submission
+toSubmission comment =
+  CommentMsg.Submission (submitter comment) (cid comment) (title comment) (text comment)
 
 commentsList :: [CommentEntry]
 commentsList =

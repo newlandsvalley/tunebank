@@ -26,7 +26,7 @@ import Tunebank.Types (AppCtx(..))
 import Tunebank.Server (commentServer, commentAPI)
 import Tunebank.Model.User
 import Tunebank.Model.Comment
-import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
+import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Data.Configurator.Types (Config)
 import Data.Genre
@@ -43,8 +43,8 @@ fixtureDelay =
   100000
 
 singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
-commentList ::  Genre -> TuneRef.TuneId -> ClientM CommentList
-postComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> NewComment.Submission -> ClientM Text
+commentList ::  Genre -> TuneRef.TuneId -> ClientM [CommentMsg.Submission]
+postComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> CommentMsg.Submission -> ClientM Text
 deleteComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> CommentId -> ClientM ()
 singleComment :<|> commentList :<|> postComment :<|> deleteComment = client (Proxy :: Proxy CommentAPI)
 
@@ -93,7 +93,7 @@ commentApiSpec config =
           Left _ ->
             expectationFailure "unexpected comment list error"
           Right cList -> do
-            (length $ comment cList) `shouldBe` 3
+            (length $ cList) `shouldBe` 3
 
     describe "POST comment" $ do
       it "should post a new comment " $ do

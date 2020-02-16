@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+-- | this represent a comment as stored on the database
+
 module Tunebank.Model.Comment where
 
 import GHC.Generics
@@ -52,14 +54,8 @@ data Comment = Comment
 instance ToJSON Comment
 instance FromJSON Comment
 
+instance FromRow Comment where
+  fromRow = Comment <$> field <*> field <*> field <*> field <*> field
+
 instance ToRow Comment where
   toRow c = [ toField (cid c), toField (tidkey c), toField (submitter c), toField (title c), toField (text c) ]
-
-
-data CommentList = CommentList
-  { comment :: [Comment]
-  } deriving (Eq, Show, Generic)
-
-
-instance ToJSON CommentList
-instance FromJSON CommentList

@@ -5,13 +5,11 @@ module TestData where
 import Prelude ()
 import Prelude.Compat
 import Data.Text (Text)
-import Data.Time.Calendar
 import Servant
 import Tunebank.Model.User
 import Tunebank.Model.TuneRef
 import Tunebank.Model.AbcMetadataSubmission
 import Tunebank.Model.Comment
-import Tunebank.Utils.Timestamps
 import qualified Tunebank.Model.UserRegistration as UReg (Submission(..))
 import qualified Tunebank.Model.CommentSubmission as NewComment
 

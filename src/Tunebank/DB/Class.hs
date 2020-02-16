@@ -14,8 +14,8 @@ import Tunebank.Model.NewUser (NewUser, EmailConfirmation)
 import Tunebank.Model.AbcMetadata
 import Tunebank.Model.AbcMetadataSubmission
 import Tunebank.Model.TuneRef (TuneId, TuneRef)
-import Tunebank.Model.Comment (CommentId, Comment, CommentList)
-import qualified Tunebank.Model.CommentSubmission as NewComment (Submission)
+import Tunebank.Model.Comment (CommentId, Comment)
+import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission)
 import Data.Genre (Genre)
 
 -- | This is a very abstract interface into the DB layer allowing
@@ -73,8 +73,8 @@ class (MonadThrow m, MonadIO m, Monad m) => DBAccess m d | m -> d, d -> m where
 
   findCommentById :: Genre -> TuneId -> CommentId -> m (Maybe Comment)
 
-  getComments :: Genre -> TuneId -> m CommentList
+  getComments :: Genre -> TuneId -> m [CommentMsg.Submission]
 
   insertComment :: Comment -> m CommentId
 
-  deleteComment :: Genre -> TuneId -> CommentId -> m ()
+  deleteComment :: Genre -> Int -> CommentId -> m Int64

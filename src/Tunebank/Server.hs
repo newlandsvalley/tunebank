@@ -40,8 +40,8 @@ import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.TuneRef (TuneId(..))
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
-import Tunebank.Model.Comment (CommentId(..), Comment, CommentList(..))
-import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
+import Tunebank.Model.Comment (CommentId(..), Comment)
+import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission(..))
 import Tunebank.Model.Pagination
 import Tunebank.TypeConversion.Transcode (transcodeTo)
 import qualified Tunebank.TypeConversion.Cache as Cache (removeOldFiles)
@@ -239,12 +239,12 @@ commentServer conn =
         Just comment ->
           pure comment
 
-    commentListHandler :: Genre -> TuneId -> AppM CommentList
+    commentListHandler :: Genre -> TuneId -> AppM [CommentMsg.Submission]
     commentListHandler genre tuneId = do
       _ <- traceM ("get comments for: " <> (show tuneId))
       runQuery conn $ getComments genre tuneId
 
-    newCommentHandler :: UserName -> Genre -> TuneId -> NewComment.Submission -> AppM Text
+    newCommentHandler :: UserName -> Genre -> TuneId -> CommentMsg.Submission -> AppM Text
     newCommentHandler userName genre tuneId submission = do
       _ <- traceM ("new comment: " <> (show submission))
       eUpserted <- runQuery conn $ upsertCommentIfPermitted userName genre tuneId submission
