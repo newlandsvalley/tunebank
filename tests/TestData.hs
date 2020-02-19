@@ -127,15 +127,6 @@ fastanId :: TuneId
 fastanId =
   TuneId "fastan-polska"
 
-
-{-}
-fastanMetadata :: AbcMetadataSubmission
-fastanMetadata =
-  AbcMetadataSubmission "Scandi" (TuneId "fastan-polska")
-              (UserName "administrator") "Fastan"
-              "Polska" "F" fastan Nothing Nothing Nothing Nothing
--}
-
 cig :: Text
 cig =
   "X: 1\r\n"

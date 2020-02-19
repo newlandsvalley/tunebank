@@ -49,7 +49,7 @@ data AbcMetadata = AbcMetadata
     , rhythm :: Text
     , key :: Text
     , submitter :: Text
-    , date :: Text
+    , ts :: Text        -- epoch timestamp - 13 character string
     , abc :: Text
     , source :: Maybe Text
     , origin :: Maybe Text

@@ -129,8 +129,8 @@ instance DBAccess (PostgresT IO) DBConfig where
       let
         genreStr = pack $ show genre
         queryTemplate = "SELECT title, rhythm, keysignature, submitter, "
-                <> " to_char(creation_ts, 'DD Mon yyyy'), abc, "
-                <> " source, origin, composer, transcriber "
+                <> " floor ( extract ( epoch from creation_ts) * 1000) :: text, "
+                <> " abc, source, origin, composer, transcriber "
                 <> " from tunes"
                 <> " WHERE genre = ? and tune_id = ? "
         params =

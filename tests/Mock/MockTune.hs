@@ -93,7 +93,7 @@ scandiMetadata =
   let
     submitter = UserName (pack "Administrator")
   in
-    fromList $ catMaybes $ map (hush . buildMetadataEntry submitter "09 Feb 2020" Scandi) scandiAbc
+    fromList $ catMaybes $ map (hush . buildMetadataEntry submitter "13charepochts" Scandi) scandiAbc
 
 scandiAbc :: [ Text ]
 scandiAbc =
@@ -129,11 +129,6 @@ search genre mTitle mRhythm mKey mSource mOrigin
       !p6 = trace ("composer param: " <> show mComposer) mComposer
       !p7 = trace ("transcriber param: " <> show mTranscriber) mTranscriber
       !p8 = trace ("sort param: " <> show sortKey) sortKey
-      {-}
-      count = countTunes genre mTitle mRhythm mKey mSource mOrigin mComposer mTranscriber
-      maxPages = (count + limit - 1) `quot` limit
-      pagination = Pagination page limit maxPages
-      -}
     in
       getTuneList genre
 
