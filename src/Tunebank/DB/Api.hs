@@ -202,7 +202,8 @@ instance DBAccess (PostgresT IO) DBConfig where
           Alpha -> " ORDER BY title ASC "
           Date -> " ORDER BY creation_ts DESC "
         queryBase = "SELECT tune_id, title, rhythm, abc, "
-               <> " to_char(creation_ts, 'DD Mon yyyy')  from tunes WHERE genre = ? "
+               <> " floor ( extract ( epoch from creation_ts) * 1000) :: text "
+               <> " from tunes WHERE genre = ? "
         pagination = " LIMIT ? OFFSET ? "
         params =
           (genreStr :: Text, limit :: Int, offset :: Int)

@@ -40,7 +40,7 @@ import Tunebank.Model.AbcMetadata hiding (Origin(..))
 import qualified Tunebank.Model.AbcMetadata as AbcMetadata (Origin(..))
 import Tunebank.Model.TuneRef (TuneId(..))
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneList(..))
-import Tunebank.Model.Comment (CommentId(..), Comment)
+import Tunebank.Model.Comment (CommentId(..))
 import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission(..))
 import Tunebank.Model.Pagination
 import Tunebank.TypeConversion.Transcode (transcodeTo)

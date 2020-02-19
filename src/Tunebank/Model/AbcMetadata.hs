@@ -38,7 +38,7 @@ import qualified Data.Abc as ABC
 import Data.Genre (Genre(..))
 import Tunebank.Model.User (UserName(..))
 import Tunebank.Utils.Timestamps (fromDay)
-import Data.Validation (Validation(..), toEither)
+import Data.Validation (toEither)
 import Data.Abc.Validator (buildHeaderMap, validateHeaders)
 import qualified Data.Abc.Validator as V (ValidatedHeaders(..))
 

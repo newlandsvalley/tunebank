@@ -66,7 +66,7 @@ buildTuneRef metadata =
     , TuneRef.title = title metadata
     , TuneRef.rhythm = rhythm metadata
     , TuneRef.abc = abc metadata
-    , TuneRef.date = "04 Feb 2020"
+    , TuneRef.ts = "157303009370"
     }
 
 findTunePrimaryKey :: Genre -> TuneRef.TuneId -> Maybe Int

@@ -72,7 +72,7 @@ data TuneRef = TuneRef
    , title :: Text
    , rhythm :: Text
    , abc :: Text    -- the body
-   , date  :: Text
+   , ts  :: Text    -- the epoch 13-character timestamp
    } deriving (Eq, Show, Generic)
 
 instance ToJSON TuneRef

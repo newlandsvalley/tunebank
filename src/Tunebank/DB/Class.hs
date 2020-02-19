@@ -9,7 +9,7 @@ import Control.Monad.IO.Class (MonadIO)
 import Data.Text (Text)
 import Data.Int (Int64)
 import Tunebank.Types
-import Tunebank.Model.User (UserId, UserName, User)
+import Tunebank.Model.User (UserId, User)
 import Tunebank.Model.NewUser (NewUser, EmailConfirmation)
 import Tunebank.Model.AbcMetadata
 import Tunebank.Model.AbcMetadataSubmission
