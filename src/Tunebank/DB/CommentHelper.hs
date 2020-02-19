@@ -6,7 +6,7 @@ import Servant.Server (ServerError)
 import Tunebank.DB.Class
 import Tunebank.Model.User
 import Tunebank.Model.Comment
-import qualified Tunebank.Model.CommentSubmission as NewComment (Submission(..))
+import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission(..))
 import qualified Tunebank.Model.TuneRef as TuneRef
 import Data.Genre
 import Tunebank.Utils.HTTPErrors
@@ -34,10 +34,10 @@ deleteCommentIfPermitted  userName genre tuneId commentId = do
       pure $ Left $ serverError ("could not find tune primary key for " <> (show tuneId))
 
 
-upsertCommentIfPermitted ::  DBAccess m d => UserName -> Genre -> TuneRef.TuneId -> NewComment.Submission -> m (Either ServerError CommentId)
+upsertCommentIfPermitted ::  DBAccess m d => UserName -> Genre -> TuneRef.TuneId -> CommentMsg.Submission -> m (Either ServerError CommentId)
 upsertCommentIfPermitted  userName genre tuneId submission = do
   let
-    commentId = NewComment.commentId submission
+    commentId = CommentMsg.commentId submission
   _ <- traceM ("upsert comment if permitted ")
   mComment <- findCommentById genre tuneId commentId
   mPK <- findTunePrimaryKey genre tuneId
@@ -62,12 +62,17 @@ upsertCommentIfPermitted  userName genre tuneId submission = do
     _ ->
       pure $ Left $ serverError ("could not find tune primary key for " <> (show tuneId))
 
-buildComment :: Int -> NewComment.Submission -> Comment
+buildComment :: Int -> CommentMsg.Submission -> Comment
 buildComment tunePK submission =
-  Comment (NewComment.commentId submission) tunePK  (NewComment.user submission)
-             (NewComment.subject submission) (NewComment.text submission)
+  Comment (CommentMsg.commentId submission) tunePK  (CommentMsg.user submission)
+             (CommentMsg.subject submission) (CommentMsg.text submission)
 
-updateComment :: Comment -> NewComment.Submission -> Comment
+updateComment :: Comment -> CommentMsg.Submission -> Comment
 updateComment oldComment submission =
   Comment (commentId oldComment) (tidkey oldComment) (submitter oldComment)
-           (NewComment.subject submission) (NewComment.text submission)
+           (CommentMsg.subject submission) (CommentMsg.text submission)
+
+-- | convert a comment (as on DB) to a submission (as a message)
+commentToSubmission :: Comment -> CommentMsg.Submission
+commentToSubmission comment =
+  CommentMsg.Submission (submitter comment) (commentId comment) (subject comment) (text comment)

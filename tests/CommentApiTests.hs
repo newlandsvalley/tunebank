@@ -42,7 +42,7 @@ fixtureDelay =
   -- 100 ms
   100000
 
-singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM Comment
+singleComment :: Genre -> TuneRef.TuneId -> CommentId -> ClientM CommentMsg.Submission
 commentList ::  Genre -> TuneRef.TuneId -> ClientM [CommentMsg.Submission]
 postComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> CommentMsg.Submission -> ClientM Text
 deleteComment ::   BasicAuthData -> Genre -> TuneRef.TuneId -> CommentId -> ClientM ()
@@ -84,7 +84,7 @@ commentApiSpec config =
           Left err ->
             expectationFailure ("unexpected single comment error: " <> (show err))
           Right c -> do
-            (subject c) `shouldBe` "as played by Fred"
+            (CommentMsg.subject c) `shouldBe` "as played by Fred"
 
     describe "GET comments" $ do
       it "should get a comment list " $ do

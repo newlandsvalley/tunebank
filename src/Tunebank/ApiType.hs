@@ -126,7 +126,7 @@ type CommentAPI =
                :> Capture "genre" Genre
                :> "tune" :> Capture "tune" TuneId
                :> "comment" :> Capture "comment" CommentId
-               :> Get '[JSON] Comment
+               :> Get '[JSON] CommentMsg.Submission
 
      :<|>  "tunebank" :> "genre"
                       :> Capture "genre" Genre

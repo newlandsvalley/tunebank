@@ -13,6 +13,7 @@ import Data.Map (fromList)
 import qualified Data.Map as Map (lookup)
 import qualified Tunebank.Model.TuneRef as TuneRef (TuneId)
 import qualified Tunebank.Model.CommentSubmission as CommentMsg (Submission(..))
+import Tunebank.DB.CommentHelper (commentToSubmission)
 import TestData
 
 import Debug.Trace (trace)
@@ -36,14 +37,9 @@ getComments genre tuneId =
     let
       commentRows = map snd commentsList
     in
-      map toSubmission commentRows
+      map commentToSubmission commentRows
   else
     []
-
--- | convert a comment (as on DB) to a submission (as a message)
-toSubmission :: Comment -> CommentMsg.Submission
-toSubmission comment =
-  CommentMsg.Submission (submitter comment) (commentId comment) (subject comment) (text comment)
 
 commentsList :: [CommentEntry]
 commentsList =

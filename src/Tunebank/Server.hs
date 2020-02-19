@@ -31,7 +31,7 @@ import Tunebank.Model.User (UserName(..), UserId(..), UserList(..))
 import qualified Tunebank.Model.UserRegistration as UserReg (Submission)
 import Tunebank.DB.Class
 import Tunebank.DB.UserHelper (registerNewUser, getUsersIfPermitted)
-import Tunebank.DB.CommentHelper (deleteCommentIfPermitted, upsertCommentIfPermitted)
+import Tunebank.DB.CommentHelper (deleteCommentIfPermitted, upsertCommentIfPermitted, commentToSubmission)
 import Tunebank.DB.TuneHelper (deleteTuneIfPermitted, upsertTuneIfPermitted)
 import Tunebank.Utils.HTTPErrors (badRequest, badRequestLazy, notFound)
 import qualified Tunebank.Model.TuneText as NewTune (Submission)
@@ -229,15 +229,18 @@ commentServer conn =
   commentHandler :<|> commentListHandler
                 :<|> newCommentHandler :<|> deleteCommentHandler
   where
-    commentHandler :: Genre -> TuneId -> CommentId -> AppM Comment
+    commentHandler :: Genre -> TuneId -> CommentId -> AppM CommentMsg.Submission
     commentHandler  genre tuneId commentId = do
       _ <- traceM ("get comment: " <> (show commentId))
       mComment <- runQuery conn $ findCommentById genre tuneId commentId
       case mComment of
         Nothing ->
           throwError $ notFound "comment not found"
-        Just comment ->
-          pure comment
+        Just comment -> do
+          let
+            commentMsg = commentToSubmission comment
+          _ <- traceM ("returning comment: " <> (show commentMsg))
+          pure commentMsg
 
     commentListHandler :: Genre -> TuneId -> AppM [CommentMsg.Submission]
     commentListHandler genre tuneId = do
