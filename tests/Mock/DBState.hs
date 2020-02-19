@@ -92,7 +92,7 @@ instance DBAccess (DB IO) DBIORef where
 
    insertComment comment =
      -- we're not mocking inserts
-     pure (cid comment)
+     pure (commentId comment)
 
    deleteComment genre tunePK commentId =
      -- we're not mocking deletes

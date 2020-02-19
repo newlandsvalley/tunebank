@@ -245,9 +245,9 @@ instance DBAccess (PostgresT IO) DBConfig where
     findCommentById genre (TuneId tid)  (CommentId commentId) = do
       let
         queryTemplate =
-          "SELECT c.id, c,tune_id, c.submitter, c.title, c.text "
+          "SELECT c.id, c.tid, c.submitter, c.subject, c.text "
           <> " FROM comments c, tunes t "
-          <> " WHERE c.tune_id = t.id "
+          <> " WHERE c.tid = t.id "
           <>  " AND t.tune_id = ? and c.id = ? "
         params =
           (tid :: Text, commentId :: Text)
@@ -260,9 +260,9 @@ instance DBAccess (PostgresT IO) DBConfig where
     getComments genre (TuneId tid) = do
       let
         queryTemplate =
-          "SELECT c.submitter, c.id, c.title, c.text "
+          "SELECT c.submitter, c.id, c.subject, c.text "
           <> " FROM comments c, tunes t "
-          <> " WHERE c.tune_id = t.id "
+          <> " WHERE c.tid = t.id "
           <>  " AND t.tune_id = ?  "
         params =
             (Only (tid :: Text))
@@ -274,18 +274,18 @@ instance DBAccess (PostgresT IO) DBConfig where
     insertComment comment = do
       let
         queryTemplate =
-          "INSERT INTO comments (id, tune_id, submitter, title, text) "
+          "INSERT INTO comments (id, tid, submitter, subject, text) "
           <>  " VALUES (?, ?, ?, ?, ?) "
       pool <- asks _getPool
       rowcount <-  liftIO $ withResource pool
          (\conn -> execute conn queryTemplate comment)
-      pure $ (cid comment)
+      pure $ (commentId comment)
 
     deleteComment :: Genre -> Int -> CommentId -> PostgresT IO Int64
     deleteComment genre tunePK (CommentId commentId) = do
       let
         queryTemplate = "DELETE FROM comments "
-                    <> " WHERE id = ? AND tune_id = ? "
+                    <> " WHERE id = ? AND tid = ? "
         params =
           (commentId :: Text, tunePK :: Int)
       pool <- asks _getPool

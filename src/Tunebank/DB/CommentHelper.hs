@@ -12,6 +12,7 @@ import Data.Genre
 import Tunebank.Utils.HTTPErrors
 import Tunebank.DB.UserHelper
 
+import Debug.Trace (traceM)
 
 deleteCommentIfPermitted :: DBAccess m d => UserName -> Genre -> TuneRef.TuneId -> CommentId  -> m (Either ServerError ())
 deleteCommentIfPermitted  userName genre tuneId commentId = do
@@ -36,7 +37,8 @@ deleteCommentIfPermitted  userName genre tuneId commentId = do
 upsertCommentIfPermitted ::  DBAccess m d => UserName -> Genre -> TuneRef.TuneId -> NewComment.Submission -> m (Either ServerError CommentId)
 upsertCommentIfPermitted  userName genre tuneId submission = do
   let
-    commentId = NewComment.cid submission
+    commentId = NewComment.commentId submission
+  _ <- traceM ("upsert comment if permitted ")
   mComment <- findCommentById genre tuneId commentId
   mPK <- findTunePrimaryKey genre tuneId
   case mPK of
@@ -62,10 +64,10 @@ upsertCommentIfPermitted  userName genre tuneId submission = do
 
 buildComment :: Int -> NewComment.Submission -> Comment
 buildComment tunePK submission =
-  Comment (NewComment.cid submission) tunePK  (NewComment.user submission)
-             (NewComment.title submission) (NewComment.text submission)
+  Comment (NewComment.commentId submission) tunePK  (NewComment.user submission)
+             (NewComment.subject submission) (NewComment.text submission)
 
 updateComment :: Comment -> NewComment.Submission -> Comment
 updateComment oldComment submission =
-  Comment (cid oldComment) (tidkey oldComment) (submitter oldComment)
-           (NewComment.title submission) (NewComment.text submission)
+  Comment (commentId oldComment) (tidkey oldComment) (submitter oldComment)
+           (NewComment.subject submission) (NewComment.text submission)

@@ -43,7 +43,7 @@ getComments genre tuneId =
 -- | convert a comment (as on DB) to a submission (as a message)
 toSubmission :: Comment -> CommentMsg.Submission
 toSubmission comment =
-  CommentMsg.Submission (submitter comment) (cid comment) (title comment) (text comment)
+  CommentMsg.Submission (submitter comment) (commentId comment) (subject comment) (text comment)
 
 commentsList :: [CommentEntry]
 commentsList =

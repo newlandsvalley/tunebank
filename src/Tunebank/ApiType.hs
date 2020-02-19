@@ -140,7 +140,7 @@ type CommentAPI =
                       :> Capture "genre" Genre
                       :> "tune"
                       :> Capture "tune" TuneId
-                      :> "comment"
+                      :> "comments"
                       :> ReqBody '[FormUrlEncoded] CommentMsg.Submission
                       :> Post '[PlainText] Text
 

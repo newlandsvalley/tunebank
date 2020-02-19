@@ -84,7 +84,7 @@ commentApiSpec config =
           Left err ->
             expectationFailure ("unexpected single comment error: " <> (show err))
           Right c -> do
-            (title c) `shouldBe` "as played by Fred"
+            (subject c) `shouldBe` "as played by Fred"
 
     describe "GET comments" $ do
       it "should get a comment list " $ do

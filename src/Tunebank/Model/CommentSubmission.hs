@@ -12,14 +12,14 @@ import Data.Aeson
 import Web.FormUrlEncoded
 import Data.Text (Text)
 import Tunebank.Model.Comment (CommentId)
-import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
+-- import Database.PostgreSQL.Simple.FromField (FromField(..), fromField)
 import Database.PostgreSQL.Simple.FromRow
 
 -- | A mew comment submitted on a tune
 data Submission = Submission
   { user :: Text
-  , cid :: CommentId
-  , title :: Text
+  , commentId :: CommentId
+  , subject :: Text
   , text :: Text
   } deriving (Eq, Show, Generic)
 

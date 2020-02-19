@@ -44,10 +44,10 @@ instance ToField CommentId  where
 
 -- | A comment on a tune
 data Comment = Comment
-  { cid :: CommentId
+  { commentId :: CommentId
   , tidkey :: Int
   , submitter :: Text
-  , title :: Text
+  , subject :: Text
   , text :: Text
   } deriving (Eq, Show, Generic)
 
@@ -58,4 +58,4 @@ instance FromRow Comment where
   fromRow = Comment <$> field <*> field <*> field <*> field <*> field
 
 instance ToRow Comment where
-  toRow c = [ toField (cid c), toField (tidkey c), toField (submitter c), toField (title c), toField (text c) ]
+  toRow c = [ toField (commentId c), toField (tidkey c), toField (submitter c), toField (subject c), toField (text c) ]
