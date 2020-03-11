@@ -43,6 +43,7 @@ sendConfirmation confirmation = do
         _ <- traceM "authentication succeeded - sending the mail"
         sendMimeMail (unpack $ address confirmation) userName subject plainBody htmlBody [] c
       else do
-        _ <- traceM "authentication failed"
+        _ <- traceM "authentication with email server failed"
         -- print "Authentication error."
-        pure ()
+        fail "server Failed to log in to the email server"
+        -- pure ()

@@ -22,4 +22,6 @@ cabal.sandbox.config
 copybinary.sh
 tunebank.cabal
 conf/tunebank.conf
+conf/tunebank-tests-gmail.conf
+conf/tunebank-tests-postfix.conf
 scripts/example.sh
